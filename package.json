@@ -1,0 +1,16 @@
+{
+  "name": "hubplace",
+  "version": "1.0.0",
+  "description": "Electron App with Modern UI",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^25.0.0"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "mongodb": "^6.13.0"
+  }
+}
