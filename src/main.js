@@ -38,23 +38,15 @@ function createMainWindow() {
     );
     app.commandLine.appendSwitch('ssl-version-min', 'tls1.2');
 
-    session.defaultSession.cookies.set({
-        url: 'https://www.mercadolivre.com.br',
-        name: 'accept-cookies',
-        value: 'true',
-    }).then(() => {
-        console.log('Cookies accepted automatically');
-    }).catch(error => {
-        console.error('Failed to set cookies:', error);
-    });
-
     const sites = {
-        meli: 'https://www.mercadolivre.com.br/vendas',
-        amazon: 'https://sellercentral.amazon.com.br/',
-        magalu: 'https://universo.magalu.com/',
-        shopee: 'https://seller.shopee.com.br/'
+        chatgpt: 'https://chatgpt.com/auth/login', 
+        whatsapp: 'https://web.whatsapp.com/', 
+        telegram: 'https://web.telegram.org/k/', 
+        gmail: 'https://accounts.google.com/signin/v2/identifier?service=mail', 
+        outlook: 'https://login.live.com/', 
+        linkedin: 'https://www.linkedin.com/login'
     };
-
+    
     const views = {};
     for (const [name, url] of Object.entries(sites)) {
         const view = new BrowserView();
@@ -70,14 +62,18 @@ function createMainWindow() {
         if (activeView) activeView.setBounds({ x: sidebarWidth, y: 0, width: contentWidth, height });
     }
 
-    mainWindow.setBrowserView(views.meli);
+    // Set default view to ChatGPT
+    //mainWindow.setBrowserView(views.chatgpt);
     updateBounds();
     mainWindow.on('resize', updateBounds);
 
-    ipcMain.on('show-meli', () => { mainWindow.setBrowserView(views.meli); updateBounds(); });
-    ipcMain.on('show-amazon', () => { mainWindow.setBrowserView(views.amazon); updateBounds(); });
-    ipcMain.on('show-magalu', () => { mainWindow.setBrowserView(views.magalu); updateBounds(); });
-    ipcMain.on('show-shopee', () => { mainWindow.setBrowserView(views.shopee); updateBounds(); });
+    // Update the ipcMain events to use the new site names
+    ipcMain.on('show-chatgpt', () => { mainWindow.setBrowserView(views.chatgpt); updateBounds(); });
+    ipcMain.on('show-whatsapp', () => { mainWindow.setBrowserView(views.whatsapp); updateBounds(); });
+    ipcMain.on('show-telegram', () => { mainWindow.setBrowserView(views.telegram); updateBounds(); });
+    ipcMain.on('show-gmail', () => { mainWindow.setBrowserView(views.gmail); updateBounds(); });
+    ipcMain.on('show-outlook', () => { mainWindow.setBrowserView(views.outlook); updateBounds(); });
+    ipcMain.on('show-linkedin', () => { mainWindow.setBrowserView(views.linkedin); updateBounds(); });
 }
 
 function createLoginWindow() {
