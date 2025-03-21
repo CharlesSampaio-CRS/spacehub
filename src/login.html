@@ -11,81 +11,87 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f0f4f7, #cce7f4); /* Gradiente suave */
+            font-family: 'Poppins', sans-serif;
+            color: #333;
         }
         .login-container {
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.9); /* Fundo branco translúcido */
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 380px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            backdrop-filter: blur(10px);
+            max-width: 400px;
+            text-align: center;
         }
         h2 {
             margin-bottom: 20px;
-            text-align: center;
-            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            color: #4b8e8d; /* Verde suave */
         }
         .input-group {
-            margin-bottom: 15px;
-            width: 100%;
+            margin-bottom: 20px;
+            text-align: left;
         }
         .input-group label {
             display: block;
-            margin-bottom: 5px;
-            color: white;
+            margin-bottom: 6px;
             font-weight: bold;
+            color: #4b8e8d;
         }
         .input-group input {
             width: 100%;
             padding: 12px;
-            border: none;
-            border-radius: 6px;
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            outline: none;
+            border: 1px solid #b8e0d2; /* Borda suave de verde claro */
+            border-radius: 16px;
+            background: #f1f9f4; /* Fundo suave em tom claro */
+            color: #333;
             font-size: 16px;
-        }
-        .input-group input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
+            outline: none;
+            transition: all 0.3s;
         }
         .input-group input:focus {
-            background-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+            background: #e0f7f3; /* Foco suave */
+            box-shadow: 0 0 10px rgba(0, 150, 136, 0.3);
         }
         .btn {
             width: 100%;
             padding: 12px;
-            background-color: #3498db;
-            color: white;
             border: none;
-            border-radius: 6px;
-            cursor: pointer;
+            border-radius: 16px;
             font-size: 16px;
-            transition: background 0.3s ease-in-out;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
         }
-        .btn:hover {
-            background-color: #2980b9;
+        .btn-primary {
+            background: #3498db; /* Cor do botão mais suave e chamativa */
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2980b9; /* Cor mais escura no hover */
+        }
+        .btn-google {
+            background: #f06b6b; /* Tom mais escuro de azul claro */
+            /* Cor suave de azul claro */
+            color: white;
+        }
+        .btn-google:hover {
+            background: #dd2e2e; 
+
         }
         .links {
-            margin-top: 15px;
-            text-align: center;
+            margin-top: 20px;
         }
         .links a {
-            display: block;
-            margin-top: 5px;
-            color: #ecf0f1;
+            color: #4b8e8d;
             text-decoration: none;
-            transition: color 0.3s;
+            font-size: 14px;
+            transition: all 0.3s;
         }
         .links a:hover {
-            color: #1abc9c;
-            text-decoration: underline;
+            color: #00796b; /* Tom mais escuro de verde suave */
         }
     </style>
 </head>
@@ -101,10 +107,11 @@
                 <label for="password">Senha</label>
                 <input type="password" id="password" placeholder="Digite sua senha" required>
             </div>
-            <button type="submit" class="btn">Entrar</button>
+            <button type="submit" class="btn btn-primary">Entrar</button>
         </form>
+        <button id="googleLogin" class="btn btn-google">Entrar com Google</button>
         <div class="links">
-            <a href="./register.html" id="registerLink">Registrar</a>
+            <a href="./register.html" id="registerLink">Registrar</a> |
             <a href="#" id="forgotPasswordLink">Esqueci a senha</a>
         </div>
     </div>
@@ -114,7 +121,6 @@
 
         document.getElementById('loginForm').addEventListener('submit', (event) => {
             event.preventDefault();
-
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
@@ -125,14 +131,8 @@
             }
         });
 
-        document.getElementById('registerLink').addEventListener('click', (event) => {
-            event.preventDefault();
-            ipcRenderer.send('show-register');
-        });
-
-        document.getElementById('forgotPasswordLink').addEventListener('click', (event) => {
-            event.preventDefault();
-            ipcRenderer.send('show-forgot-password');
+        document.getElementById('googleLogin').addEventListener('click', () => {
+            ipcRenderer.send('login-google');
         });
     </script>
 </body>

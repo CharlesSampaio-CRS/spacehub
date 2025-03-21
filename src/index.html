@@ -3,26 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HubPlace</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <meta http-equiv="Content-Security-Policy">
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data:;">
     <style>
         body {
             margin: 0;
             display: flex;
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
             height: 100vh;
-            background: linear-gradient(135deg, #2c3e50, #34495e);
+            background: linear-gradient(135deg, #f0f4f7, #cce7f4);
+            color: #333;
         }
         .sidebar {
-            width: 60px;
-            background: rgba(44, 62, 80, 0.8);
+            width: 80px;
+            background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
-            color: white;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 10px 0;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+            padding: 20px 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
             transition: width 0.3s ease;
         }
         .menu-icons {
@@ -31,32 +33,42 @@
             align-items: center;
         }
         .sidebar-item {
-            margin: 10px 0;
+            margin: 15px 0;
             cursor: pointer;
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
             display: flex;
             justify-content: center;
             align-items: center;
             transition: background 0.3s, transform 0.2s;
         }
         .sidebar-item:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.3);
             transform: scale(1.1);
         }
+        .sidebar-item.active {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.15);
+        }
         .icon {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
         }
         #content {
             flex-grow: 1;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
             padding: 20px;
-            border-radius: 10px;
-            margin: 10px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            margin: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
         }
         .button-container {
             display: flex;
@@ -65,43 +77,51 @@
             margin: 20px 0;
         }
         .settings-btn, .logout-btn {
-            padding: 10px;
-            color: white;
+            padding: 12px;
             border: none;
             border-radius: 50%;
             cursor: pointer;
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             display: flex;
             justify-content: center;
             align-items: center;
             transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
-            font-size: 18px;
+            font-size: 20px;
+            margin: 10px 0;
         }
-        .faded {
-            opacity: 0.5;
+        .settings-btn:hover {
+            background: #80cbc4;
+            transform: scale(1.1);
+        }
+        .logout-btn:hover {
+            background: #f44336;
+            transform: scale(1.1);
         }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <div class="menu-icons">
-            <div class="sidebar-item" id="chatgpt" title="ChatGPT">
+            <div class="sidebar-item" data-site="home" title="Home">
+                <img src="assets/home.png" alt="Home" class="icon">
+            </div>
+            <div class="sidebar-item" data-site="chatgpt" title="ChatGPT">
                 <img src="assets/chatgpt.png" alt="ChatGPT" class="icon">
             </div>
-            <div class="sidebar-item" id="whatsapp" title="WhatsApp">
+            <div class="sidebar-item" data-site="whatsapp" title="WhatsApp">
                 <img src="assets/whatsapp.png" alt="WhatsApp" class="icon">
             </div>
-            <div class="sidebar-item" id="telegram" title="Telegram">
+            <div class="sidebar-item" data-site="telegram" title="Telegram">
                 <img src="assets/telegram.png" alt="Telegram" class="icon">
             </div>
-            <div class="sidebar-item" id="gmail" title="Gmail">
+            <div class="sidebar-item" data-site="gmail" title="Gmail">
                 <img src="assets/gmail.png" alt="Gmail" class="icon">
             </div>
-            <div class="sidebar-item" id="outlook" title="Outlook">
+            <div class="sidebar-item" data-site="outlook" title="Outlook">
                 <img src="assets/outlook.png" alt="Outlook" class="icon">
             </div>
-            <div class="sidebar-item" id="linkedin" title="LinkedIn">
+            <div class="sidebar-item" data-site="linkedin" title="LinkedIn">
                 <img src="assets/linkedin.png" alt="LinkedIn" class="icon">
             </div>
         </div>
@@ -114,34 +134,49 @@
             </button>
         </div>
     </div>
-    <div id="content">Home --- </div> 
+    <div id="content">Bem-vindo! Escolha um aplicativo na barra lateral.</div>
 
     <script>
-        const { ipcRenderer } = require('electron');
+const { ipcRenderer } = require('electron');
 
-        const sidebarItems = document.querySelectorAll('.sidebar-item');
+document.addEventListener('DOMContentLoaded', () => {
+    const sidebarItems = document.querySelectorAll('.sidebar-item');
+    const content = document.getElementById('content');
 
-        sidebarItems.forEach(item => {
-            item.addEventListener('click', () => {
-                sidebarItems.forEach(i => {
-                    i.classList.add('faded');
-                });
-                item.classList.remove('faded');
-                const eventName = `show-${item.id}`;
-                ipcRenderer.send(eventName);
-            });
-        });
+    sidebarItems.forEach(item => {
+        item.addEventListener('click', () => {
+            // Remove a classe ativa de todos os itens
+            sidebarItems.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
 
-        document.getElementById('config').addEventListener('click', () => {
-            ipcRenderer.send('show-link-registration');
-        });
-
-        document.getElementById('logout').addEventListener('click', () => {
-            const confirmLogout = confirm('Você tem certeza que deseja sair?');
-            if (confirmLogout) {
-                ipcRenderer.send('logout-success');
+            // Obtém o nome do site do atributo 'data-site'
+            const siteKey = item.getAttribute('data-site');
+            if (siteKey) {
+                console.log(`🔗 Navegando para: ${siteKey}`); // Log para depuração
+                ipcRenderer.send('navigate', siteKey);
+                content.textContent = `Carregando ${item.getAttribute('title')}...`;
             }
         });
+    });
+
+    // Evento de Configurações
+    document.getElementById('config').addEventListener('click', () => {
+        ipcRenderer.send('show-link-registration');
+    });
+
+    // Evento de Logout com confirmação
+    document.getElementById('logout').addEventListener('click', () => {
+        if (confirm('Você tem certeza que deseja sair?')) {
+            ipcRenderer.send('logout-success');
+        }
+    });
+
+    // Atualiza o conteúdo da página quando recebe resposta do Electron
+    ipcRenderer.on('update-content', (_, title) => {
+        content.textContent = `Você está visualizando: ${title}`;
+    });
+});
+
     </script>
 </body>
 </html>

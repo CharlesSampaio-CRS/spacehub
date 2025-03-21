@@ -31,7 +31,7 @@ function createMainWindow() {
         }
     });
 
-    mainWindow.loadFile(path.join(__dirname, 'index.html'));
+    mainWindow.loadFile(path.join(__dirname, 'home.html'));
 
     session.defaultSession.setUserAgent(
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
@@ -114,3 +114,5 @@ ipcMain.on('logout-success', () => {
     if (mainWindow) mainWindow.close();
     createLoginWindow();
 });
+
+
