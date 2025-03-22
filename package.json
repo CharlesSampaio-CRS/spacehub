@@ -7,10 +7,12 @@
     "start": "electron ."
   },
   "devDependencies": {
-    "electron": "^25.0.0"
+    "electron": "^25.9.8"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
-    "mongodb": "^6.13.0"
+    "googleapis": "^148.0.0",
+    "mongodb": "^6.13.0",
+    "oauth-electron": "^2.0.111"
   }
 }

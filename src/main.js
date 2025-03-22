@@ -1,7 +1,9 @@
+
 const { app, BrowserWindow, BrowserView, ipcMain, session } = require('electron');
 const path = require('path');
 const { MongoClient } = require('mongodb');
 const bcrypt = require('bcrypt');
+const { googleLogin } = require('./auth'); 
 
 let mainWindow;
 let loginWindow;
@@ -19,6 +21,42 @@ async function connectToMongoDB() {
 }
 
 connectToMongoDB();
+
+function createBrowserViews(sites) {
+    const views = {};
+    for (const [name, url] of Object.entries(sites)) {
+        const view = new BrowserView();
+        view.webContents.loadURL(url);
+        views[name] = view;
+    }
+    return views;
+}
+
+function setupViewNavigation(views) {
+    // Dynamically create IPC listeners for each view
+    Object.keys(views).forEach(siteKey => {
+        ipcMain.on(`show-${siteKey}`, () => {
+            mainWindow.setBrowserView(views[siteKey]);
+            updateBounds();
+        });
+    });
+
+    ipcMain.on('navigate', (_, siteKey) => {
+        const activeView = views[siteKey];
+        if (activeView) {
+            mainWindow.setBrowserView(activeView);
+            updateBounds();
+        }
+    });
+}
+
+function updateBounds() {
+    const { width, height } = mainWindow.getContentBounds();
+    const sidebarWidth = 80;
+    const contentWidth = width - sidebarWidth;
+    const activeView = mainWindow.getBrowserView();
+    if (activeView) activeView.setBounds({ x: sidebarWidth, y: 0, width: contentWidth, height });
+}
 
 function createMainWindow() {
     mainWindow = new BrowserWindow({
@@ -58,56 +96,13 @@ function createMainWindow() {
         microsoftTeams: 'https://www.microsoft.com/en/microsoft-teams/group-chat-software'
     };
 
-    const views = {};
-    for (const [name, url] of Object.entries(sites)) {
-        const view = new BrowserView();
-        view.webContents.loadURL(url);
-        views[name] = view;
-        // Adicionando o view como BrowserView na janela principal
-        mainWindow.setBrowserView(view);
-        view.setBounds({ x: 0, y: 0, width: 1200, height: 800 });
-    }
-
-    function updateBounds() {
-        const { width, height } = mainWindow.getContentBounds();
-        const sidebarWidth = 80;
-        const contentWidth = width - sidebarWidth;
-        const activeView = mainWindow.getBrowserView();
-        if (activeView) activeView.setBounds({ x: sidebarWidth, y: 0, width: contentWidth, height });
-    }
-
-    // Set default view to ChatGPT
+    const views = createBrowserViews(sites);
+    //mainWindow.setBrowserView(views.chatgpt);  // Set default view to ChatGPT
     updateBounds();
+    setupViewNavigation(views);
+
     mainWindow.on('resize', updateBounds);
-
-    // Update the ipcMain events to use the new site names
-    ipcMain.on('navigate', (_, siteKey) => {
-        const activeView = views[siteKey];
-        if (activeView) {
-            mainWindow.setBrowserView(activeView);
-            updateBounds();
-        }
-    });
-
-    ipcMain.on('show-chatgpt', () => { mainWindow.setBrowserView(views.chatgpt); updateBounds(); });
-    ipcMain.on('show-whatsapp', () => { mainWindow.setBrowserView(views.whatsapp); updateBounds(); });
-    ipcMain.on('show-telegram', () => { mainWindow.setBrowserView(views.telegram); updateBounds(); });
-    ipcMain.on('show-gmail', () => { mainWindow.setBrowserView(views.gmail); updateBounds(); });
-    ipcMain.on('show-outlook', () => { mainWindow.setBrowserView(views.outlook); updateBounds(); });
-    ipcMain.on('show-linkedin', () => { mainWindow.setBrowserView(views.linkedin); updateBounds(); });
-    ipcMain.on('show-messenger', () => { mainWindow.setBrowserView(views.messenger); updateBounds(); });
-    ipcMain.on('show-wechat', () => { mainWindow.setBrowserView(views.wechat); updateBounds(); });
-    ipcMain.on('show-snapchat', () => { mainWindow.setBrowserView(views.snapchat); updateBounds(); });
-    ipcMain.on('show-line', () => { mainWindow.setBrowserView(views.line); updateBounds(); });
-    ipcMain.on('show-discord', () => { mainWindow.setBrowserView(views.discord); updateBounds(); });
-    ipcMain.on('show-skype', () => { mainWindow.setBrowserView(views.skype); updateBounds(); });
-    ipcMain.on('show-slack', () => { mainWindow.setBrowserView(views.slack); updateBounds(); });
-    ipcMain.on('show-viber', () => { mainWindow.setBrowserView(views.viber); updateBounds(); });
-    ipcMain.on('show-kik', () => { mainWindow.setBrowserView(views.kik); updateBounds(); });
-    ipcMain.on('show-hangouts', () => { mainWindow.setBrowserView(views.hangouts); updateBounds(); });
-    ipcMain.on('show-microsoftTeams', () => { mainWindow.setBrowserView(views.microsoftTeams); updateBounds(); });
-
-  }
+}
 
 function createLoginWindow() {
     loginWindow = new BrowserWindow({
@@ -122,15 +117,7 @@ function createLoginWindow() {
     loginWindow.loadFile(path.join(__dirname, 'login.html'));
 }
 
-app.on('ready', createLoginWindow);
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-
-ipcMain.on('login-success', (_, username) => {
-    loginWindow.close();
-    createMainWindow();
-});
-
-ipcMain.on('register-user', async (event, name, email, password) => {
+async function handleUserRegistration(event, name, email, password) {
     const db = client.db('SpaceWalletDB').collection('users');
 
     if (await db.findOne({ email })) {
@@ -142,9 +129,32 @@ ipcMain.on('register-user', async (event, name, email, password) => {
 
     event.reply('register-success', 'Usuário cadastrado com sucesso');
     loginWindow.loadFile(path.join(__dirname, 'login.html'));
-});
+}
 
-ipcMain.on('logout-success', () => {
+function handleLogout() {
     if (mainWindow) mainWindow.close();
     createLoginWindow();
+}
+
+app.on('ready', createLoginWindow);
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+
+ipcMain.on('login-success', (_, username) => {
+    loginWindow.close();
+    createMainWindow();
 });
+
+ipcMain.on('google-login', async (event) => {
+    try {
+        const tokens = await googleLogin();
+        loginWindow.close();
+        createMainWindow();
+        event.reply('login-success', tokens);
+    } catch (error) {
+        console.error('❌ Erro no login do Google:', error);
+        event.reply('login-failed', 'Falha no login do Google');
+    }
+});
+
+ipcMain.on('register-user', handleUserRegistration);
+ipcMain.on('logout-success', handleLogout);
