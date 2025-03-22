@@ -53,7 +53,6 @@ function createMainWindow() {
         skype: 'https://www.skype.com',
         slack: 'https://slack.com',
         viber: 'https://www.viber.com',
-        signal: 'https://signal.org',
         kik: 'https://www.kik.com',
         hangouts: 'https://hangouts.google.com',
         microsoftTeams: 'https://www.microsoft.com/en/microsoft-teams/group-chat-software'
@@ -104,26 +103,11 @@ function createMainWindow() {
     ipcMain.on('show-skype', () => { mainWindow.setBrowserView(views.skype); updateBounds(); });
     ipcMain.on('show-slack', () => { mainWindow.setBrowserView(views.slack); updateBounds(); });
     ipcMain.on('show-viber', () => { mainWindow.setBrowserView(views.viber); updateBounds(); });
-    ipcMain.on('show-signal', () => { mainWindow.setBrowserView(views.signal); updateBounds(); });
     ipcMain.on('show-kik', () => { mainWindow.setBrowserView(views.kik); updateBounds(); });
     ipcMain.on('show-hangouts', () => { mainWindow.setBrowserView(views.hangouts); updateBounds(); });
     ipcMain.on('show-microsoftTeams', () => { mainWindow.setBrowserView(views.microsoftTeams); updateBounds(); });
 
-    // Add IPC events for navigation
-    ipcMain.on('go-back', () => {
-        const activeView = mainWindow.getBrowserView();
-        if (activeView && activeView.webContents.canGoBack()) {
-            activeView.webContents.goBack();
-        }
-    });
-
-    ipcMain.on('go-forward', () => {
-        const activeView = mainWindow.getBrowserView();
-        if (activeView && activeView.webContents.canGoForward()) {
-            activeView.webContents.goForward();
-        }
-    });
-}
+  }
 
 function createLoginWindow() {
     loginWindow = new BrowserWindow({

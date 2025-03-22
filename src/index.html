@@ -18,21 +18,25 @@
         }
     
         .sidebar {
-            width: 50px; /* Reduzida para 50px */
-            background: rgba(240, 240, 240, 0.3);
-            backdrop-filter: blur(15px);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 15px 0;
-            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
-            transition: width 0.3s ease;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-        }
+    width: 50px; /* Reduzida para 50px */
+    background: rgba(240, 240, 240, 0.3);
+    backdrop-filter: blur(15px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Ajustado para não ter espaço extra no final */
+    padding: 15px 0;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
+    transition: width 0.3s ease;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    overflow-y: auto; /* Adicionado para o scroll vertical */
+}
+.sidebar::-webkit-scrollbar {
+    width: 6px; /* Tamanho da barra de rolagem */
+}
     
         .menu-icons {
             display: flex;
@@ -121,9 +125,6 @@
 <body>
     <div class="sidebar">
         <div class="menu-icons">
-            <div class="sidebar-item" data-site="chatgpt" title="ChatGPT">
-                <img src="assets/chatgpt.png" alt="ChatGPT" class="icon">
-            </div>
             <div class="sidebar-item" data-site="whatsapp" title="WhatsApp">
                 <img src="assets/whatsapp.png" alt="WhatsApp" class="icon">
             </div>
@@ -163,9 +164,6 @@
             <div class="sidebar-item" data-site="viber" title="Viber">
                 <img src="assets/viber.png" alt="Viber" class="icon">
             </div>
-            <div class="sidebar-item" data-site="signal" title="Signal">
-                <img src="assets/signal.png" alt="Signal" class="icon">
-            </div>
             <div class="sidebar-item" data-site="kik" title="Kik">
                 <img src="assets/kik.png" alt="Kik" class="icon">
             </div>
@@ -173,7 +171,10 @@
                 <img src="assets/hangouts.png" alt="Hangouts" class="icon">
             </div>
             <div class="sidebar-item" data-site="microsoftTeams" title="Microsoft Teams">
-                <img src="assets/microsoftTeams.png" alt="Microsoft Teams" class="icon">
+                <img src="assets/teams.png" alt="Microsoft Teams" class="icon">
+            </div>
+            <div class="sidebar-item" data-site="chatgpt" title="ChatGPT">
+                <img src="assets/chatgpt.png" alt="ChatGPT" class="icon">
             </div>
         </div>
         <div class="button-container">
@@ -181,7 +182,7 @@
                 <i class="fas fa-cog"></i>
             </button>
             <button class="logout-btn" id="logout" title="Sair">
-                <i class="fas fa-sign-out-alt"></i>
+                <img src="assets/out.png" alt="ChatGPT" class="icon">
             </button>
         </div>
     </div>
