@@ -4,15 +4,38 @@
   "description": "Electron App with Modern UI",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder"
   },
   "devDependencies": {
-    "electron": "^25.9.8"
+    "electron": "^25.9.8",
+    "electron-builder": "^25.1.8",
+    "electron-packager": "^17.1.2"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
     "googleapis": "^148.0.0",
     "mongodb": "^6.13.0",
     "oauth-electron": "^2.0.111"
+  },
+  "build": {
+    "appId": "com.hubplace",
+    "productName": "SpaceApp",
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm"
+      ]
+    }
   }
 }
