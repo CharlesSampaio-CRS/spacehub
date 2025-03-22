@@ -23,7 +23,12 @@ sidebarItems.forEach(item => {
         // Adiciona "active" ao item clicado
         item.classList.add('active');
 
-        // Envia evento para o processo principal do Electron
-        ipcRenderer.send(`show-${item.id}`);
+        // Obtém o site correspondente do atributo "data-site"
+        const siteKey = item.getAttribute('data-site');
+
+        if (siteKey) {
+            console.log(`🔗 Navegando para: ${siteKey}`); // Log para depuração
+            ipcRenderer.send('navigate', siteKey);
+        }
     });
 });
