@@ -62,13 +62,15 @@ function createMainWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
+        icon: path.join(__dirname, './assets/allchats.png'), // ícone inicial
+
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
             webSecurity: true,
         }
     });
-
+    mainWindow.setMenu(null);
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
     session.defaultSession.setUserAgent(
@@ -87,9 +89,9 @@ function createMainWindow() {
         wechat: 'https://www.wechat.com',
         snapchat: 'https://www.snapchat.com',
         line: 'https://line.me',
-        discord: 'https://discord.com',
+        discord: 'https://discord.com/login',
         skype: 'https://www.skype.com',
-        slack: 'https://slack.com',
+        slack: 'https://slack.com/get-started?entry_point=nav_menu#/createnew',
         viber: 'https://www.viber.com',
         kik: 'https://www.kik.com',
         hangouts: 'https://hangouts.google.com',
@@ -97,7 +99,7 @@ function createMainWindow() {
     };
 
     const views = createBrowserViews(sites);
-    //mainWindow.setBrowserView(views.chatgpt);  // Set default view to ChatGPT
+    
     updateBounds();
     setupViewNavigation(views);
 
@@ -108,6 +110,7 @@ function createLoginWindow() {
     loginWindow = new BrowserWindow({
         width: 1200,
         height: 800,
+        icon: path.join(__dirname, './assets/allchats.png'), // ícone inicial
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,

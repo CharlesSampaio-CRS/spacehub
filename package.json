@@ -25,17 +25,29 @@
       "output": "dist"
     },
     "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "./assets/allchats.icns",  
       "category": "public.app-category.utilities"
     },
     "win": {
-      "target": "nsis"
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "icon": "./assets/allchats.ico"  
     },
     "linux": {
       "target": [
         "AppImage",
         "deb",
         "rpm"
-      ]
+      ],
+      "icon": "./assets/allchats.png",  
+      "category": "Utility",
+      "maintainer": "Seu Nome <ccharlesroberto@gmail.com>"
     }
   }
 }
