@@ -1,9 +1,8 @@
-
 const { app, BrowserWindow, BrowserView, ipcMain, session } = require('electron');
 const path = require('path');
 const { MongoClient } = require('mongodb');
 const bcrypt = require('bcrypt');
-const { googleLogin } = require('./auth'); 
+const { googleLogin } = require('./auth');
 
 let mainWindow;
 let loginWindow;
@@ -33,14 +32,12 @@ function createBrowserViews(sites) {
 }
 
 function setupViewNavigation(views) {
-    // Dynamically create IPC listeners for each view
     Object.keys(views).forEach(siteKey => {
         ipcMain.on(`show-${siteKey}`, () => {
             mainWindow.setBrowserView(views[siteKey]);
             updateBounds();
         });
     });
-
     ipcMain.on('navigate', (_, siteKey) => {
         const activeView = views[siteKey];
         if (activeView) {
@@ -62,22 +59,23 @@ function createMainWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
-        icon: path.join(__dirname, './assets/allchats.png'), // ícone inicial
-
+        icon: path.join(__dirname, './assets/spaceapp.png'),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
             webSecurity: true,
         }
     });
+
     mainWindow.setMenu(null);
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
+    mainWindow.on('resize', updateBounds);
+    mainWindow.maximize(); 
 
     session.defaultSession.setUserAgent(
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
     );
     app.commandLine.appendSwitch('ssl-version-min', 'tls1.2');
-
     const sites = {
         chatgpt: 'https://chatgpt.com/auth/login',
         whatsapp: 'https://web.whatsapp.com/',
@@ -95,14 +93,13 @@ function createMainWindow() {
         viber: 'https://www.viber.com',
         kik: 'https://www.kik.com',
         hangouts: 'https://hangouts.google.com',
-        microsoftTeams: 'https://www.microsoft.com/en/microsoft-teams/group-chat-software'
+        microsoftTeams: 'https://www.microsoft.com/en/microsoft-teams/group-chat-software',
+        home: `file://${path.join(__dirname, 'home.html')}`
     };
-
     const views = createBrowserViews(sites);
-    
+    mainWindow.setBrowserView(views.home);
     updateBounds();
     setupViewNavigation(views);
-
     mainWindow.on('resize', updateBounds);
 }
 
@@ -110,7 +107,7 @@ function createLoginWindow() {
     loginWindow = new BrowserWindow({
         width: 1200,
         height: 800,
-        icon: path.join(__dirname, './assets/allchats.png'), // ícone inicial
+        icon: path.join(__dirname, './assets/spaceapp.png'),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -122,14 +119,11 @@ function createLoginWindow() {
 
 async function handleUserRegistration(event, name, email, password) {
     const db = client.db('SpaceWalletDB').collection('users');
-
     if (await db.findOne({ email })) {
         return event.reply('register-failure', 'E-mail já cadastrado');
     }
-
     const hashedPassword = await bcrypt.hash(password, 10);
     await db.insertOne({ name, email, password: hashedPassword });
-
     event.reply('register-success', 'Usuário cadastrado com sucesso');
     loginWindow.loadFile(path.join(__dirname, 'login.html'));
 }

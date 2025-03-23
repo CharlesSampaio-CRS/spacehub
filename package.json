@@ -1,5 +1,5 @@
 {
-  "name": "hubplace",
+  "name": "spaceapp",
   "version": "1.0.0",
   "description": "Electron App with Modern UI",
   "main": "src/main.js",
@@ -14,12 +14,13 @@
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "electron-store": "^10.0.1",
     "googleapis": "^148.0.0",
     "mongodb": "^6.13.0",
     "oauth-electron": "^2.0.111"
   },
   "build": {
-    "appId": "com.hubplace",
+    "appId": "com.spaceapp",
     "productName": "SpaceApp",
     "directories": {
       "output": "dist"
@@ -29,7 +30,7 @@
         "dmg",
         "zip"
       ],
-      "icon": "./assets/allchats.icns",  
+      "icon": "./assets/spaceapp.icns",
       "category": "public.app-category.utilities"
     },
     "win": {
@@ -37,7 +38,7 @@
         "nsis",
         "zip"
       ],
-      "icon": "./assets/allchats.ico"  
+      "icon": "./assets/spaceapp.ico"
     },
     "linux": {
       "target": [
@@ -45,7 +46,7 @@
         "deb",
         "rpm"
       ],
-      "icon": "./assets/allchats.png",  
+      "icon": "./assets/spaceapp.png",
       "category": "Utility",
       "maintainer": "Seu Nome <ccharlesroberto@gmail.com>"
     }
