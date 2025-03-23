@@ -118,6 +118,33 @@
       border-width: 10px 0 10px 15px;
       border-color: transparent transparent transparent #fff;
     }
+    footer {
+      background: #969595;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .db-icon {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2em;
+    }
+    .db-status {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: red; /* Por padrão, desconectado */
+    }
+    .connected {
+      background: green;
+    }
   </style>
 </head>
 <body>
@@ -179,5 +206,16 @@
       </div>
     </div>
   </div>
+  <footer>
+    <div class="db-icon">
+      <span class="db-status" id="db-status"></span>
+      Connected
+    </div>
+  </footer>
+  <script>
+    // Simulação de conexão ao banco
+    let isConnected = true; // Altere para false para ver o estado desconectado
+    document.getElementById('db-status').classList.toggle('connected', isConnected);
+  </script>
 </body>
 </html>

@@ -2,7 +2,8 @@ const { app, BrowserWindow, BrowserView, ipcMain, session } = require('electron'
 const path = require('path');
 const { MongoClient } = require('mongodb');
 const bcrypt = require('bcrypt');
-const { googleLogin } = require('./auth');
+const { googleLogin, linkedinLogin } = require('./auth');
+
 
 let mainWindow;
 let loginWindow;
@@ -150,6 +151,18 @@ ipcMain.on('google-login', async (event) => {
     } catch (error) {
         console.error('❌ Erro no login do Google:', error);
         event.reply('login-failed', 'Falha no login do Google');
+    }
+});
+
+ipcMain.on('linkedin-login', async (event) => {
+    try {
+        const tokens = await linkedinLogin();
+        loginWindow.close();
+        createMainWindow();
+        event.reply('login-success', tokens);
+    } catch (error) {
+        console.error('❌ Erro no login do LinkedIn:', error);
+        event.reply('login-failed', 'Falha no login do LinkedIn');
     }
 });
 
