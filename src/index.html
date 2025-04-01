@@ -9,7 +9,7 @@
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; 
     font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; 
     connect-src *; img-src * data:; frame-src *; object-src 'none';">
-
+    <title>SpaceApp</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -361,6 +361,11 @@
                     webpreferences="contextIsolation=false, nodeIntegration=false, nativeWindowOpen=false"
                     partition="persist:mainSession">
                 </webview>
+                <webview 
+    id="preloader" 
+    style="display: none; width: 0; height: 0;" 
+    partition="persist:preloader"
+></webview>
             </div>
         </div>
     </div>
