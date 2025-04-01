@@ -58,23 +58,18 @@
         }
 
         .logo-container {
-            padding: 0 0 30px;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
+            gap: 10px;
         }
 
-        .logo-icon {
-            font-size: 28px;
-            color: var(--primary-color);
-            background: white;
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+        .logo-icon img {
+            width: 30px;
+            /* Ajuste conforme necessário */
+            height: 30px;
+            /* Ajuste conforme necessário */
+            object-fit: contain;
         }
 
         .nav-section {
@@ -219,6 +214,7 @@
             0% {
                 transform: rotate(0deg);
             }
+
             100% {
                 transform: rotate(360deg);
             }
@@ -265,7 +261,8 @@
             background-color: #c0392b;
         }
 
-        #logout-button {
+        #logout-button,
+        #notifications-button {
             background: transparent;
             color: var(--text-secondary);
             border: none;
@@ -284,16 +281,57 @@
             background: var(--hover-color);
         }
 
+        #notifications-panel {
+            display: none;
+            position: absolute;
+            top: 60px;
+            /* Ajustado para ficar abaixo do botão dentro do header */
+            right: 96px;
+            width: 200px;
+            background: #f8fafc;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            z-index: 50;
+        }
+
+        /* Ajuste para evitar que saia do container */
+        #header {
+            position: relative;
+        }
+
+        .notification {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification:hover {
+            background: #f1f5f9;
+        }
+
+        .close-btn {
+            float: right;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .close-btn:hover {
+            color: #555;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             :root {
                 --sidebar-width: 70px;
             }
-            
+
             #content-container {
                 margin: 8px;
             }
-            
+
             .nav-button {
                 width: 50px;
                 height: 50px;
@@ -306,11 +344,6 @@
 <body>
     <div id="app">
         <div id="sidebar">
-            <div class="logo-container">
-                <div class="logo-icon">
-                    <i class="fas fa-rocket"></i>
-                </div>
-            </div>
             <div class="nav-section">
                 <button class="nav-button" data-nav="chatgpt">
                     <img src="assets/chatgpt.png" alt="ChatGPT">
@@ -350,8 +383,11 @@
 
         <div id="content">
             <div id="header">
-                <h1 id="page-title">Olá!</h1>
-                <button id="logout-button">
+                <button id="notifications-button" aria-label="Notificações">
+                    <i class="fas fa-bell"></i>
+                    <span>Notificações</span>
+                </button>
+                <button id="logout-button" aria-label="Sair">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Sair</span>
                 </button>
@@ -361,12 +397,42 @@
                     webpreferences="contextIsolation=false, nodeIntegration=false, nativeWindowOpen=false"
                     partition="persist:mainSession">
                 </webview>
-                <webview 
-    id="preloader" 
-    style="display: none; width: 0; height: 0;" 
-    partition="persist:preloader"
-></webview>
+                <webview id="preloader" style="display: none; width: 0; height: 0;" partition="persist:preloader">
+                </webview>
             </div>
+        </div>
+    </div>
+    <div id="notifications-panel" class="hidden">
+        <span class="close-btn" onclick="toggleNotifications()"></span>
+        <div class="notification">
+            <strong>João:</strong> Enviou uma mensagem para você.
+        </div>
+        <div class="notification">
+            <strong>Ana:</strong> Curtiu sua postagem.
+        </div>
+        <div class="notification">
+            <strong>Pedro:</strong> Comentou no seu post.
+        </div>
+        <div class="notification">
+            <strong>Pedro:</strong> Comentou no seu post.
+        </div>
+        <div class="notification">
+            <strong>Pedro:</strong> Comentou no seu post.
+        </div>
+        <div class="notification">
+            <strong>Pedro:</strong> Comentou no seu post.
+        </div>
+        <div class="notification">
+            <strong>Pedro:</strong> Comentou no seu post.
+        </div>
+        <div class="notification">
+            <strong>Pedro:</strong> Comentou no seu post.
+        </div>
+        <div class="notification">
+            <strong>Pedro:</strong> Comentou no seu post.
+        </div>
+        <div class="notification">
+            <strong>Pedro:</strong> Comentou no seu post.
         </div>
     </div>
 
@@ -378,6 +444,40 @@
             if (typeof require !== 'undefined') {
                 const { ipcRenderer } = require('electron');
                 ipcRenderer.send('logout-success');
+            }
+        });
+        document.getElementById('notifications-button').addEventListener('click', () => {
+            // Enviar evento de logout para o processo principal
+            if (typeof require !== 'undefined') {
+                const { ipcRenderer } = require('electron');
+                ipcRenderer.send('notifications-center');
+            }
+        });
+
+        function toggleNotifications() {
+            let panel = document.getElementById('notifications-panel');
+            let button = document.getElementById('notifications-button');
+            let rect = button.getBoundingClientRect();
+
+            // Ajustando a posição para garantir que fique abaixo do botão
+            panel.style.top = `${rect.bottom + 5}px`; // Adiciona um pequeno espaço abaixo do botão
+            panel.style.left = `${rect.left}px`; // Mantém alinhado com o botão
+
+            // Alterna a visibilidade do painel
+            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        }
+
+        document.getElementById('notifications-button').addEventListener('click', function (event) {
+            event.stopPropagation();
+            toggleNotifications();
+        });
+
+        document.addEventListener('click', function (event) {
+            let panel = document.getElementById('notifications-panel');
+            let button = document.getElementById('notifications-button');
+
+            if (!button.contains(event.target) && !panel.contains(event.target)) {
+                panel.style.display = 'none';
             }
         });
 

@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
-    "electron-oauth-helper": "^5.1.1",
+    "electron-oauth-helper": "^2.0.3",
     "electron-store": "^10.0.1",
     "googleapis": "^148.0.0",
     "mongodb": "^6.13.0",
