@@ -394,11 +394,11 @@
             </div>
             <div id="content-container">
                 <webview id="webview" allowpopups="true"
-                    webpreferences="contextIsolation=false, nodeIntegration=false, nativeWindowOpen=false"
-                    partition="persist:mainSession">
-                </webview>
-                <webview id="preloader" style="display: none; width: 0; height: 0;" partition="persist:preloader">
-                </webview>
+                webpreferences="contextIsolation=false, nodeIntegration=false, nativeWindowOpen=false"
+                partition="persist:mainSession" partition="persist:gmail" useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"></webview>>
+            </webview>
+            <webview id="preloader" style="display: none; width: 0; height: 0;" partition="persist:preloader">
+            </webview>
             </div>
         </div>
     </div>
