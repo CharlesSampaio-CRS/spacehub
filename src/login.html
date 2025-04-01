@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space App</title>
+    <title>Space App - Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
@@ -12,31 +12,52 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #f0f4f7, #cce7f4); /* Gradiente suave */
+            background: linear-gradient(135deg, #2c3e50, #4ca1af);
             font-family: 'Poppins', sans-serif;
-            color: #333;
+            color: #fff;
         }
         .login-container {
-            background: rgba(255, 255, 255, 0.9); /* Fundo branco translúcido */
-            padding: 30px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 40px;
             border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             width: 100%;
-            max-width: 400px;
+            max-width: 350px;
             text-align: center;
         }
         h2 {
             margin-bottom: 20px;
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
-            color: #4b8e8d; /* Verde suave */
+        }
+        .input-group {
+            width: 100%;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .input-group input {
+            width: 90%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            text-align: center;
+        }
+        .input-group input::placeholder {
+            color: #ddd;
         }
         .btn {
             width: 100%;
             padding: 12px;
             border: none;
-            border-radius: 16px;
-            font-size: 20px;
+            border-radius: 25px;
+            font-size: 18px;
             cursor: pointer;
             transition: all 0.3s;
             margin-top: 10px;
@@ -45,68 +66,72 @@
             align-items: center;
         }
         .btn-primary {
-            background: #3498db; /* Cor do botão mais suave e chamativa */
+            background: #27ae60;
             color: white;
         }
         .btn-primary:hover {
-            background: #2980b9; /* Cor mais escura no hover */
+            background: #219150;
         }
-        .btn-google {
-            background: #f06b6b; /* Cor suave de azul claro */
+        .btn-social {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
             color: white;
         }
-        .btn-google:hover {
-            background: #dd2e2e;
-        }
-        .btn-linkedin {
-            background: #0077b5; /* Azul do LinkedIn */
-            color: white;
-        }
-        .btn-linkedin:hover {
-            background: #005582;
-        }
-        .btn-facebook {
-            background: #3b5998; /* Cor do Facebook */
-            color: white;
-        }
-        .btn-facebook:hover {
-            background: #2d4373;
-        }
-        .btn i {
-            margin-right: 10px;
-        }
+        .btn-google { background: #DB4437; }
+        .btn-google:hover { background: #c1351d; }
+        .btn-linkedin { background: #0077b5; }
+        .btn-linkedin:hover { background: #005582; }
+        .btn-facebook { background: #3b5998; }
+        .btn-facebook:hover { background: #2d4373; }
     </style>
 </head>
 <body>
     <div class="login-container">
         <h2>Login</h2>
-
-        <button id="googleLogin" class="btn btn-google">
-            <i class="fab fa-google"></i>Google
-        </button>
         
-        <button id="linkedinLogin" class="btn btn-linkedin">
+        <div class="input-group">
+            <input type="text" id="username" placeholder="Usuário ou Email">
+        </div>
+        <div class="input-group">
+            <input type="password" id="password" placeholder="Senha">
+        </div>
+        
+        <button id="loginButton" class="btn btn-primary">Entrar</button>
+        
+        <p>Ou continue com:</p>
+        
+        <button id="googleLogin" class="btn btn-social btn-google">
+            <i class="fab fa-google"></i> Google
+        </button>
+        <button id="linkedinLogin" class="btn btn-social btn-linkedin">
             <i class="fab fa-linkedin"></i> LinkedIn
         </button>
-
-        <button id="facebookLogin" class="btn btn-facebook">
-            <i class="fab fa-facebook-f"></i>Facebook
+        <button id="facebookLogin" class="btn btn-social btn-facebook">
+            <i class="fab fa-facebook-f"></i> Facebook
         </button>
     </div>
 
     <script>
         const { ipcRenderer } = require('electron');
 
+        document.getElementById('loginButton').addEventListener('click', () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            ipcRenderer.send('login', { username, password });
+        });
+
         document.getElementById('googleLogin').addEventListener('click', () => {
-            ipcRenderer.send('google-login'); 
+            ipcRenderer.send('google-login');
         });
 
         document.getElementById('linkedinLogin').addEventListener('click', () => {
-            ipcRenderer.send('linkedin-login'); 
+            ipcRenderer.send('linkedin-login');
         });
 
         document.getElementById('facebookLogin').addEventListener('click', () => {
-            ipcRenderer.send('facebook-login'); 
+            ipcRenderer.send('facebook-login');
         });
     </script>
 </body>

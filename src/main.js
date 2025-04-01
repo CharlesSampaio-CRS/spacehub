@@ -1,9 +1,8 @@
-const { app, BrowserWindow, BrowserView, ipcMain, session } = require('electron');
+const { app, BrowserWindow, ipcMain, session, shell } = require('electron');
 const path = require('path');
 const { MongoClient } = require('mongodb');
 const bcrypt = require('bcrypt');
 const { googleLogin, linkedinLogin } = require('./auth');
-
 
 let mainWindow;
 let loginWindow;
@@ -22,39 +21,27 @@ async function connectToMongoDB() {
 
 connectToMongoDB();
 
-function createBrowserViews(sites) {
-    const views = {};
-    for (const [name, url] of Object.entries(sites)) {
-        const view = new BrowserView();
-        view.webContents.loadURL(url);
-        views[name] = view;
-    }
-    return views;
-}
-
-function setupViewNavigation(views) {
-    Object.keys(views).forEach(siteKey => {
-        ipcMain.on(`show-${siteKey}`, () => {
-            mainWindow.setBrowserView(views[siteKey]);
-            updateBounds();
-        });
-    });
-    ipcMain.on('navigate', (_, siteKey) => {
-        const activeView = views[siteKey];
-        if (activeView) {
-            mainWindow.setBrowserView(activeView);
-            updateBounds();
-        }
-    });
-}
-
-function updateBounds() {
-    const { width, height } = mainWindow.getContentBounds();
-    const sidebarWidth = 80;
-    const contentWidth = width - sidebarWidth;
-    const activeView = mainWindow.getBrowserView();
-    if (activeView) activeView.setBounds({ x: sidebarWidth, y: 0, width: contentWidth, height });
-}
+// Objeto com as URLs dos sites
+const sites = {
+    chatgpt: 'https://chatgpt.com/auth/login',
+    whatsapp: 'https://web.whatsapp.com/',
+    telegram: 'https://web.telegram.org/k/',
+    gmail: 'https://accounts.google.com/signin/v2/identifier?service=mail',
+    outlook: 'https://login.live.com/',
+    linkedin: 'https://www.linkedin.com/login',
+    messenger: 'https://www.messenger.com',
+    wechat: 'https://www.wechat.com',
+    snapchat: 'https://www.snapchat.com',
+    line: 'https://line.me',
+    discord: 'https://discord.com/login',
+    skype: 'https://www.skype.com',
+    slack: 'https://slack.com/get-started?entry_point=nav_menu#/createnew',
+    viber: 'https://www.viber.com',
+    kik: 'https://www.kik.com',
+    hangouts: 'https://hangouts.google.com',
+    microsoftTeams: 'https://www.microsoft.com/en/microsoft-teams/group-chat-software',
+    home: `file://${path.join(__dirname, 'home.html')}`
+};
 
 function createMainWindow() {
     mainWindow = new BrowserWindow({
@@ -65,43 +52,52 @@ function createMainWindow() {
             nodeIntegration: true,
             contextIsolation: false,
             webSecurity: true,
+            webviewTag: true,
+            partition: 'persist:mainSession' // Manter sessões persistentes
         }
     });
 
-    mainWindow.setMenu(null);
+    // mainWindow.setMenu(null);
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
-    mainWindow.on('resize', updateBounds);
     mainWindow.maximize(); 
 
-    session.defaultSession.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
-    );
+    // Configurar session para todos os sites
+    const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
+    session.defaultSession.setUserAgent(userAgent);
     app.commandLine.appendSwitch('ssl-version-min', 'tls1.2');
-    const sites = {
-        chatgpt: 'https://chatgpt.com/auth/login',
-        whatsapp: 'https://web.whatsapp.com/',
-        telegram: 'https://web.telegram.org/k/',
-        gmail: 'https://accounts.google.com/signin/v2/identifier?service=mail',
-        outlook: 'https://login.live.com/',
-        linkedin: 'https://www.linkedin.com/login',
-        messenger: 'https://www.messenger.com',
-        wechat: 'https://www.wechat.com',
-        snapchat: 'https://www.snapchat.com',
-        line: 'https://line.me',
-        discord: 'https://discord.com/login',
-        skype: 'https://www.skype.com',
-        slack: 'https://slack.com/get-started?entry_point=nav_menu#/createnew',
-        viber: 'https://www.viber.com',
-        kik: 'https://www.kik.com',
-        hangouts: 'https://hangouts.google.com',
-        microsoftTeams: 'https://www.microsoft.com/en/microsoft-teams/group-chat-software',
-        home: `file://${path.join(__dirname, 'home.html')}`
-    };
-    const views = createBrowserViews(sites);
-    mainWindow.setBrowserView(views.home);
-    updateBounds();
-    setupViewNavigation(views);
-    mainWindow.on('resize', updateBounds);
+    
+    // Desabilitar restrições de CSP
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+        callback({
+            responseHeaders: {
+                ...details.responseHeaders,
+                'Content-Security-Policy': ["default-src * 'unsafe-inline' 'unsafe-eval' data: blob:"]
+            }
+        });
+    });
+    
+    // Controlar a abertura de novas janelas
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        // Verificar se é uma URL que queremos abrir internamente
+        const shouldOpenInternally = Object.values(sites).some(siteUrl => 
+            url.startsWith(siteUrl) || 
+            // Verificar domínios comuns que devem permanecer na aplicação
+            ['whatsapp.com', 'web.telegram.org', 'accounts.google.com', 
+             'login.live.com', 'linkedin.com', 'messenger.com'].some(domain => 
+                url.includes(domain)
+            )
+        );
+            
+        if (shouldOpenInternally) {
+            // Abrir dentro da aplicação atual
+            mainWindow.webContents.loadURL(url);
+            return { action: 'deny' };
+        }
+        
+        // Para URLs externas, pode deixar abrir no navegador padrão
+        shell.openExternal(url);
+        return { action: 'deny' };
+    });
 }
 
 function createLoginWindow() {
@@ -114,7 +110,7 @@ function createLoginWindow() {
             contextIsolation: false,
         }
     });
-    loginWindow.setMenu(null);
+    //loginWindow.setMenu(null);
     loginWindow.loadFile(path.join(__dirname, 'login.html'));
 }
 
@@ -137,21 +133,80 @@ function handleLogout() {
 app.on('ready', createLoginWindow);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 
+// Configurar handler para o evento 'navigate'
+ipcMain.on('navigate', (event, siteKey) => {
+    if (!sites[siteKey]) return;
+    
+    // Informe o renderer que estamos mudando de site
+    event.reply('site-loading', { title: siteKey });
+    
+    if (siteKey === 'home') {
+        // Carregar página home diretamente na janela principal
+        mainWindow.loadFile(path.join(__dirname, 'index.html'));
+        return;
+    }
+    
+    // Configurar partição de sessão específica para o site
+    const partitionName = `persist:${siteKey}`;
+    const siteSession = session.fromPartition(partitionName);
+    siteSession.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
+    
+    // Desabilitar CSP para esta sessão específica
+    siteSession.webRequest.onHeadersReceived((details, callback) => {
+        callback({
+            responseHeaders: {
+                ...details.responseHeaders,
+                'Content-Security-Policy': ["default-src * 'unsafe-inline' 'unsafe-eval' data: blob:"]
+            }
+        });
+    });
+
+    // Tratamento especial para links que abrem em novas janelas
+    siteSession.webRequest.onBeforeRequest({ urls: ['*://*/*'] }, (details, callback) => {
+        // Permitir todos os requests, mas monitorando para debugging
+        console.log(`Request URL: ${details.url} in ${partitionName}`);
+        callback({ cancel: false });
+    });
+    
+    // Carregar a URL diretamente no WebContents da janela principal
+    mainWindow.loadURL(sites[siteKey], { 
+        partition: partitionName,
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36' 
+    }).catch(err => {
+        console.error(`Erro ao carregar ${siteKey}:`, err);
+        event.reply('load-error', { error: err.message, site: siteKey });
+        mainWindow.loadFile(path.join(__dirname, 'index.html'));
+    });
+});
+
+// Método alternativo usando webview
+ipcMain.on('navigate-webview', (event, siteKey) => {
+    if (sites[siteKey]) {
+        // Enviar a URL para o renderer process para ser carregada no webview
+        event.reply('load-url', { 
+            url: sites[siteKey], 
+            title: siteKey,
+            partition: `persist:${siteKey}`
+        });
+    }
+});
+
 ipcMain.on('login-success', (_, username) => {
     loginWindow.close();
     createMainWindow();
 });
 
 ipcMain.on('google-login', async (event) => {
-    try {
-        const tokens = await googleLogin();
-        loginWindow.close();
-        createMainWindow();
-        event.reply('login-success', tokens);
-    } catch (error) {
-        console.error('❌ Erro no login do Google:', error);
-        event.reply('login-failed', 'Falha no login do Google');
-    }
+     createMainWindow();
+    // try {
+    //     const tokens = await googleLogin();
+    //     loginWindow.close();
+    //     createMainWindow();
+    //     event.reply('login-success', tokens);
+    // } catch (error) {
+    //     console.error('❌ Erro no login do Google:', error);
+    //     event.reply('login-failed', 'Falha no login do Google');
+    // }
 });
 
 ipcMain.on('linkedin-login', async (event) => {
@@ -163,6 +218,15 @@ ipcMain.on('linkedin-login', async (event) => {
     } catch (error) {
         console.error('❌ Erro no login do LinkedIn:', error);
         event.reply('login-failed', 'Falha no login do LinkedIn');
+    }
+});
+
+ipcMain.on('open-external', (event, url) => {
+    // Verificar se a URL é segura antes de abrir
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        shell.openExternal(url);
+    } else {
+        console.warn(`Tentativa de abrir URL potencialmente insegura: ${url}`);
     }
 });
 

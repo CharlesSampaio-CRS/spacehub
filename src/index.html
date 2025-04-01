@@ -1,240 +1,354 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space App</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; connect-src *; img-src * data:; style-src 'self' 'unsafe-inline'; frame-src *; object-src 'none';">
+    <title>Space Wallet</title>
     <style>
-        body {
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+        
+        body, html {
             margin: 0;
-            display: flex;
-            font-family: 'Poppins', sans-serif;
-            height: 100vh;
-            background: linear-gradient(135deg, #e0eaf3, #b0d6ec);
+            padding: 0;
+            height: 100%;
+            font-family: 'Montserrat', Arial, sans-serif;
+            background-color: #f5f7fa;
             color: #333;
+        }
+        
+        #app {
+            display: flex;
+            height: 100vh;
             overflow: hidden;
         }
-    
-        .sidebar {
-    width: 50px; /* Reduzida para 50px */
-    background: rgba(240, 240, 240, 0.3);
-    backdrop-filter: blur(15px);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start; /* Ajustado para não ter espaço extra no final */
-    padding: 15px 0;
-    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
-    transition: width 0.3s ease;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    overflow-y: auto; /* Adicionado para o scroll vertical */
-}
-.sidebar::-webkit-scrollbar {
-    width: 6px; /* Tamanho da barra de rolagem */
-}
-    
-        .menu-icons {
+        
+        #sidebar {
+            width: 50px;
+            background: linear-gradient(135deg, #1a2a6c, #2a4858);
+            color: white;
+            padding: 25px 0;
+            box-shadow: 3px 0 15px rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
-            align-items: center;
+            transition: width 0.3s ease;
         }
-    
-        .sidebar-item {
-            margin: 12px 0;
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+        
+        .logo-container {
+            padding: 10px 25px 30px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            transition: background 0.3s, transform 0.2s;
+            justify-content: center;
         }
-    
-        .sidebar-item:hover {
-            background: rgba(255, 255, 255, 0.4);
-            transform: scale(1.1);
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            margin: 0;
         }
-    
-        .sidebar-item.active {
-            background: rgba(255, 255, 255, 0.5);
-            transform: scale(1.15);
+        
+        .nav-section {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 15px;
         }
-    
-        .icon {
-            width: 22px;
-            height: 22px;
-        }
-    
+        
         #content {
-            flex-grow: 1;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 12px;
-            margin: 20px 20px 20px 70px; /* Ajustado para o novo tamanho do menu lateral */
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            font-weight: bold;
-            height: calc(100vh - 40px);
-        }
-    
-        .button-container {
+            height: auto;
+            flex: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            background-color: #f5f7fa;
+            position: relative;
         }
-    
-        .settings-btn, .logout-btn {
-            padding: 10px;
-            border: none;
-            border-radius: 50%;
+        
+        #header {
+            background-color: #ffffff;
+            color: #333;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+        
+        #page-title {
+            margin: 0;
+            font-weight: 600;
+            font-size: 18px;
+            color: #1a2a6c;
+        }
+        
+        #content-container {
+    flex: 1;
+    position: relative;
+    overflow: auto; /* Alterado para permitir rolagem se necessário */
+    background-color: #ffffff;
+    margin: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    height: calc(100% - 40px); /* Garante altura suficiente para preencher a tela */
+}
+        
+        .nav-button {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            margin: 8px 0;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: 8px;
             cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .nav-button.active {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+        
+        .nav-button.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: white;
+        }
+        
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        
+        #webview {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    border: none;
+    display: block;
+    border-radius: 12px;
+}
+        
+        #loading-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.05);
             width: 40px;
             height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
-            font-size: 18px;
-            margin: 8px 0;
-            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-left-color: #3498db;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
         }
-    
-        .settings-btn:hover {
-            background: #66b2a3;
-            transform: scale(1.1);
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-    
-        .logout-btn:hover {
-            background: #d32f2f;
-            transform: scale(1.1);
+        
+        .hidden {
+            display: none;
+        }
+        
+        #error-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background-color: #fff3f3;
+            border: 1px solid #ffcaca;
+            color: #e74c3c;
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 80%;
+            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        #error-container h3 {
+            margin-top: 0;
+            color: #c0392b;
+        }
+        
+        #error-container button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+        
+        #error-container button:hover {
+            background-color: #c0392b;
+        }
+        
+        #logout-button {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+        
+        #logout-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #sidebar {
+                width: 80px;
+            }
+            
+            .logo-text {
+                display: none;
+            }
+            
+            .nav-button span {
+                display: none;
+            }
+            
+            .nav-icon {
+                margin-right: 0;
+                font-size: 22px;
+            }
+            
+            #content-container {
+                margin: 10px;
+            }
         }
     </style>
-    
+    <!-- Adding Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="sidebar">
-        <div class="menu-icons">
-            <div class="sidebar-item" data-site="home" title="Home">
-                <img src="assets/home.png" alt="Home" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="whatsapp" title="WhatsApp">
-                <img src="assets/whatsapp.png" alt="WhatsApp" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="telegram" title="Telegram">
-                <img src="assets/telegram.png" alt="Telegram" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="gmail" title="Gmail">
-                <img src="assets/gmail.png" alt="Gmail" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="outlook" title="Outlook">
-                <img src="assets/outlook.png" alt="Outlook" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="linkedin" title="LinkedIn">
-                <img src="assets/linkedin.png" alt="LinkedIn" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="messenger" title="Messenger">
-                <img src="assets/messenger.png" alt="Messenger" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="wechat" title="WeChat">
-                <img src="assets/wechat.png" alt="WeChat" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="snapchat" title="Snapchat">
-                <img src="assets/snapchat.png" alt="Snapchat" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="line" title="Line">
-                <img src="assets/line.png" alt="Line" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="discord" title="Discord">
-                <img src="assets/discord.png" alt="Discord" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="skype" title="Skype">
-                <img src="assets/skype.png" alt="Skype" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="slack" title="Slack">
-                <img src="assets/slack.png" alt="Slack" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="viber" title="Viber">
-                <img src="assets/viber.png" alt="Viber" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="kik" title="Kik">
-                <img src="assets/kik.png" alt="Kik" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="hangouts" title="Hangouts">
-                <img src="assets/hangouts.png" alt="Hangouts" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="microsoftTeams" title="Microsoft Teams">
-                <img src="assets/teams.png" alt="Microsoft Teams" class="icon">
-            </div>
-            <div class="sidebar-item" data-site="chatgpt" title="ChatGPT">
-                <img src="assets/chatgpt.png" alt="ChatGPT" class="icon">
+    <div id="app">
+        <div id="sidebar">
+            <div id="sidebar">
+                <div class="logo-container">
+                    <i class="fas fa-rocket fa-2x"></i>
+                </div>
+                <button class="nav-button active" data-nav="home">
+                    <i class="fas fa-home nav-icon"></i>
+                </button>
+                <button class="nav-button" data-nav="whatsapp">
+                    <i class="fab fa-whatsapp nav-icon"></i>
+                </button>
+                <button class="nav-button" data-nav="telegram">
+                    <i class="fab fa-telegram-plane nav-icon"></i>
+                </button>
+                <button class="nav-button" data-nav="gmail">
+                    <i class="fas fa-envelope nav-icon"></i>
+                </button>
+                <button class="nav-button" data-nav="outlook">
+                    <i class="fas fa-envelope-square nav-icon"></i>
+                </button>
+                <button class="nav-button" data-nav="linkedin">
+                    <i class="fab fa-linkedin nav-icon"></i>
+                </button>
+                <button class="nav-button" data-nav="discord">
+                    <i class="fab fa-discord nav-icon"></i>
+                </button>
             </div>
         </div>
-        <div class="button-container">
-            <button class="settings-btn" id="config" title="Configurações">
-                <i class="fas fa-cog"></i>
-            </button>
-            <button class="logout-btn" id="logout" title="Sair">
-                <img src="assets/out.png" alt="ChatGPT" class="icon">
-            </button>
+        
+        <div id="content">
+            <div id="header">
+                <h3 id="page-title"><i class="fas fa-compass"></i> Home</h3>
+                <button id="logout-button"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+            
+            <div id="content-container">
+                <!-- Webview configurado com configurações importantes -->
+                <webview id="webview" 
+                         class="w-full h-full"
+                         allowpopups="false"
+                         webpreferences="contextIsolation=false, nodeIntegration=false, nativeWindowOpen=false"
+                         partition="persist:mainSession"
+>
+                </webview>
+                
+                <div id="loading-indicator" class="hidden">
+                    <div class="spinner"></div>
+                    <p>Carregando...</p>
+                </div>
+                
+                <div id="error-container" class="hidden">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Erro</h3>
+                    <p id="error-message">Não foi possível carregar o conteúdo.</p>
+                    <button onclick="document.getElementById('error-container').classList.add('hidden');"><i class="fas fa-times"></i> Fechar</button>
+                </div>
+            </div>
         </div>
     </div>
-
+    
+    <script src="renderer.js"></script>
     <script>
-        const { ipcRenderer } = require('electron');
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const sidebarItems = document.querySelectorAll('.sidebar-item');
-            const content = document.getElementById('content');
-
-            sidebarItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    sidebarItems.forEach(i => i.classList.remove('active'));
-                    item.classList.add('active');
-
-                    const siteKey = item.getAttribute('data-site');
-                    if (siteKey) {
-                        console.log(`🔗 Navegando para: ${siteKey}`);
-                        ipcRenderer.send('navigate', siteKey);
-                        content.textContent = `Carregando ${item.getAttribute('title')}...`;
-                    }
-                });
+        // Script para o botão de logout
+        document.getElementById('logout-button').addEventListener('click', () => {
+            // Enviar evento de logout para o processo principal
+            if (typeof require !== 'undefined') {
+                const { ipcRenderer } = require('electron');
+                ipcRenderer.send('logout-success');
+            }
+        });
+        
+        // Script para atualizar o título da página e ativar o botão de navegação
+        const navButtons = document.querySelectorAll('.nav-button');
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                button.classList.add('active');
+                
+                // Update page title
+                const nav = button.getAttribute('data-nav');
+                const pageTitle = document.getElementById('page-title');
+                
+                // Set icon based on nav
+                let icon = 'compass';
+                if (nav === 'whatsapp') icon = 'whatsapp';
+                else if (nav === 'telegram') icon = 'telegram-plane';
+                else if (nav === 'gmail' || nav === 'outlook') icon = 'envelope';
+                else if (nav === 'linkedin') icon = 'linkedin';
+                else if (nav === 'discord') icon = 'discord';
+                else if (nav === 'home') icon = 'home';
+                
+                pageTitle.innerHTML = `<i class="fas fa-${icon}"></i> ${nav.charAt(0).toUpperCase() + nav.slice(1)}`;
             });
-
-            document.getElementById('config').addEventListener('click', () => {
-                ipcRenderer.send('show-link-registration');
-            });
-
-            document.getElementById('logout').addEventListener('click', () => {
-                if (confirm('Você tem certeza que deseja sair?')) {
-                    ipcRenderer.send('logout-success');
-                }
-            });
-            // Go back
-            document.getElementById('goBackButton').addEventListener('click', () => {
-                ipcRenderer.send('go-back');
-            });
-
-            // Go forward
-            document.getElementById('goForwardButton').addEventListener('click', () => {
-                ipcRenderer.send('go-forward');
-            });
-
-            ipcRenderer.on('update-content', (_, title) => {
-                content.textContent = `Você está visualizando: ${title}`;
-            });
-
-            
         });
     </script>
 </body>
