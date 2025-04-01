@@ -58,7 +58,7 @@ function createMainWindow() {
         }
     });
 
-    // mainWindow.setMenu(null);
+    mainWindow.setMenu(null);
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
     mainWindow.maximize(); 
 
@@ -111,6 +111,10 @@ function createLoginWindow() {
             contextIsolation: false,
         }
     });
+     // Fechar a janela de registro se existir
+    if (registerWindow && !registerWindow.isDestroyed()) {
+        registerWindow.close();
+    }
     loginWindow.setMenu(null);
     loginWindow.loadFile(path.join(__dirname, 'login.html'));
 }
@@ -123,6 +127,7 @@ async function handleUserRegistration(event, name, email, password) {
     const hashedPassword = await bcrypt.hash(password, 10);
     await db.insertOne({ name, email, password: hashedPassword });
     event.reply('register-success', 'Usuário cadastrado com sucesso');
+    registerWindow.close();
     loginWindow.loadFile(path.join(__dirname, 'login.html'));
 }
 
@@ -146,13 +151,14 @@ ipcMain.on('show-register', () => {
         width: 1200,
         height: 800,
         resizable: false,
+
         icon: path.join(__dirname, './assets/spaceapp.png'),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
         }
     });
-    
+    registerWindow.setMenu(null);    
     registerWindow.loadFile(path.join(__dirname, 'register.html'));
     
     // Centralizar a janela
