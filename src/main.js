@@ -55,7 +55,7 @@ const sites = {
     kik: 'https://www.kik.com',
     hangouts: 'https://hangouts.google.com',
     microsoftTeams: 'https://www.microsoft.com/en/microsoft-teams/group-chat-software',
-    home: `file://${path.join(__dirname, 'home.html')}`
+    home: `file://${path.join(__dirname, 'pages/home.html')}`
 };
 
 // Save Google session data to disk
@@ -162,7 +162,7 @@ function createMainWindow() {
     });
 
     mainWindow.setMenu(null);
-    mainWindow.loadFile(path.join(__dirname, 'index.html'));
+    mainWindow.loadFile(path.join(__dirname, 'pages/index.html'));
     mainWindow.maximize(); 
 
     // Configurar session para todos os sites
@@ -219,7 +219,7 @@ function createLoginWindow() {
         registerWindow.close();
     }
     loginWindow.setMenu(null);
-    loginWindow.loadFile(path.join(__dirname, 'login.html'));
+    loginWindow.loadFile(path.join(__dirname, 'pages/login.html'));
 }
 
 async function handleUserRegistration(event, name, email, password) {
@@ -262,7 +262,7 @@ ipcMain.on('show-register', () => {
         }
     });
     registerWindow.setMenu(null);    
-    registerWindow.loadFile(path.join(__dirname, 'register.html'));
+    registerWindow.loadFile(path.join(__dirname, 'pages/register.html'));
     
     // Centralizar a janela
     registerWindow.center();
@@ -286,7 +286,7 @@ ipcMain.on('navigate', async (event, siteKey) => {
     
     if (siteKey === 'home') {
         // Carregar página home diretamente na janela principal
-        mainWindow.loadFile(path.join(__dirname, 'index.html'));
+        mainWindow.loadFile(path.join(__dirname, 'pages/index.html'));
         return;
     }
     
@@ -344,7 +344,7 @@ ipcMain.on('navigate', async (event, siteKey) => {
     }).catch(err => {
         console.error(`Erro ao carregar ${siteKey}:`, err);
         event.reply('load-error', { error: err.message, site: siteKey });
-        mainWindow.loadFile(path.join(__dirname, 'index.html'));
+        mainWindow.loadFile(path.join(__dirname, 'pages/index.html'));
     });
 });
 
