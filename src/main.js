@@ -6,6 +6,7 @@ const { googleLogin, linkedinLogin } = require('./auth');
 
 let mainWindow;
 let loginWindow;
+let registerWindow;
 
 const MONGO_URI = "mongodb+srv://SpaceWalletRootUser:VvhEnifxJUkA4918@clusterspacewallet.kwbw5gv.mongodb.net/?retryWrites=true&w=majority&tls=true";
 const client = new MongoClient(MONGO_URI, { tlsAllowInvalidCertificates: true });
@@ -110,7 +111,7 @@ function createLoginWindow() {
             contextIsolation: false,
         }
     });
-    //loginWindow.setMenu(null);
+    loginWindow.setMenu(null);
     loginWindow.loadFile(path.join(__dirname, 'login.html'));
 }
 
@@ -133,6 +134,39 @@ function handleLogout() {
 app.on('ready', createLoginWindow);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 
+
+ipcMain.on('show-register', () => {
+    // Fechar a janela de login se existir
+    if (loginWindow) {
+        loginWindow.close();
+    }
+    
+    // Criar nova janela de registro
+    const registerWindow = new BrowserWindow({
+        width: 1200,
+        height: 800,
+        resizable: false,
+        icon: path.join(__dirname, './assets/spaceapp.png'),
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+    
+    registerWindow.loadFile(path.join(__dirname, 'register.html'));
+    
+    // Centralizar a janela
+    registerWindow.center();
+    
+    // Limpar referência quando a janela é fechada
+    registerWindow.on('closed', () => {
+        registerWindow = null;
+        // Reabrir a janela de login se necessário
+        if (!mainWindow) {
+            createLoginWindow();
+        }
+    });
+});
 // Configurar handler para o evento 'navigate'
 ipcMain.on('navigate', (event, siteKey) => {
     if (!sites[siteKey]) return;
@@ -232,3 +266,4 @@ ipcMain.on('open-external', (event, url) => {
 
 ipcMain.on('register-user', handleUserRegistration);
 ipcMain.on('logout-success', handleLogout);
+ipcMain.on('show-login', createLoginWindow);

@@ -3,110 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Cadastro - Space App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #6366f1;
+            --primary-light: #a5b4fc;
+            --background: linear-gradient(160deg, #f0f4ff 0%, #e0e7ff 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --hover-color: rgba(99, 102, 241, 0.1);
+            --active-color: rgba(99, 102, 241, 0.2);
+            --border-radius: 16px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --input-border: rgba(0, 0, 0, 0.1);
+        }
+
         body {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #f0f4f7, #cce7f4); /* Gradiente suave */
-            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-primary);
         }
+
         .register-container {
-            background-color: rgba(255, 255, 255, 0.9); /* Fundo branco translúcido */
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
             width: 100%;
             max-width: 400px;
-            display: flex;
-            flex-direction: column;
+            text-align: center;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .logo {
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            font-size: 42px;
+            color: var(--primary-color);
+            background: white;
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: inline-flex;
             align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+            margin-bottom: 15px;
         }
+
         h2 {
-            margin: 0 0 20px;
+            margin: 0 0 30px 0;
             font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50; /* Cor escura para o título */
+            font-weight: 600;
+            color: var(--text-primary);
         }
+
         .input-group {
-            margin-bottom: 20px;
             width: 100%;
+            margin-bottom: 20px;
+            text-align: left;
         }
+
         .input-group label {
             display: block;
-            margin-bottom: 6px;
-            font-weight: bold;
-            color: #2c3e50; /* Cor dos textos */
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
         }
+
         .input-group input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #bcd9e1;
-            border-radius: 16px;
-            background: rgba(240, 248, 255, 0.9);
-            color: #333;
-            font-size: 20px;
+            padding: 14px 16px;
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            font-size: 15px;
             outline: none;
-            transition: all 0.3s;
+            background: white;
+            color: var(--text-primary);
+            transition: var(--transition);
+            box-sizing: border-box;
         }
+
         .input-group input:focus {
-            background: rgba(240, 248, 255, 1);
-            box-shadow: 0 0 10px rgba(46, 204, 113, 0.3); /* Foco mais destacado */
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
         }
+
         .btn {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 16px;
-            font-size: 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: var(--transition);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
             margin-top: 10px;
         }
-        .btn-primary {
-            background: #3498db; /* Cor do botão mais suave e chamativa */
-            color: white;
-        }
+
         .btn-primary:hover {
-            background: #2980b9; /* Cor mais escura no hover */
+            background: #4f46e5;
+            transform: translateY(-2px);
         }
+
         .links {
-            margin-top: 20px;
+            margin-top: 25px;
+            font-size: 14px;
+            color: var(--text-secondary);
         }
+
         .links a {
-            color: #3498db; /* Cor azul para o link */
+            color: var(--primary-color);
             text-decoration: none;
-            font-size: 16px;
-            transition: all 0.3s;
+            font-weight: 500;
+            transition: var(--transition);
         }
+
         .links a:hover {
-            color: #2980b9; /* Cor mais escura para o hover do link */
+            text-decoration: underline;
+        }
+
+        .password-strength {
+            margin-top: 8px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            background: #ef4444;
+            transition: var(--transition);
+        }
+
+        @media (max-width: 480px) {
+            .register-container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            .logo-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 36px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="register-container">
-        <h2>Cadastro</h2>
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-rocket"></i>
+            </div>
+            <h2>Crie sua conta</h2>
+        </div>
+        
         <form id="registerForm">
             <div class="input-group">
-                <label for="name">Nome</label>
+                <label for="name">Nome completo</label>
                 <input type="text" id="name" placeholder="Digite seu nome" required>
             </div>
+            
             <div class="input-group">
                 <label for="email">E-mail</label>
                 <input type="email" id="email" placeholder="Digite seu e-mail" required>
             </div>
+            
             <div class="input-group">
                 <label for="password">Senha</label>
-                <input type="password" id="password" placeholder="Digite sua senha" required>
+                <input type="password" id="password" placeholder="Crie uma senha" required>
+                <div class="password-strength">
+                    <div class="strength-bar" id="strengthBar"></div>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Cadastrar</button>
+            
+            <button type="submit" class="btn btn-primary">
+                <span>Criar conta</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
         </form>
+        
         <div class="links">
-            <a href="#" id="loginLink">Já tem uma conta? Entrar</a>
+            <p>Já tem uma conta? <a href="#" id="loginLink">Faça login</a></p>
         </div>
     </div>
 
@@ -124,8 +227,30 @@
         });
 
         document.getElementById('loginLink').addEventListener('click', (event) => {
-            event.preventDefault();
-            ipcRenderer.send('show-login');
+        event.preventDefault();
+        ipcRenderer.send('show-login'); // Envia o comando para mostrar a tela de login
+    });
+        // Password strength indicator
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const strengthBar = document.getElementById('strengthBar');
+            let strength = 0;
+            
+            if (password.length > 0) strength += 20;
+            if (password.length >= 8) strength += 30;
+            if (/[A-Z]/.test(password)) strength += 15;
+            if (/[0-9]/.test(password)) strength += 15;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 20;
+            
+            strengthBar.style.width = strength + '%';
+            
+            if (strength < 40) {
+                strengthBar.style.backgroundColor = '#ef4444';
+            } else if (strength < 70) {
+                strengthBar.style.backgroundColor = '#f59e0b';
+            } else {
+                strengthBar.style.backgroundColor = '#10b981';
+            }
         });
     </script>
 </body>

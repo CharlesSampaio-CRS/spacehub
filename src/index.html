@@ -11,16 +11,32 @@
     connect-src *; img-src * data:; frame-src *; object-src 'none';">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #6366f1;
+            --primary-light: #a5b4fc;
+            --background: #f8fafc;
+            --sidebar-bg: linear-gradient(160deg, #f0f4ff 0%, #e0e7ff 100%);
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --hover-color: rgba(99, 102, 241, 0.1);
+            --active-color: rgba(99, 102, 241, 0.2);
+            --border-radius: 16px;
+            --sidebar-width: 80px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
         body,
         html {
             margin: 0;
             padding: 0;
             height: 100%;
-            font-family: 'Montserrat', Arial, sans-serif;
-            background-color: #f5f7fa;
-            color: #333;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            overflow: hidden;
         }
 
         #app {
@@ -30,142 +46,154 @@
         }
 
         #sidebar {
-            width: 50px;
-            background: linear-gradient(135deg, #1a2a6c, #2a4858);
-            color: white;
-            padding: 25px 0;
-            box-shadow: 3px 0 15px rgba(0, 0, 0, 0.2);
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            padding: 20px 0;
             display: flex;
             flex-direction: column;
-            transition: width 0.3s ease;
+            align-items: center;
+            transition: var(--transition);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            z-index: 10;
         }
 
         .logo-container {
-            padding: 10px 25px 30px;
+            padding: 0 0 30px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .logo-text {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-            margin: 0;
+        .logo-icon {
+            font-size: 28px;
+            color: var(--primary-color);
+            background: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
         }
 
         .nav-section {
             flex: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 0 10px;
             overflow-y: auto;
-            padding: 0 15px;
         }
 
         #content {
-            height: auto;
             flex: 1;
             display: flex;
             flex-direction: column;
-            background-color: #f5f7fa;
-            position: relative;
+            overflow: hidden;
         }
 
         #header {
-            background-color: #ffffff;
-            color: #333;
-            padding: 15px 30px;
+            background-color: var(--card-bg);
+            padding: 16px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            z-index: 10;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            z-index: 5;
         }
 
         #page-title {
             margin: 0;
             font-weight: 600;
             font-size: 18px;
-            color: #1a2a6c;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #page-title i {
+            color: var(--primary-color);
         }
 
         #content-container {
             flex: 1;
-            position: relative;
-            overflow: auto;
-            /* Alterado para permitir rolagem se necessário */
-            background-color: #ffffff;
-            margin: 20px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            height: calc(100% - 40px);
-            /* Garante altura suficiente para preencher a tela */
+            background-color: var(--card-bg);
+            margin: 16px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .nav-button {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            padding: 14px 20px;
-            margin: 8px 0;
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            border-radius: 8px;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 500;
+            transition: var(--transition);
+            color: var(--text-secondary);
+            text-decoration: none;
             position: relative;
-            overflow: hidden;
+            background: transparent;
+            border: none;
+        }
+
+        .nav-button i {
+            font-size: 20px;
+            transition: var(--transition);
+        }
+
+        .nav-button img {
+            width: 24px;
+            height: 24px;
+            transition: var(--transition);
+            filter: grayscale(100%) brightness(0.8);
         }
 
         .nav-button:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
-            transform: translateX(5px);
+            background: var(--hover-color);
+            color: var(--primary-color);
+        }
+
+        .nav-button:hover img {
+            filter: grayscale(0) brightness(1);
+            transform: scale(1.1);
         }
 
         .nav-button.active {
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            color: white;
-            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+            background: var(--active-color);
+            color: var(--primary-color);
         }
 
-        .nav-button.active::before {
+        .nav-button.active img {
+            filter: grayscale(0) brightness(1);
+            transform: scale(1.1);
+        }
+
+        .nav-button.active::after {
             content: '';
             position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
             width: 4px;
-            background-color: white;
+            height: 24px;
+            background: var(--primary-color);
+            border-radius: 2px;
         }
-
-        .nav-icon {
-            margin-right: 12px;
-            font-size: 18px;
-        }
-
 
         #webview {
-            display: contents !important;
-            /* Mantém a configuração */
             width: 100%;
             height: 100%;
-            min-height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-        #content-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background-color: #ffffff;
-            margin: 20px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            height: calc(100% - 40px);
-            /* Ajustando para preencher a tela corretamente */
+            display: inline-flex !important;
         }
 
         #loading-indicator {
@@ -182,7 +210,7 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            border-left-color: #3498db;
+            border-left-color: var(--primary-color);
             animation: spin 1s linear infinite;
             margin: 0 auto 15px;
         }
@@ -191,7 +219,6 @@
             0% {
                 transform: rotate(0deg);
             }
-
             100% {
                 transform: rotate(360deg);
             }
@@ -239,92 +266,86 @@
         }
 
         #logout-button {
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
-            color: white;
+            background: transparent;
+            color: var(--text-secondary);
             border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         #logout-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+            color: var(--primary-color);
+            background: var(--hover-color);
         }
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
-            #sidebar {
-                width: 80px;
+            :root {
+                --sidebar-width: 70px;
             }
-
-            .logo-text {
-                display: none;
-            }
-
-            .nav-button span {
-                display: none;
-            }
-
-            .nav-icon {
-                margin-right: 0;
-                font-size: 22px;
-            }
-
+            
             #content-container {
-                margin: 10px;
+                margin: 8px;
+            }
+            
+            .nav-button {
+                width: 50px;
+                height: 50px;
             }
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMUaxl5lz4PzGpC3kD5P7foz6ljJ5V4qz4P1NY5" crossorigin="anonymous">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
 <body>
     <div id="app">
         <div id="sidebar">
-            <div id="sidebar">
-                <div class="logo-container">
-                    <i class="fas fa-rocket fa-2x"></i>
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fas fa-rocket"></i>
                 </div>
-                <button class="nav-button active" data-nav="home">
-                    <i class="fas fa-home nav-icon"></i>
-                </button>
+            </div>
+            <div class="nav-section">
                 <button class="nav-button" data-nav="whatsapp">
-                    <i class="fab fa-whatsapp nav-icon"></i>
+                    <img src="assets/whatsapp.png" alt="WhatsApp">
                 </button>
                 <button class="nav-button" data-nav="telegram">
-                    <i class="fab fa-telegram-plane nav-icon"></i>
+                    <img src="assets/telegram.png" alt="Telegram">
                 </button>
                 <button class="nav-button" data-nav="gmail">
-                    <i class="fas fa-envelope nav-icon"></i>
+                    <img src="assets/gmail.png" alt="Gmail">
                 </button>
                 <button class="nav-button" data-nav="outlook">
-                    <i class="fas fa-envelope-square nav-icon"></i>
+                    <img src="assets/outlook.png" alt="Outlook">
                 </button>
                 <button class="nav-button" data-nav="linkedin">
-                    <i class="fab fa-linkedin nav-icon"></i>
+                    <img src="assets/linkedin.png" alt="Linkedin">
                 </button>
                 <button class="nav-button" data-nav="discord">
-                    <i class="fab fa-discord nav-icon"></i>
+                    <img src="assets/discord.png" alt="Discord">
                 </button>
             </div>
         </div>
 
         <div id="content">
+            <div id="header">
+                <h1 id="page-title">Olá!</h1>
+                <button id="logout-button">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sair</span>
+                </button>
+            </div>
             <div id="content-container">
                 <webview id="webview" allowpopups="true"
                     webpreferences="contextIsolation=false, nodeIntegration=false, nativeWindowOpen=false"
                     partition="persist:mainSession">
                 </webview>
-                <div id="loading-indicator" class="hidden">
-                    <div class="spinner"></div>
-                    <p>Loading...</p>
-                </div>
-
             </div>
         </div>
     </div>
@@ -352,17 +373,18 @@
                 // Update page title
                 const nav = button.getAttribute('data-nav');
                 const pageTitle = document.getElementById('page-title');
+                const titleText = nav.charAt(0).toUpperCase() + nav.slice(1);
 
                 // Set icon based on nav
                 let icon = 'compass';
                 if (nav === 'whatsapp') icon = 'whatsapp';
-                else if (nav === 'telegram') icon = 'telegram-plane';
+                else if (nav === 'telegram') icon = 'paper-plane';
                 else if (nav === 'gmail' || nav === 'outlook') icon = 'envelope';
-                else if (nav === 'linkedin') icon = 'linkedin';
+                else if (nav === 'linkedin') icon = 'linkedin-in';
                 else if (nav === 'discord') icon = 'discord';
                 else if (nav === 'home') icon = 'home';
 
-                pageTitle.innerHTML = `<i class="fas fa-${icon}"></i> ${nav.charAt(0).toUpperCase() + nav.slice(1)}`;
+                pageTitle.innerHTML = `<i class="fab fa-${icon}"></i> ${titleText}`;
             });
         });
     </script>
