@@ -1,7 +1,5 @@
 const { app, BrowserWindow, ipcMain, session, shell } = require('electron');
 const path = require('path');
-const { MongoClient } = require('mongodb');
-const bcrypt = require('bcrypt');
 const { googleLogin, linkedinLogin } = require('./auth');
 const fs = require('fs');
 const os = require('os');
@@ -13,28 +11,6 @@ let registerWindow;
 // Path for cached session data
 const SESSION_CACHE_DIR = path.join(os.homedir(), '.spacewallet', 'sessions');
 const GOOGLE_SESSION_FILE = path.join(SESSION_CACHE_DIR, 'google-session.json');
-
-const MONGO_URI = "mongodb+srv://SpaceWalletRootUser:VvhEnifxJUkA4918@clusterspacewallet.kwbw5gv.mongodb.net/?retryWrites=true&w=majority&tls=true";
-const client = new MongoClient(MONGO_URI, { tlsAllowInvalidCertificates: true });
-
-// Ensure session cache directory exists
-function ensureCacheDirExists() {
-    if (!fs.existsSync(SESSION_CACHE_DIR)) {
-        fs.mkdirSync(SESSION_CACHE_DIR, { recursive: true });
-    }
-}
-
-async function connectToMongoDB() {
-    try {
-        await client.connect();
-        console.log("Connected to MongoDB successfully!");
-    } catch (error) {
-        console.error("Error connecting to MongoDB:", error);
-    }
-}
-
-connectToMongoDB();
-ensureCacheDirExists();
 
 // Objeto com as URLs dos sites
 const sites = {
@@ -157,12 +133,12 @@ function createMainWindow() {
             contextIsolation: false,
             webSecurity: true,
             webviewTag: true,
-            partition: 'persist:mainSession' // Manter sessões persistentes
+            partition: 'persist:mainSession' 
         }
     });
 
     mainWindow.setMenu(null);
-    mainWindow.loadFile(path.join(__dirname, 'pages/index.html'));
+    mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
     mainWindow.maximize(); 
 
     // Configurar session para todos os sites
@@ -219,7 +195,7 @@ function createLoginWindow() {
         registerWindow.close();
     }
     loginWindow.setMenu(null);
-    loginWindow.loadFile(path.join(__dirname, 'pages/login.html'));
+    loginWindow.loadFile(path.join(__dirname, 'pages/login/login.html'));
 }
 
 async function handleUserRegistration(event, name, email, password) {
@@ -262,7 +238,7 @@ ipcMain.on('show-register', () => {
         }
     });
     registerWindow.setMenu(null);    
-    registerWindow.loadFile(path.join(__dirname, 'pages/register.html'));
+    registerWindow.loadFile(path.join(__dirname, 'pages/register/register.html'));
     
     // Centralizar a janela
     registerWindow.center();
@@ -286,7 +262,7 @@ ipcMain.on('navigate', async (event, siteKey) => {
     
     if (siteKey === 'home') {
         // Carregar página home diretamente na janela principal
-        mainWindow.loadFile(path.join(__dirname, 'pages/index.html'));
+        mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
         return;
     }
     
@@ -344,7 +320,7 @@ ipcMain.on('navigate', async (event, siteKey) => {
     }).catch(err => {
         console.error(`Erro ao carregar ${siteKey}:`, err);
         event.reply('load-error', { error: err.message, site: siteKey });
-        mainWindow.loadFile(path.join(__dirname, 'pages/index.html'));
+        mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
     });
 });
 
