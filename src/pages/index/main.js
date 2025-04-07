@@ -1,12 +1,15 @@
-document.addEventListener('DOMContentLoaded', getApplications);
-
 async function getApplications() {
   const container = document.getElementById('nav-applications');
+  
+  if (!container) {
+    console.warn('Container "nav-applications" not found.');
+    return;
+  }
 
   const token = localStorage.getItem('token'); 
 
   if (!token) {
-    console.warn('Token não encontrado no localStorage');
+    console.warn('Token not found! Is the user logged in?');
     return;
   }
 
@@ -17,13 +20,15 @@ async function getApplications() {
       }
     });
 
+    container.innerHTML = ''; 
+
     data.forEach(app => {
       const button = createApplicationButton(app);
       container.appendChild(button);
     });
 
   } catch (error) {
-    console.error('Erro ao buscar aplicações:', error);
+    console.error('Failed to fetch applications:', error);
   }
 }
 
@@ -42,9 +47,15 @@ function createApplicationButton(app) {
 
   button.addEventListener('click', () => {
     const webview = document.getElementById('webview');
-    webview.src = app.url;
-    console.log(`Abrindo: ${app.url}`);
+    if (webview.src !== app.url) {
+      webview.src = app.url;
+      console.log(`Opening: ${app.url}`);
+    } else {
+      console.log(`App ${app.application} already loaded.`);
+    }
   });
 
   return button;
 }
+
+getApplications();

@@ -10,13 +10,9 @@
     font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; 
     connect-src *; img-src * data:; frame-src *; object-src 'none';">
   <title>SpaceApp</title>
-
   <link rel="stylesheet" href="./style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  
-  <!-- axios CDN -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <!-- main.js sem type=module -->
   <script src="./main.js"></script>
 </head>
 
@@ -55,13 +51,10 @@
     <div class="notification"><strong>João:</strong> Enviou uma mensagem para você.</div>
     <div class="notification"><strong>Ana:</strong> Curtiu sua postagem.</div>
     <div class="notification"><strong>Pedro:</strong> Comentou no seu post.</div>
-    <!-- Repetidos omitidos para clareza -->
   </div>
 
-  <!-- Renderer Script -->
   <script src="../renderer.js"></script>
 
-  <!-- Script de interação -->
   <script>
     document.getElementById('logout-button').addEventListener('click', () => {
       if (typeof require !== 'undefined') {

@@ -37,7 +37,7 @@
             <label for="password">Senha</label>
             <input type="password" id="password" placeholder="••••••••">
         </div>
-        
+        <p id="errorMessage" style="color: #ef4444; display: none; margin-top: 8px;"></p>
         <button id="loginButton" class="btn btn-primary" onclick="login()">Entrar</button>
         <p class="footer-text">
             Não tem uma conta? <a href="#" id="registerLink">Cadastre-se</a>
@@ -45,6 +45,12 @@
     </div>
     <script>
         document.getElementById('loginButton').addEventListener('click', login);
-      </script>
+        document.getElementById('registerLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            window.electronAPI?.openRegister?.();
+            require('electron').ipcRenderer.send('show-register');
+        });
+        const token = window.electronAPI?.getToken?.();
+    </script>
 </body>
 </html>
