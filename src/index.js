@@ -77,7 +77,7 @@ function createRegisterWindow() {
         }
     });
 
-    registerWindow.setMenu(null);
+    //registerWindow.setMenu(null);
     registerWindow.loadFile(path.join(__dirname, 'pages/register/register.html'));
     registerWindow.center();
 
