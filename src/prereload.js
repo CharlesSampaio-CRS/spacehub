@@ -1,4 +1,5 @@
-// Este arquivo é injetado no webview para permitir comunicação segura
-window.addEventListener('DOMContentLoaded', () => {
-    console.log('Preload script carregado no webview');
-  });
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('electronAPI', {
+  sendLoginSuccess: (email) => ipcRenderer.send('login-success', email)
+});
