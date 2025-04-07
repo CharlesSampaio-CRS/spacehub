@@ -79,7 +79,7 @@ html {
 
 #header {
     background-color: var(--card-bg);
-    padding: 16px 24px;
+    padding: 1px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -249,7 +249,7 @@ html {
 }
 
 #logout-button,
-#notifications-button {
+#notifications-button,#settings-button {
     background: transparent;
     color: var(--text-secondary);
     border: none;
@@ -282,7 +282,6 @@ html {
     z-index: 50;
 }
 
-/* Ajuste para evitar que saia do container */
 #header {
     position: relative;
 }

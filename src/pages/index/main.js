@@ -49,7 +49,6 @@ function createApplicationButton(app) {
     const webview = document.getElementById('webview');
     if (webview.src !== app.url) {
       webview.src = app.url;
-      console.log(`Opening: ${app.url}`);
     } else {
       console.log(`App ${app.application} already loaded.`);
     }

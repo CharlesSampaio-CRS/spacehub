@@ -97,7 +97,6 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
 
-// IPC HANDLERS
 ipcMain.on('login-success', (event, token) => {
     store.set('token', token);
     loginWindow = closeWindow(loginWindow);

@@ -23,12 +23,15 @@
         <!-- Buttons dinâmicos aqui -->
       </div>
     </div>
-
     <div id="content">
       <div id="header">
         <button id="notifications-button" aria-label="Notificações">
           <i class="fas fa-bell"></i>
           <span>Notificações</span>
+        </button>
+        <button id="settings-button" aria-label="Configurações">
+          <i class="fas fa-cog"></i>
+          <span>Configurações</span>
         </button>
         <button id="logout-button" aria-label="Sair">
           <i class="fas fa-sign-out-alt"></i>
@@ -56,6 +59,7 @@
   <script src="../renderer.js"></script>
 
   <script>
+
     document.getElementById('logout-button').addEventListener('click', () => {
       if (typeof require !== 'undefined') {
         const { ipcRenderer } = require('electron');
@@ -91,6 +95,18 @@
         panel.style.display = 'none';
       }
     });
+    document.addEventListener('DOMContentLoaded', () => {
+  const settingsBtn = document.getElementById('settings-button');
+  const webview = document.getElementById('webview');
+
+  if (settingsBtn && webview) {
+    settingsBtn.addEventListener('click', () => {
+      webview.src = '../config/config.html';
+    });
+  } else {
+    console.warn('Botão ou Webview não encontrado no DOM');
+  }
+});
   </script>
 </body>
 
