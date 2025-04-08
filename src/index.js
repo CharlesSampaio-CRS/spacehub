@@ -180,12 +180,11 @@ ipcMain.on('start-google-login', () => {
 
         const accessToken = tokenRes.data.access_token;
         const idToken = tokenRes.data.id_token;
-
         const userRes = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
           headers: { Authorization: `Bearer ${accessToken}` }
         });
 
-        const { name, email } = userRes.data;
+        const { id: googleId, name, email } = userRes.data;
         const fakePassword = generateFakePassword(email);
 
         try {
@@ -193,7 +192,7 @@ ipcMain.on('start-google-login', () => {
             name,
             email,
             password: fakePassword,
-            googleId: idToken
+            googleId
           });
         } catch (err) {
           if (err.response?.status !== 409) {
@@ -208,14 +207,10 @@ ipcMain.on('start-google-login', () => {
           }
         }
 
-
-
-
         const loginRes = await axios.post('https://spaceapp-digital-api.onrender.com/login', {
           email,
           password: fakePassword
         });
-
 
         const token = loginRes.data.token;
         ipcMain.emit('login-success', null, token);
