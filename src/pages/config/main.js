@@ -1,41 +1,86 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const applications = [
-    { id: 1, name: 'SpaceChat', status: 'Ativo' },
-    { id: 2, name: 'AstroFeed', status: 'Inativo' },
-    { id: 3, name: 'Galáxia Store', status: 'Em revisão' }
-  ];
-
+document.addEventListener('DOMContentLoaded', async () => {
   const applicationsList = document.getElementById('applicationsList');
+  const token = localStorage.getItem('token');
 
-  applications.forEach(app => {
-    const card = document.createElement('div');
-    card.classList.add('application-card');
+  if (!token) {
+    applicationsList.innerHTML = '<p>Token de autenticação não encontrado.</p>';
+    return;
+  }
 
-    card.innerHTML = `
-      <div class="application-info">
-        <h3>${app.name}</h3>
-        <p>ID: ${app.id}</p>
-      </div>
-      <div class="application-status">
-        <label for="status-${app.id}">Status:</label>
-        <select id="status-${app.id}" data-id="${app.id}">
-          <option ${app.status === 'Ativo' ? 'selected' : ''}>Ativo</option>
-          <option ${app.status === 'Inativo' ? 'selected' : ''}>Inativo</option>
-          <option ${app.status === 'Em revisão' ? 'selected' : ''}>Em revisão</option>
-        </select>
-      </div>
-    `;
+  try {
+    const response = await axios.get('https://spaceapp-digital-api.onrender.com/applications', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-    applicationsList.appendChild(card);
-  });
+    const applications = response.data;
+
+    console.log('Aplicações carregadas com sucesso:');
+    console.log(JSON.stringify(response, null, 2));
+
+    applications.forEach(app => {
+      const card = document.createElement('div');
+      card.classList.add('application-card');
+      const iconSrc = `../../assets/${app.application.toLowerCase()}.png`;
+
+      card.innerHTML = `
+<div class="application-info">
+  <img src="${iconSrc}" alt="${app.application} icon" class="application-icon" />
+  <h1>${app.application}</h1>
+</div>
+<div class="application-status">
+  <p>Status:</p>
+  <label class="switch">
+    <input type="checkbox" id="toggle-${app.id}" ${app.status === 'Ativo' ? 'checked' : ''}>
+    <span class="slider"></span>
+  </label>
+  <span class="status-label" id="status-label-${app.id}">${app.status}</span>
+</div>
+      `;
+
+      applicationsList.appendChild(card);
+    });
+  } catch (error) {
+    console.error('❌ Erro ao buscar aplicações:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+
+    applicationsList.innerHTML = '<p>Erro ao carregar aplicações. Verifique sua conexão ou tente novamente mais tarde.</p>';
+  }
 
   applicationsList.addEventListener('change', (event) => {
-    if (event.target.tagName === 'SELECT') {
-      const appId = event.target.getAttribute('data-id');
-      const newStatus = event.target.value;
-      console.log(`Aplicação ${appId} atualizada para: ${newStatus}`);
-      // Aqui você pode chamar sua API para atualizar o status no backend
-      // axios.post('/api/updateStatus', { id: appId, status: newStatus })
+    if (event.target.type === 'checkbox') {
+      const appId = event.target.id.split('-')[1];
+      const isChecked = event.target.checked;
+      const newStatus = isChecked ? 'Ativo' : 'Inativo';
+
+      // Atualiza o texto ao lado do toggle
+      const statusLabel = document.getElementById(`status-label-${appId}`);
+      statusLabel.textContent = newStatus;
+
+      console.log(`🔄 Aplicação ${appId} atualizada para: ${newStatus}`);
+
+      axios.post(
+        'https://spaceapp-digital-api.onrender.com/applications/update',
+        { id: appId, status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      ).then(res => {
+        console.log('✅ Status atualizado com sucesso!');
+      }).catch(err => {
+        console.error('❌ Erro ao atualizar status:', {
+          message: err.message,
+          response: err.response?.data,
+          status: err.response?.status
+        });
+        alert('Erro ao atualizar status. Verifique sua conexão ou tente novamente.');
+      });
     }
   });
 });

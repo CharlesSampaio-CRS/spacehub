@@ -14,6 +14,7 @@ let loginWindow = null;
 let registerWindow = null;
 let authWindow = null;
 
+
 function closeWindow(winRef) {
   if (winRef && !winRef.isDestroyed()) winRef.close();
   return null;
@@ -42,6 +43,9 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
+  mainWindow.webContents.on('did-attach-webview', (event, webContents) => {
+    webContents.openDevTools(); // abre DevTools da webview
+  });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url)) shell.openExternal(url);

@@ -1,25 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aplicações - SpaceApp</title>
+  <title>Space App - Aplicações</title>
   <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./sidebar.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="./main.js" defer></script>
 </head>
 
 <body>
-
-
-      <div id="content-container">
-        <h2 class="title">Minhas Aplicações</h2>
-        <div class="applications-list" id="applicationsList">
-          <!-- Aplicações carregadas dinamicamente -->
-        </div>
+  <div style="display: flex; width: 100%; align-items: flex-start;">
+    <!-- Painel de Aplicações -->
+    <div id="content-container">
+      <h1 class="title">Apps</h1>
+      <div class="applications-list" id="applicationsList">
+        <!-- Aplicações carregadas dinamicamente -->
       </div>
-</body>
+    </div>
 
+    <!-- Painel de Configurações -->
+    <div id="settings-panel">
+      <h2 class="settings-title">Configurações</h2>
+
+      <div class="setting-item">
+        <span class="setting-label">Notificações</span>
+        <label class="toggle-switch">
+          <input type="checkbox" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <span class="setting-label">Modo Escuro</span>
+        <label class="toggle-switch">
+          <input type="checkbox" />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <span class="setting-label">Auto Login</span>
+        <label class="toggle-switch">
+          <input type="checkbox" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <span class="setting-label">Compactar Layout</span>
+        <label class="toggle-switch">
+          <input type="checkbox" />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <span class="setting-label">Abrir em Tela Cheia</span>
+        <label class="toggle-switch">
+          <input type="checkbox" />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+</body>
 </html>
