@@ -161,7 +161,7 @@ ipcMain.on('start-google-login', () => {
 
       try {
         const code = new URL(url).searchParams.get('code');
-        
+
         const tokenRes = await axios.post(
           'https://oauth2.googleapis.com/token',
           qs.stringify({
@@ -184,19 +184,17 @@ ipcMain.on('start-google-login', () => {
         });
 
         const { name, email } = userRes.data;
+        const fakePassword = generateFakePassword(email);
 
         try {
           await axios.post('https://spaceapp-digital-api.onrender.com/register', {
             name,
             email,
-            password: generateFakePassword(email),
+            password: fakePassword,
             googleId: idToken
           });
-
         } catch (err) {
-          if (err.response?.status === 409) {
-            console.log('Usuário já registrado', err.response.data);
-          } else {
+          if (err.response?.status !== 409) {
             const msg = err.response?.status === 500
               ? 'Erro ao realizar login com o Google. Tente novamente.'
               : 'Erro inesperado ao registrar com o Google.';
@@ -208,15 +206,23 @@ ipcMain.on('start-google-login', () => {
           }
         }
 
-        store.set('google-token', idToken || accessToken);
-        loginWindow = closeWindow(loginWindow);
-        createMainWindow();
-        mainWindow.webContents.once('did-finish-load', () => {
-          mainWindow.webContents.send('set-token', idToken || accessToken);
+
+
+
+        const loginRes = await axios.post('https://spaceapp-digital-api.onrender.com/login', {
+          email,
+          password: fakePassword
         });
 
+
+        const token = loginRes.data.token;
+        ipcMain.emit('login-success', null, token);
+
       } catch (error) {
+        console.error('Erro no login com o Google:', error);
         loginWindow?.webContents.send('google-login-failed', error.message);
+        loginWindow = closeWindow(loginWindow);
+        createLoginWindow();
       } finally {
         authWindow = closeWindow(authWindow);
       }
