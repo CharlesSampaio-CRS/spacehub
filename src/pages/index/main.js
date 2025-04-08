@@ -15,6 +15,7 @@ async function getApplications() {
     );
 
     const applications = data[0]?.applications || [];
+
     if (!applications.length) return console.warn('No applications found.');
 
     const fragment = document.createDocumentFragment();
