@@ -4,16 +4,26 @@
   padding: 0;
   box-sizing: border-box;
 }
-
 body {
   font-family: 'Segoe UI', sans-serif;
   background-color: #f9f9fb;
   padding: 40px 20px;
   min-height: 100vh;
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: flex-start;
 }
+
+.main-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+  max-width: 1200px;
+  width: 100%;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
 
 /* Container principal */
 #content-container {
@@ -23,6 +33,7 @@ body {
   padding: 30px;
   border-radius: 16px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.06);
+  flex: 2;
 }
 
 /* Título */
@@ -135,14 +146,91 @@ body {
   vertical-align: middle;
 }
 
+/* Painel lateral de configurações */
+#settings-panel {
+  width: 300px;
+  background-color: #ffffff;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.settings-title {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.setting-label {
+  font-size: 1rem;
+  color: #555;
+}
+
+/* Reutiliza o switch existente para os toggles da sidebar */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-switch .slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+.toggle-switch .slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .slider {
+  background-color: #4f46e5;
+}
+
+.toggle-switch input:checked + .slider::before {
+  transform: translateX(24px);
+}
+
 /* Responsivo */
-@media (max-width: 600px) {
-  .application-card {
-    width: 100%;
+@media (max-width: 768px) {
+  body {
+    flex-direction: column;
+    padding: 20px;
   }
 
-  #content-container {
-    padding: 20px;
+  #settings-panel {
+    width: 100%;
+    margin-top: 30px;
+  }
+
+  .application-card {
+    width: 100%;
   }
 
   .application-status {

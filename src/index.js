@@ -216,7 +216,7 @@ ipcMain.on('start-google-login', () => {
           password: fakePassword
         });
         const token = loginRes.data.token;
-        ipcMain.emit('login-success', null, token);
+        ipcMain.emit('login-success', null, token );
 
       } catch (error) {
         console.error('Erro no login com o Google:', error);

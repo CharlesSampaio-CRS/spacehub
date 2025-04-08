@@ -11,8 +11,12 @@ async function login() {
       password
     });
 
+    const payload = parseJwt(token);
     localStorage.setItem('token', data.token);
-    ipcRenderer.send('login-success', data.token);
+    if (payload.uuid != null) {
+      localStorage.setItem('userUuid', payload.uuid);
+    }
+    ipcRenderer.send('login-success', data.token,data.userUuid );
   } catch (error) {
     console.error('Login error:', error);
     alert('Invalid email or password');
@@ -31,3 +35,15 @@ document.addEventListener('DOMContentLoaded', () => {
     errorMsg.style.display = 'block';
   });
 });
+
+
+function parseJwt(token) {
+  try {
+    const base64Payload = token.split('.')[1]; 
+    const payload = atob(base64Payload);
+    return JSON.parse(payload); 
+  } catch (e) {
+    console.error('Failed to parse JWT', e);
+    return null;
+  }
+}
