@@ -1,4 +1,5 @@
 const { ipcRenderer } = require("electron");
+const axios = require("axios");
 
 async function login() {
   const email = document.getElementById('email').value;
@@ -20,4 +21,13 @@ async function login() {
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('loginButton').addEventListener('click', login);
+  document.getElementById('googleLogin').addEventListener('click', () => {
+    ipcRenderer.send('start-google-login');
+  });
+
+  ipcRenderer.on('google-login-failed', (event, message) => {
+    const errorMsg = document.getElementById('errorMessage');
+    errorMsg.textContent = 'Falha ao fazer login com Google: ' + message;
+    errorMsg.style.display = 'block';
+  });
 });

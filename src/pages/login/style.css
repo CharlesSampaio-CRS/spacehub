@@ -204,3 +204,17 @@ h2 {
 .footer-text a:hover {
     text-decoration: underline;
 }
+
+.btn-google {
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #ddd;
+    padding: 10px 20px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-google:hover {
+    background-color: #f1f1f1;
+}

@@ -2,55 +2,197 @@
 <html lang="pt-br">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; 
-    script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; 
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; 
-    font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; 
-    connect-src *; img-src * data:; frame-src *; object-src 'none';">
-    <title>SpaceApp</title>
-    <link rel="stylesheet" href="./style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-      <!-- axios CDN -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; 
+        script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; 
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; 
+        font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; 
+        connect-src *; img-src * data:; frame-src *; object-src 'none';">
+  <title>SpaceApp</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <!-- main.js sem type=module -->
   <script src="./main.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9fafb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .login-container {
+      background-color: white;
+      padding: 32px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .logo-container {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo-icon img {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .btn-primary {
+      background-color: #3b82f6;
+      color: white;
+      font-weight: bold;
+    }
+
+    .btn-primary:hover {
+      background-color: #2563eb;
+    }
+
+    .btn-google {
+      background-color: white;
+      border: 1px solid #d1d5db;
+      color: #374151;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background-color 0.2s;
+    }
+
+    .btn-google:hover {
+      background-color: #f3f4f6;
+    }
+
+    .login-actions {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .footer-text {
+      text-align: center;
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .footer-text a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+
+    .footer-text a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="login-container">
-        <div class="logo-container">
-            <div class="logo-icon">
-                <img src="../../assets/spaceapp.png" alt="SpaceApp">
-            </div>
-            <h2>Bem-vindo de volta</h2>
-            <p class="subtitle">Faça login para acessar sua conta</p>
-        </div>
-
-        <div class="input-group">
-            <label for="email">E-mail</label>
-            <input type="text" id="email" placeholder="seu@email.com">
-        </div>
-        
-        <div class="input-group">
-            <label for="password">Senha</label>
-            <input type="password" id="password" placeholder="••••••••">
-        </div>
-        <p id="errorMessage" style="color: #ef4444; display: none; margin-top: 8px;"></p>
-        <button id="loginButton" class="btn btn-primary" onclick="login()">Entrar</button>
-        <p class="footer-text">
-            Não tem uma conta? <a href="#" id="registerLink">Cadastre-se</a>
-        </p>
+  <div class="login-container">
+    <div class="logo-container">
+      <div class="logo-icon">
+        <img src="../../assets/spaceapp.png" alt="SpaceApp">
+      </div>
+      <h2>Bem-vindo de volta</h2>
+      <p class="subtitle">Faça login para acessar sua conta</p>
     </div>
-    <script>
-        document.getElementById('loginButton').addEventListener('click', login);
-        document.getElementById('registerLink').addEventListener('click', (e) => {
-            e.preventDefault();
-            window.electronAPI?.openRegister?.();
-            require('electron').ipcRenderer.send('show-register');
-        });
-        const token = window.electronAPI?.getToken?.();
-    </script>
+
+    <div class="input-group">
+      <label for="email">E-mail</label>
+      <input type="text" id="email" placeholder="seu@email.com">
+    </div>
+
+    <div class="input-group">
+      <label for="password">Senha</label>
+      <input type="password" id="password" placeholder="••••••••">
+    </div>
+
+    <p id="errorMessage" style="color: #ef4444; display: none; margin-top: 8px;"></p>
+
+    <button id="loginButton" class="btn btn-primary">Entrar</button>
+
+    <div class="login-actions">
+      <p style="margin: 16px 0 8px;">ou</p>
+      <button id="googleLogin" class="btn btn-google">
+        <i class="fab fa-google"></i>
+        Entrar com Google
+      </button>
+    </div>
+
+    <p class="footer-text" style="margin-top: 20px;">
+      Não tem uma conta? <a href="#" id="registerLink">Cadastre-se</a>
+    </p>
+  </div>
+
+  <script>
+    document.getElementById('googleLogin').addEventListener('click', () => {
+      require('electron').ipcRenderer.send('start-google-login');
+    });
+
+    require('electron').ipcRenderer.on('google-login-success', (event, tokens) => {
+      console.log('Google login tokens:', tokens);
+      const token = tokens.id_token || tokens.access_token;
+      localStorage.setItem('token', token);
+      require('electron').ipcRenderer.send('login-success', token);
+    });
+
+    require('electron').ipcRenderer.on('google-login-failed', (event, message) => {
+      const errorMsg = document.getElementById('errorMessage');
+      errorMsg.textContent = 'Falha ao fazer login com Google: ' + message;
+      errorMsg.style.display = 'block';
+    });
+
+    document.getElementById('loginButton').addEventListener('click', login);
+    document.getElementById('registerLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      window.electronAPI?.openRegister?.();
+      require('electron').ipcRenderer.send('show-register');
+    });
+
+    const token = window.electronAPI?.getToken?.();
+  </script>
 </body>
+
 </html>
