@@ -7,6 +7,8 @@ require('dotenv').config();
 
 const store = new Store();
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // ⚠️ apenas para debug/teste
+
 let mainWindow = null;
 let loginWindow = null;
 let registerWindow = null;
