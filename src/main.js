@@ -3,15 +3,16 @@ const path = require('path');
 const Store = require('electron-store');
 const axios = require('axios');
 const qs = require('querystring');
+const config = require('../config');
 require('dotenv').config();
 const store = new Store();
 
 
 global.sharedObject = {
   env: {
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-    GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET
+    GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID,
+    GOOGLE_REDIRECT_URI: config.GOOGLE_REDIRECT_URI,
+    GOOGLE_CLIENT_SECRET: config.GOOGLE_CLIENT_SECRET
   }
 };
 

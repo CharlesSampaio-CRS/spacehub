@@ -5,9 +5,8 @@
   "main": "src/main.js",
   "scripts": {
     "prebuild": "node scripts/generate-config.js",
-    "generate-config": "node scripts/generate-config.js",
     "start": "electron .",
-    "build": "electron-builder",
+    "build": "npm run generate-config && electron-builder",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux"
@@ -32,33 +31,29 @@
     },
     "files": [
       "src/**/*",
+      "pages/**/*",
       "assets/**/*",
       "node_modules/**/*",
+      "main.js",
+      "config.js",
+      ".env",
       "package.json",
-      "**/*",
-      ".env"
+      "src/**/*",
+      "pages/**/*",
+      "assets/**/*",
+      "node_modules/**/*"
     ],
     "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ],
+      "target": ["dmg", "zip"],
       "icon": "assets/spaceapp.icns",
       "category": "public.app-category.utilities"
     },
     "win": {
-      "target": [
-        "nsis",
-        "zip"
-      ],
+      "target": ["nsis", "zip"],
       "icon": "assets/spaceapp.ico"
     },
     "linux": {
-      "target": [
-        "AppImage",
-        "deb",
-        "rpm"
-      ],
+      "target": ["AppImage", "deb", "rpm"],
       "icon": "assets/spaceapp.png",
       "category": "Utility",
       "maintainer": "ccharlesroberto@gmail.com"
