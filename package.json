@@ -4,12 +4,13 @@
   "description": "Electron App with Modern UI",
   "main": "src/main.js",
   "scripts": {
+    "prestart": "node scripts/generate-config.js",
     "prebuild": "node scripts/generate-config.js",
     "start": "electron .",
-    "build": "npm run generate-config && electron-builder",
-    "build:win": "electron-builder --win",
-    "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux"
+    "build": "npm run prebuild && electron-builder",
+    "build:win": "npm run prebuild && electron-builder --win",
+    "build:mac": "npm run prebuild && electron-builder --mac",
+    "build:linux": "npm run prebuild && electron-builder --linux"
   },
   "devDependencies": {
     "electron": "^25.9.8",
@@ -33,15 +34,12 @@
       "src/**/*",
       "pages/**/*",
       "assets/**/*",
+      "scripts/**/*",
       "node_modules/**/*",
       "main.js",
       "config.js",
       ".env",
-      "package.json",
-      "src/**/*",
-      "pages/**/*",
-      "assets/**/*",
-      "node_modules/**/*"
+      "package.json"
     ],
     "mac": {
       "target": ["dmg", "zip"],
@@ -54,7 +52,7 @@
     },
     "linux": {
       "target": ["AppImage", "deb", "rpm"],
-      "icon": "assets/spaceapp.png",
+      "icon": "assets/spaceapp", 
       "category": "Utility",
       "maintainer": "ccharlesroberto@gmail.com"
     }

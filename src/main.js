@@ -54,10 +54,10 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
-  //mainWindow.setMenu(null)
-  mainWindow.webContents.on('did-attach-webview', (event, webContents) => {
-    webContents.openDevTools(); // abre DevTools da webview
-  });
+  mainWindow.setMenu(null)
+  // mainWindow.webContents.on('did-attach-webview', (event, webContents) => {
+  //   webContents.openDevTools(); // abre DevTools da webview
+  // });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url)) shell.openExternal(url);
@@ -78,7 +78,7 @@ function createLoginWindow() {
       contextIsolation: false
     }
   });
-  //loginWindow.setMenu(null)
+  loginWindow.setMenu(null)
   loginWindow.loadFile(path.join(__dirname, 'pages/login/login.html'));
   loginWindow.on('closed', () => { loginWindow = null; });
 }
@@ -96,7 +96,7 @@ function createRegisterWindow(userData) {
     }
   });
 
-  //registerWindow.setMenu(null)
+  registerWindow.setMenu(null)
   registerWindow.loadFile(path.join(__dirname, 'pages/register/register.html'));
   registerWindow.center();
   registerWindow.webContents.on('did-finish-load', () => {
@@ -169,7 +169,7 @@ ipcMain.on('start-google-login', () => {
     }
   });
 
-  //authWindow.setMenu(null)
+  authWindow.setMenu(null)
   authWindow.loadURL(authUrl);
 
   authWindow.on('closed', () => {
