@@ -3,7 +3,7 @@ const path = require('path');
 const Store = require('electron-store');
 const axios = require('axios');
 const qs = require('querystring');
-const config = require('../config');
+const config = require(path.join(__dirname, '../config'));
 require('dotenv').config();
 const store = new Store();
 
