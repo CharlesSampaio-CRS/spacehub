@@ -4,25 +4,24 @@
   "description": "Electron App with Modern UI",
   "main": "src/index.js",
   "scripts": {
+    "prebuild": "node src/scripts/generate-config.js",
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
   },
   "devDependencies": {
     "electron": "^25.9.8",
-    "electron-builder": "^25.1.8",
-    "electron-packager": "^17.1.2"
+    "electron-builder": "^25.1.8"
   },
   "dependencies": {
     "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.7",
-    "electron-google-oauth": "^2.0.0",
-    "electron-oauth-helper": "^2.0.3",
-    "electron-oauth2": "^3.0.0",
     "electron-store": "^7.0.3",
     "googleapis": "^148.0.0",
-    "node-fetch": "^2.7.0",
-    "oauth-electron": "^2.0.111"
+    "node-fetch": "^2.7.0"
   },
   "build": {
     "appId": "com.spaceapp",
@@ -30,12 +29,18 @@
     "directories": {
       "output": "dist"
     },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
     "mac": {
       "target": [
         "dmg",
         "zip"
       ],
-      "icon": "./assets/spaceapp.icns",
+      "icon": "assets/spaceapp.icns",
       "category": "public.app-category.utilities"
     },
     "win": {
@@ -43,7 +48,7 @@
         "nsis",
         "zip"
       ],
-      "icon": "./assets/spaceapp.ico"
+      "icon": "assets/spaceapp.ico"
     },
     "linux": {
       "target": [
@@ -51,9 +56,9 @@
         "deb",
         "rpm"
       ],
-      "icon": "./assets/spaceapp.png",
+      "icon": "assets/spaceapp.png",
       "category": "Utility",
-      "maintainer": "Seu Nome <ccharlesroberto@gmail.com>"
+      "maintainer": "ccharlesroberto@gmail.com"
     }
   }
 }
