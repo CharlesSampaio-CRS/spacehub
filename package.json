@@ -4,22 +4,25 @@
   "description": "Electron App with Modern UI",
   "main": "src/main.js",
   "scripts": {
+    "prestart": "node scripts/generate-config.js",
+    "prebuild": "node scripts/generate-config.js",
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "npm run prebuild && electron-builder",
+    "build:win": "npm run prebuild && electron-builder --win",
+    "build:mac": "npm run prebuild && electron-builder --mac",
+    "build:linux": "npm run prebuild && electron-builder --linux"
   },
   "devDependencies": {
     "electron": "^25.9.8",
-    "electron-builder": "^25.1.8",
-    "electron-packager": "^17.1.2"
+    "electron-builder": "^25.1.8"
   },
   "dependencies": {
+    "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
-    "electron-oauth-helper": "^2.0.3",
-    "electron-store": "^10.0.1",
+    "dotenv": "^16.4.7",
+    "electron-store": "^7.0.3",
     "googleapis": "^148.0.0",
-    "mongodb": "^6.13.0",
-    "node-fetch": "^2.7.0",
-    "oauth-electron": "^2.0.111"
+    "node-fetch": "^2.7.0"
   },
   "build": {
     "appId": "com.spaceapp",
@@ -27,30 +30,31 @@
     "directories": {
       "output": "dist"
     },
+    "files": [
+      "src/**/*",
+      "pages/**/*",
+      "assets/**/*",
+      "scripts/**/*",
+      "node_modules/**/*",
+      "main.js",
+      "config.js",
+      ".env",
+      "package.json"
+    ],
     "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "icon": "./assets/spaceapp.icns",
+      "target": ["dmg", "zip"],
+      "icon": "assets/spaceapp.icns",
       "category": "public.app-category.utilities"
     },
     "win": {
-      "target": [
-        "nsis",
-        "zip"
-      ],
-      "icon": "./assets/spaceapp.ico"
+      "target": ["nsis", "zip"],
+      "icon": "assets/spaceapp.ico"
     },
     "linux": {
-      "target": [
-        "AppImage",
-        "deb",
-        "rpm"
-      ],
-      "icon": "./assets/spaceapp.png",
+      "target": ["AppImage", "deb", "rpm"],
+      "icon": "assets/spaceapp", 
       "category": "Utility",
-      "maintainer": "Seu Nome <ccharlesroberto@gmail.com>"
+      "maintainer": "ccharlesroberto@gmail.com"
     }
   }
 }

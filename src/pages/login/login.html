@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; 
+        script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; 
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; 
+        font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; 
+        connect-src *; img-src * data:; frame-src *; object-src 'none';">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="./login.js"></script>
+</head>
+
+<body>
+  <div class="login-container">
+    <div class="logo-container">
+      <div class="logo-icon">
+        <img src="../../assets/spaceapp.png" alt="SpaceApp">
+      </div>
+      <h2>Bem-vindo!</h2>
+      <p class="subtitle">Faça login para acessar sua conta</p>
+    </div>
+
+    <div class="input-group">
+      <label for="email">E-mail</label>
+      <input type="text" id="email" placeholder="seu@email.com">
+    </div>
+
+    <div class="input-group">
+      <label for="password">Senha</label>
+      <input type="password" id="password" placeholder="••••••••">
+    </div>
+
+    <p id="errorMessage" style="color: #ef4444; display: none; margin-top: 8px;"></p>
+
+    <button id="loginButton" class="btn btn-primary">Entrar</button>
+
+    <div class="login-actions">
+      <p style="margin: 16px 0 8px;">ou</p>
+      <button id="googleLogin" class="btn btn-google">
+        <i class="fab fa-google"></i>
+        Entrar com Google
+      </button>
+    </div>
+
+    <p class="footer-text" style="margin-top: 20px;">
+      Não tem uma conta? <a href="#" id="registerLink">Cadastre-se</a>
+    </p>
+  </div>
+
+  <script>
+    document.getElementById('googleLogin').addEventListener('click', () => {
+      require('electron').ipcRenderer.send('start-google-login');
+    });
+
+    require('electron').ipcRenderer.on('google-login-success', (event, tokens) => {
+      const token = tokens.id_token || tokens.access_token;
+      localStorage.setItem('token', token);
+      require('electron').ipcRenderer.send('login-success', token);
+    });
+
+    require('electron').ipcRenderer.on('google-login-failed', (event, message) => {
+      const errorMsg = document.getElementById('errorMessage');
+      errorMsg.textContent = 'Falha ao fazer login com Google: ' + message;
+      errorMsg.style.display = 'block';
+    });
+
+    document.getElementById('loginButton').addEventListener('click', login);
+    document.getElementById('registerLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      window.electronAPI?.openRegister?.();
+      require('electron').ipcRenderer.send('show-register');
+    });
+
+    const token = window.electronAPI?.getToken?.();
+  </script>
+</body>
+
+</html>

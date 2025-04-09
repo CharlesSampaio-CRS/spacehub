@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; 
+    script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; 
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; 
+    font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; 
+    connect-src *; img-src * data:; frame-src *; object-src 'none';">
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="./index.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <div id="sidebar">
+      <button id="home-button" class="nav-button" title="Início">
+        <img src="../../assets/home.png" alt="Home" />
+      </button>
+      <div class="nav-section" id="nav-applications">
+        <!-- Buttons dinâmicos aqui -->
+      </div>
+    </div>
+    <div id="content">
+      <div id="header">
+        <button id="notifications-button" aria-label="Notificações">
+          <i class="fas fa-bell"></i>
+          <span>Notificações</span>
+        </button>
+        <button id="settings-button" aria-label="Configurações">
+          <i class="fas fa-cog"></i>
+          <span>Configurações</span>
+        </button>
+        <button id="logout-button" aria-label="Sair">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Sair</span>
+        </button>
+      </div>
+      <div id="content-container">
+        <webview id="webview"
+          webpreferences="contextIsolation=false, nodeIntegration=false, nativeWindowOpen=false"
+          partition="persist:mainSession" useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+        </webview>
+        <webview id="preloader" style="display: none; width: 0; height: 0;" partition="persist:preloader">
+        </webview>
+      </div>
+    </div>
+  </div>
+
+  <div id="notifications-panel" class="hidden">
+    <span class="close-btn" onclick="toggleNotifications()"></span>
+    <div class="notification"><strong>João:</strong> Enviou uma mensagem para você.</div>
+    <div class="notification"><strong>Ana:</strong> Curtiu sua postagem.</div>
+    <div class="notification"><strong>Pedro:</strong> Comentou no seu post.</div>
+  </div>
+
+  <script src="../renderer.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const { ipcRenderer } = require('electron');
+      const webview = document.getElementById('webview');
+      const homeButton = document.getElementById('home-button');
+      const settingsBtn = document.getElementById('settings-button');
+      const logoutBtn = document.getElementById('logout-button');
+      const notificationsBtn = document.getElementById('notifications-button');
+
+      // Carrega a tela de boas-vindas ao iniciar
+      if (webview) {
+        webview.src = '../home/home.html';
+      }
+
+      // Botão Home
+      if (homeButton && webview) {
+        homeButton.addEventListener('click', () => {
+          getApplications();
+          webview.src = '../home/home.html';
+        });
+      }
+
+      // Botão Configurações
+      if (settingsBtn && webview) {
+        settingsBtn.addEventListener('click', () => {
+          webview.src = '../config/config.html';
+        });
+      }
+
+      // Botão Logout
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          ipcRenderer.send('logout-success');
+        });
+      }
+
+      // Notificações
+      if (notificationsBtn) {
+        notificationsBtn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          toggleNotifications();
+        });
+      }
+
+      // Fecha painel de notificações ao clicar fora
+      document.addEventListener('click', (event) => {
+        const panel = document.getElementById('notifications-panel');
+        if (!notificationsBtn.contains(event.target) && !panel.contains(event.target)) {
+          panel.style.display = 'none';
+        }
+      });
+
+      function toggleNotifications() {
+        const panel = document.getElementById('notifications-panel');
+        const rect = notificationsBtn.getBoundingClientRect();
+        panel.style.top = `${rect.bottom + 5}px`;
+        panel.style.left = `${rect.left}px`;
+        panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+      }
+    });
+  </script>
+</body>
+
+</html>
