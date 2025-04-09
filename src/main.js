@@ -6,6 +6,16 @@ const qs = require('querystring');
 require('dotenv').config();
 const store = new Store();
 
+
+global.sharedObject = {
+  env: {
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET
+  }
+};
+
+
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // ⚠️ apenas para debug/teste
 
 let mainWindow = null;
@@ -118,6 +128,7 @@ ipcMain.on('login-success', (event, token) => {
 ipcMain.on('show-register', () => createRegisterWindow());
 ipcMain.on('show-login', createLoginWindow);
 ipcMain.on('logout-success', handleLogout);
+
 
 ipcMain.on('clear-sessions', async (event) => {
   try {

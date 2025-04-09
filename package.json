@@ -2,7 +2,7 @@
   "name": "spaceapp",
   "version": "1.0.0",
   "description": "Electron App with Modern UI",
-  "main": "src/index.js",
+  "main": "src/main.js",
   "scripts": {
     "prebuild": "node scripts/generate-config.js",
     "generate-config": "node scripts/generate-config.js",
@@ -34,7 +34,9 @@
       "src/**/*",
       "assets/**/*",
       "node_modules/**/*",
-      "package.json"
+      "package.json",
+      "**/*",
+      ".env"
     ],
     "mac": {
       "target": [
