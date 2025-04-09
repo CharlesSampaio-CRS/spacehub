@@ -140,8 +140,8 @@ ipcMain.on('start-google-login', () => {
   }
 
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${qs.stringify({
-    client_id: process.env.GOOGLE_CLIENT_ID,
-    redirect_uri: 'http://localhost',
+    client_id: config.GOOGLE_CLIENT_ID,
+    redirect_uri: config.GOOGLE_REDIRECT_URI,
     response_type: 'code',
     scope: 'profile email openid',
     access_type: 'offline',
@@ -176,8 +176,8 @@ ipcMain.on('start-google-login', () => {
           'https://oauth2.googleapis.com/token',
           qs.stringify({
             code,
-            client_id: process.env.GOOGLE_CLIENT_ID,
-            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+            client_id: config.GOOGLE_CLIENT_ID,
+            client_secret: config.GOOGLE_CLIENT_SECRET,
             redirect_uri: 'http://localhost',
             grant_type: 'authorization_code'
           }),
@@ -187,7 +187,6 @@ ipcMain.on('start-google-login', () => {
         );
 
         const accessToken = tokenRes.data.access_token;
-        const idToken = tokenRes.data.id_token;
         const userRes = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
           headers: { Authorization: `Bearer ${accessToken}` }
         });
