@@ -79,12 +79,14 @@ html {
 
 #header {
     background-color: var(--card-bg);
-    padding: 1px 24px;
+    padding: 12px 24px;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end; /* Alinha à direita */
     align-items: center;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    gap: 12px; /* Espaço entre os botões */
     z-index: 5;
+    position: relative;
 }
 
 #page-title {
