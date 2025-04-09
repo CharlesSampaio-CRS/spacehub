@@ -11,8 +11,10 @@ async function login() {
       password
     });
 
-    const payload = parseJwt(token);
     localStorage.setItem('token', data.token);
+
+    const payload = parseJwt(data.token);
+
     if (payload.uuid != null) {
       localStorage.setItem('userUuid', payload.uuid);
     }

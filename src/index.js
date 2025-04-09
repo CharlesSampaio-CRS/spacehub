@@ -4,7 +4,6 @@ const Store = require('electron-store');
 const axios = require('axios');
 const qs = require('querystring');
 require('dotenv').config();
-const config = require('./config');
 const store = new Store();
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // ⚠️ apenas para debug/teste
@@ -140,8 +139,8 @@ ipcMain.on('start-google-login', () => {
   }
 
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${qs.stringify({
-    client_id: config.GOOGLE_CLIENT_ID,
-    redirect_uri: config.GOOGLE_REDIRECT_URI,
+    client_id: '641475733495-ljdibcpq80hd5l9l4e63cu03653pbp33.apps.googleusercontent.com',
+    redirect_uri: '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',
     response_type: 'code',
     scope: 'profile email openid',
     access_type: 'offline',
@@ -176,8 +175,8 @@ ipcMain.on('start-google-login', () => {
           'https://oauth2.googleapis.com/token',
           qs.stringify({
             code,
-            client_id: config.GOOGLE_CLIENT_ID,
-            client_secret: config.GOOGLE_CLIENT_SECRET,
+            client_id: '641475733495-ljdibcpq80hd5l9l4e63cu03653pbp33.apps.googleusercontent.com',
+            client_secret: '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',
             redirect_uri: 'http://localhost',
             grant_type: 'authorization_code'
           }),
