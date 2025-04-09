@@ -85,8 +85,6 @@ document.addEventListener('DOMContentLoaded', async () => {
               }
             }
           );
-
-          console.log(`Status da aplicação ${appName} atualizado para ${newStatus}`);
           statusLabel.textContent = newStatus;
         } catch (err) {
           console.error('Erro ao atualizar status:', {
