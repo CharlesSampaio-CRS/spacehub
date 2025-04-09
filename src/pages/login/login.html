@@ -172,7 +172,6 @@
     });
 
     require('electron').ipcRenderer.on('google-login-success', (event, tokens) => {
-      console.log('Google login tokens:', tokens);
       const token = tokens.id_token || tokens.access_token;
       localStorage.setItem('token', token);
       require('electron').ipcRenderer.send('login-success', token);
