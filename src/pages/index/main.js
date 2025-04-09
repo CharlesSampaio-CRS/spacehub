@@ -14,7 +14,9 @@ async function getApplications() {
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    const applications = data[0]?.applications || [];
+    console.log(data)
+
+    const applications = data.applications || [];
 
     if (!applications.length) return console.warn('No applications found.');
 

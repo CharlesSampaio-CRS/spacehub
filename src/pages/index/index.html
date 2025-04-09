@@ -19,6 +19,9 @@
 <body>
   <div id="app">
     <div id="sidebar">
+      <button id="home-button" class="nav-button" title="Início">
+        <img src="../../assets/home.png" alt="Home" />
+      </button>
       <div class="nav-section" id="nav-applications">
         <!-- Buttons dinâmicos aqui -->
       </div>
@@ -59,54 +62,65 @@
   <script src="../renderer.js"></script>
 
   <script>
-
-    document.getElementById('logout-button').addEventListener('click', () => {
-      if (typeof require !== 'undefined') {
-        const { ipcRenderer } = require('electron');
-        ipcRenderer.send('logout-success');
-      }
-    });
-
-    document.getElementById('notifications-button').addEventListener('click', () => {
-      if (typeof require !== 'undefined') {
-        const { ipcRenderer } = require('electron');
-        ipcRenderer.send('notifications-center');
-      }
-    });
-
-    function toggleNotifications() {
-      let panel = document.getElementById('notifications-panel');
-      let button = document.getElementById('notifications-button');
-      let rect = button.getBoundingClientRect();
-      panel.style.top = `${rect.bottom + 5}px`;
-      panel.style.left = `${rect.left}px`;
-      panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
-    }
-
-    document.getElementById('notifications-button').addEventListener('click', function (event) {
-      event.stopPropagation();
-      toggleNotifications();
-    });
-
-    document.addEventListener('click', function (event) {
-      let panel = document.getElementById('notifications-panel');
-      let button = document.getElementById('notifications-button');
-      if (!button.contains(event.target) && !panel.contains(event.target)) {
-        panel.style.display = 'none';
-      }
-    });
     document.addEventListener('DOMContentLoaded', () => {
-  const settingsBtn = document.getElementById('settings-button');
-  const webview = document.getElementById('webview');
+      const { ipcRenderer } = require('electron');
+      const webview = document.getElementById('webview');
+      const homeButton = document.getElementById('home-button');
+      const settingsBtn = document.getElementById('settings-button');
+      const logoutBtn = document.getElementById('logout-button');
+      const notificationsBtn = document.getElementById('notifications-button');
 
-  if (settingsBtn && webview) {
-    settingsBtn.addEventListener('click', () => {
-      webview.src = '../config/config.html';
+      // Carrega a tela de boas-vindas ao iniciar
+      if (webview) {
+        webview.src = '../home/home.html';
+      }
+
+      // Botão Home
+      if (homeButton && webview) {
+        homeButton.addEventListener('click', () => {
+          getApplications();
+          webview.src = '../home/home.html';
+        });
+      }
+
+      // Botão Configurações
+      if (settingsBtn && webview) {
+        settingsBtn.addEventListener('click', () => {
+          webview.src = '../config/config.html';
+        });
+      }
+
+      // Botão Logout
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          ipcRenderer.send('logout-success');
+        });
+      }
+
+      // Notificações
+      if (notificationsBtn) {
+        notificationsBtn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          toggleNotifications();
+        });
+      }
+
+      // Fecha painel de notificações ao clicar fora
+      document.addEventListener('click', (event) => {
+        const panel = document.getElementById('notifications-panel');
+        if (!notificationsBtn.contains(event.target) && !panel.contains(event.target)) {
+          panel.style.display = 'none';
+        }
+      });
+
+      function toggleNotifications() {
+        const panel = document.getElementById('notifications-panel');
+        const rect = notificationsBtn.getBoundingClientRect();
+        panel.style.top = `${rect.bottom + 5}px`;
+        panel.style.left = `${rect.left}px`;
+        panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+      }
     });
-  } else {
-    console.warn('Botão ou Webview não encontrado no DOM');
-  }
-});
   </script>
 </body>
 

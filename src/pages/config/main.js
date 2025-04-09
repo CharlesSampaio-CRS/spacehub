@@ -7,17 +7,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  const payload = parseJwt(token); 
+  if (!payload || !payload.uuid) {
+    applicationsList.innerHTML = '<p>Token inválido.</p>';
+    return;
+  }
+
   try {
-    const response = await axios.get('https://spaceapp-digital-api.onrender.com/applications', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    // 1. Buscar todas as aplicações
+    const [appsResponse, spaceResponse] = await Promise.all([
+      axios.get('https://spaceapp-digital-api.onrender.com/applications', {
+        headers: { Authorization: `Bearer ${token}` }
+      }),
+      axios.get(`https://spaceapp-digital-api.onrender.com/spaces/${payload.uuid}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+    ]);
 
-    const applications = response.data;
-    const payload = parseJwt(token); // Decodifica o token para pegar userUuid
+    const applications = appsResponse.data;
+    const userApplicationsUuid = spaceResponse.data.applications.map(app => app.uuid);
 
+    // 2. Renderizar os cards com status baseado nas aplicações do usuário
     applications.forEach(app => {
+      const isActive = userApplicationsUuid.includes(app.uuid);
       const card = document.createElement('div');
       card.classList.add('application-card');
       const iconSrc = `../../assets/${app.application.toLowerCase()}.png`;
@@ -35,16 +47,17 @@ document.addEventListener('DOMContentLoaded', async () => {
               id="toggle-${app.id}" 
               data-appname="${app.application}" 
               data-uuid="${app.uuid}" 
-              ${app.status === 'Ativo' ? 'checked' : ''}>
+              ${isActive ? 'checked' : ''}>
             <span class="slider"></span>
           </label>
-          <span class="status-label" id="status-label-${app.id}">${app.status === 'Ativo' ? 'Ativo' : 'Inativo'}</span>
+          <span class="status-label" id="status-label-${app.id}">${isActive ? 'Ativo' : 'Inativo'}</span>
         </div>
       `;
 
       applicationsList.appendChild(card);
     });
 
+    // 3. Atualizar status ao alternar checkbox
     applicationsList.addEventListener('change', async (event) => {
       if (event.target.type === 'checkbox') {
         const checkbox = event.target;
@@ -57,11 +70,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         checkbox.disabled = true;
 
         const selectedApps = Array.from(document.querySelectorAll('.application-status input[type="checkbox"]:checked'))
-          .map(cb => cb.dataset.uuid); // Corrigido: coleta UUID das aplicações selecionadas
+          .map(cb => cb.dataset.uuid); 
 
-          console.log(selectedApps)
         try {
-          await axios.post(
+          await axios.put(
             'https://spaceapp-digital-api.onrender.com/spaces',
             {
               userUuid: payload.uuid,
@@ -92,7 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
   } catch (error) {
-    console.error('❌ Erro ao buscar aplicações:', {
+    console.error('❌ Erro ao buscar dados:', {
       message: error.message,
       response: error.response?.data,
       status: error.response?.status
