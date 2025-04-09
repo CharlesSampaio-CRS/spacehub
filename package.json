@@ -4,7 +4,8 @@
   "description": "Electron App with Modern UI",
   "main": "src/index.js",
   "scripts": {
-    "prebuild": "node src/scripts/generate-config.js",
+    "prebuild": "node scripts/generate-config.js",
+    "generate-config": "node scripts/generate-config.js",
     "start": "electron .",
     "build": "electron-builder",
     "build:win": "electron-builder --win",

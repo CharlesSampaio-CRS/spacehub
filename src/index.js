@@ -4,7 +4,7 @@ const Store = require('electron-store');
 const axios = require('axios');
 const qs = require('querystring');
 require('dotenv').config();
-
+const config = require('./config');
 const store = new Store();
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // ⚠️ apenas para debug/teste
