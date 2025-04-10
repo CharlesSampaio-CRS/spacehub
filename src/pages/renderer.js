@@ -5,12 +5,9 @@ let currentSite = 'home';
 
 document.addEventListener('DOMContentLoaded', () => {
     webview = document.getElementById('webview');
-    if (webview) {
-        setupWebView();
-    } else {
-        createWebView();
-    }
+    webview ? setupWebView() : createWebView();
     setupNavigationButtons();
+    displayAppVersion();
 });
 
 function setupWebView() {
@@ -145,6 +142,17 @@ function navigateWebViewTo(url) {
         webview.src = url;
     }
 }
+
+async function displayAppVersion() {
+    try {
+        const version = await ipcRenderer.invoke('get-app-version');
+        const versionElement = document.getElementById('app-version');
+        if (versionElement) versionElement.textContent = `Versão: ${version}`;
+    } catch (err) {
+        console.error('Erro ao obter versão do app:', err);
+    }
+}
+
 
 ipcRenderer.on('load-url', (event, data) => {
     if (!webview) createWebView();

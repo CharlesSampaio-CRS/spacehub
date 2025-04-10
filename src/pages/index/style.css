@@ -310,6 +310,17 @@ html {
     color: #555;
 }
 
+#app-version {
+    position: absolute;
+    bottom: 6px;
+    right: 16px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    z-index: 2;
+    user-select: none;
+}
+
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     :root {

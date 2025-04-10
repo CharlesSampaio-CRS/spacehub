@@ -1,13 +1,13 @@
-const { app, BrowserWindow, ipcMain, session, shell } = require('electron');
 const path = require('path');
+const { app, BrowserWindow, ipcMain, session, shell, dialog } = require('electron');
 const Store = require('electron-store');
 const axios = require('axios');
 const qs = require('querystring');
-const config = require(path.join(__dirname, '../config'));
-require('dotenv').config();
-const store = new Store();
 const { autoUpdater } = require('electron-updater');
-const { dialog } = require('electron');
+require('dotenv').config();
+const config = require(path.join(__dirname, '../config'));
+
+const store = new Store();
 
 global.sharedObject = {
   env: {
@@ -117,6 +117,10 @@ function handleLogout() {
 function generateFakePassword(email) {
   return email + '_googleAuth!';
 }
+
+ipcMain.handle('get-app-version', () => {
+  return app.getVersion();
+});
 
 ipcMain.on('login-success', (event, token) => {
   store.set('token', token);
