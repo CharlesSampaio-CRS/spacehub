@@ -6,7 +6,7 @@ const qs = require('querystring');
 const config = require(path.join(__dirname, '../config'));
 require('dotenv').config();
 const store = new Store();
-
+const { autoUpdater } = require('electron-updater');
 
 global.sharedObject = {
   env: {

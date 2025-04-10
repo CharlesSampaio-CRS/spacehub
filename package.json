@@ -24,18 +24,21 @@
     "dotenv": "^16.4.7",
     "electron-store": "^7.0.3",
     "googleapis": "^148.0.0",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "electron": "^25.9.8",
+    "electron-builder": "^25.1.8",
+    "electron-updater": "^6.6.2"
   },
   "build": {
     "appId": "com.spaceapp",
     "productName": "SpaceApp",
     "publish": [
-    {
-      "provider": "github",
-      "owner": "Charles Sampaio",
-      "repo": "https://github.com/CharlesSampaio-CRS/spaceapp"
-    }
-  ],
+      {
+        "provider": "github",
+        "owner": "CharlesSampaio-CRS",
+        "repo": "spaceapp"
+      }
+    ],
     "directories": {
       "output": "dist"
     },
