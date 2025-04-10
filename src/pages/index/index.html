@@ -80,14 +80,14 @@
       if (homeButton && webview) {
         homeButton.addEventListener('click', () => {
           getApplications();
-          webview.src = '../home/home.html';
+          smoothLoadWebview('../home/home.html');
         });
       }
 
       // Botão Configurações
       if (settingsBtn && webview) {
         settingsBtn.addEventListener('click', () => {
-          webview.src = '../config/config.html';
+          smoothLoadWebview('../config/config.html');
         });
       }
 

@@ -320,6 +320,14 @@ html {
     user-select: none;
 }
 
+#webview {
+    opacity: 1;
+    transition: opacity 0.4s ease;
+  }
+  
+  #webview.fade-out {
+    opacity: 0;
+  }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {

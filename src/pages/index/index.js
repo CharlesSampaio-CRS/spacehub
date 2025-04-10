@@ -62,4 +62,20 @@ function parseJwt(token) {
   }
 }
 
+function smoothLoadWebview(newSrc) {
+  const webview = document.getElementById('webview');
+
+  if (!webview) return;
+
+  webview.classList.add('fade-out');
+
+  setTimeout(() => {
+    webview.addEventListener('did-finish-load', () => {
+      webview.classList.remove('fade-out');
+    }, { once: true });
+
+    webview.src = newSrc;
+  }, 400); 
+}
+
 getApplications();
