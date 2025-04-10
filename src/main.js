@@ -246,6 +246,7 @@ ipcMain.on('start-google-login', () => {
 
 app.whenReady().then(() => {
   createLoginWindow();
+  autoUpdater.checkForUpdatesAndNotify();
 });
 
 app.on('window-all-closed', () => {
