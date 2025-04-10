@@ -1,6 +1,6 @@
 {
   "name": "spaceapp",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "Electron App with Modern UI",
   "author": "Charles Sampaio",
   "main": "src/main.js",
@@ -37,7 +37,6 @@
         "provider": "github",
         "owner": "CharlesSampaio-CRS",
         "repo": "spaceapp",
-        "releaseType": "release",
         "draft": "false",
         "prerelease": "false"
       }
