@@ -2,6 +2,7 @@
   "name": "spaceapp",
   "version": "1.0.0",
   "description": "Electron App with Modern UI",
+  "author": "Charles Sampaio",
   "main": "src/main.js",
   "scripts": {
     "prestart": "node scripts/generate-config.js",
@@ -15,8 +16,7 @@
   },
   "devDependencies": {
     "electron": "^25.9.8",
-    "electron-builder": "^25.1.8",
-    "electron-updater": "^6.6.2"
+    "electron-builder": "^25.1.8"
   },
   "dependencies": {
     "axios": "^1.8.4",
@@ -25,8 +25,6 @@
     "electron-store": "^7.0.3",
     "googleapis": "^148.0.0",
     "node-fetch": "^2.7.0",
-    "electron": "^25.9.8",
-    "electron-builder": "^25.1.8",
     "electron-updater": "^6.6.2"
   },
   "build": {
@@ -54,26 +52,16 @@
       "package.json"
     ],
     "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ],
+      "target": ["dmg", "zip"],
       "icon": "assets/spaceapp.icns",
       "category": "public.app-category.utilities"
     },
     "win": {
-      "target": [
-        "nsis",
-        "zip"
-      ],
+      "target": ["nsis", "zip"],
       "icon": "assets/spaceapp.ico"
     },
     "linux": {
-      "target": [
-        "AppImage",
-        "deb",
-        "rpm"
-      ],
+      "target": ["AppImage", "deb", "rpm"],
       "icon": "assets/spaceapp",
       "category": "Utility",
       "maintainer": "ccharlesroberto@gmail.com"
