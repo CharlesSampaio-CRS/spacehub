@@ -18,6 +18,8 @@ async function getApplications() {
 
     if (!applications.length) return console.warn('No applications found.');
 
+    applications.sort((a, b) => a.popularity - b.popularity);
+
     const fragment = document.createDocumentFragment();
     applications.forEach(app => fragment.appendChild(createApplicationButton(app)));
 
