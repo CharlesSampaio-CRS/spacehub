@@ -58,7 +58,7 @@ function createMainWindow() {
   // mainWindow.webContents.on('did-attach-webview', (event, webContents) => {
   //   webContents.openDevTools(); // abre DevTools da webview
   // });
-
+  autoUpdater.checkForUpdatesAndNotify(); // Verifica em background
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url)) shell.openExternal(url);
     return { action: 'deny' };
@@ -250,4 +250,27 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+// Quando uma atualização estiver disponível
+autoUpdater.on('update-available', () => {
+  console.log('Atualização disponível!');
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Atualização disponível',
+    message: 'Uma nova versão do SpaceApp está disponível. Ela será baixada em segundo plano.',
+    buttons: ['OK']
+  });
+});
+
+// Quando a atualização for baixada
+autoUpdater.on('update-downloaded', () => {
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Atualização pronta',
+    message: 'A nova versão foi baixada. O aplicativo será reiniciado para instalar a atualização.',
+    buttons: ['Reiniciar agora']
+  }).then(() => {
+    autoUpdater.quitAndInstall(); // Atualiza e reinicia
+  });
 });
