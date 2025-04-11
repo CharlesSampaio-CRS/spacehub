@@ -4,15 +4,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; 
-    script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; 
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; 
-    font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; 
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self';
+    script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+    font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
     connect-src *; img-src * data:; frame-src *; object-src 'none';">
   <link rel="stylesheet" href="./style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script src="./index.js"></script>
+  <script src="./index.js" defer></script>
+  <script src="../renderer.js" defer></script>
 </head>
 
 <body>
@@ -25,102 +26,140 @@
         <!-- Buttons dinâmicos aqui -->
       </div>
     </div>
+
     <div id="content">
       <div id="header">
-        <button id="notifications-button" aria-label="Notificações">
-          <i class="fas fa-bell"></i>
-          <span>Notificações</span>
-        </button>
-        <button id="settings-button" aria-label="Configurações">
-          <i class="fas fa-cog"></i>
-          <span>Configurações</span>
-        </button>
-        <button id="logout-button" aria-label="Sair">
-          <i class="fas fa-sign-out-alt"></i>
-          <span>Sair</span>
-        </button>
+        <div class="menu-container">
+          <button id="menu-button" aria-label="Usuário">
+            <span>Olá user</span>
+            <i class="fas fa-caret-down" style="margin-left: 5px;"></i>
+          </button>
+          <div id="dropdown-menu" class="hidden">
+            <button id="profile-button">
+              <i class="fas fa-user"></i> Perfil
+            </button>
+            <button id="settings-button">
+              <i class="fas fa-cog"></i> Configurações
+            </button>
+            <button id="logout-button">
+              <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+          </div>
+        </div>
       </div>
+
       <div id="content-container">
         <webview id="webview"
           webpreferences="contextIsolation=false, nodeIntegration=false, nativeWindowOpen=false"
-          partition="persist:mainSession" useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+          partition="persist:mainSession"
+          useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
         </webview>
-        <webview id="preloader" style="display: none; width: 0; height: 0;" partition="persist:preloader">
-        </webview>
+        <webview id="preloader" style="display: none; width: 0; height: 0;" partition="persist:preloader"></webview>
       </div>
     </div>
-  </div>
-
-  <div id="notifications-panel" class="hidden">
-    <span class="close-btn" onclick="toggleNotifications()"></span>
-    <div class="notification"><strong>João:</strong> Enviou uma mensagem para você.</div>
-    <div class="notification"><strong>Ana:</strong> Curtiu sua postagem.</div>
-    <div class="notification"><strong>Pedro:</strong> Comentou no seu post.</div>
   </div>
   <footer id="app-version">
     Versão <span id="version-number">carregando...</span>
   </footer>
-  <script src="../renderer.js"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       const { ipcRenderer } = require('electron');
       const webview = document.getElementById('webview');
-      const homeButton = document.getElementById('home-button');
-      const settingsBtn = document.getElementById('settings-button');
-      const logoutBtn = document.getElementById('logout-button');
-      const notificationsBtn = document.getElementById('notifications-button');
 
-      // Carrega a tela de boas-vindas ao iniciar
+      // Inicializa webview com a home
       if (webview) {
         webview.src = '../home/home.html';
       }
 
-      // Botão Home
-      if (homeButton && webview) {
-        homeButton.addEventListener('click', () => {
-          getApplications();
-          smoothLoadWebview('../home/home.html');
-        });
+      // Função para obter o nome do usuário do token
+      async function getUserNameFromToken() {
+        const token = localStorage.getItem('token');
+        if (!token) return console.warn('Token not found! Is the user logged in?');
+
+        const payload = parseJwt(token);
+        if (!payload?.name) return console.warn('No name found in token payload.');
+
+        return payload.name;
       }
+
+      // Função para parsear o JWT
+      function parseJwt(token) {
+        try {
+          const base64Payload = token.split('.')[1];
+          const payload = atob(base64Payload);
+          return JSON.parse(payload);
+        } catch (e) {
+          console.error('Failed to parse JWT', e);
+          return null;
+        }
+      }
+
+      // Obter o nome do usuário e atualizar o conteúdo
+      const userName = await getUserNameFromToken();
+      if (userName) {
+        const menuButton = document.getElementById('menu-button');
+        const userNameSpan = menuButton.querySelector('span');
+        if (userNameSpan) {
+          userNameSpan.textContent = `Olá, ${userName}`; // Exibe o nome do usuário
+        }
+      }
+
+      // Botões
+      const homeButton = document.getElementById('home-button');
+      const settingsBtn = document.getElementById('settings-button');
+      const logoutBtn = document.getElementById('logout-button');
+      const notificationsBtn = document.getElementById('notifications-button');
+      const menuBtn = document.getElementById('menu-button');
+      const dropdownMenu = document.getElementById('dropdown-menu');
+      const notificationsPanel = document.getElementById('notifications-panel');
+
+      // Botão Home
+      homeButton?.addEventListener('click', () => {
+        getApplications();
+        smoothLoadWebview('../home/home.html');
+      });
 
       // Botão Configurações
-      if (settingsBtn && webview) {
-        settingsBtn.addEventListener('click', () => {
-          smoothLoadWebview('../config/config.html');
-        });
-      }
+      settingsBtn?.addEventListener('click', () => {
+        smoothLoadWebview('../config/config.html');
+        dropdownMenu?.classList.add('hidden');
+      });
 
       // Botão Logout
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-          ipcRenderer.send('logout-success');
-        });
-      }
+      logoutBtn?.addEventListener('click', () => {
+        ipcRenderer.send('logout-success');
+      });
 
-      // Notificações
-      if (notificationsBtn) {
-        notificationsBtn.addEventListener('click', (event) => {
-          event.stopPropagation();
-          toggleNotifications();
-        });
-      }
-
-      // Fecha painel de notificações ao clicar fora
-      document.addEventListener('click', (event) => {
-        const panel = document.getElementById('notifications-panel');
-        if (!notificationsBtn.contains(event.target) && !panel.contains(event.target)) {
-          panel.style.display = 'none';
-        }
+      // Toggle Notificações
+      notificationsBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleNotifications();
       });
 
       function toggleNotifications() {
-        const panel = document.getElementById('notifications-panel');
         const rect = notificationsBtn.getBoundingClientRect();
-        panel.style.top = `${rect.bottom + 5}px`;
-        panel.style.left = `${rect.left}px`;
-        panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        notificationsPanel.style.top = `${rect.bottom + 5}px`;
+        notificationsPanel.style.left = `${rect.left}px`;
+        notificationsPanel.style.display = (notificationsPanel.style.display === 'block') ? 'none' : 'block';
       }
+
+      // Dropdown Menu
+      menuBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        console.log('Menu button clicked'); // Adicionei log para depuração
+        dropdownMenu.classList.toggle('hidden');
+      });
+
+      // Fecha dropdown e painel de notificações ao clicar fora
+      document.addEventListener('click', (e) => {
+        if (!dropdownMenu.contains(e.target) && !menuBtn.contains(e.target)) {
+          dropdownMenu.classList.add('hidden');
+        }
+        if (!notificationsBtn.contains(e.target) && !notificationsPanel.contains(e.target)) {
+          notificationsPanel.style.display = 'none';
+        }
+      });
     });
   </script>
 </body>

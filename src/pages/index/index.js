@@ -53,6 +53,16 @@ function createApplicationButton(app) {
   return button;
 }
 
+async function getUserNameFromToken() {
+  const token = localStorage.getItem('token');
+  if (!token) return console.warn('Token not found! Is the user logged in?');
+
+  const payload = parseJwt(token);
+  if (!payload?.name) return console.warn('No name found in token payload.');
+
+  return payload.name;
+}
+
 function parseJwt(token) {
   try {
     const base64Payload = token.split('.')[1]; 
