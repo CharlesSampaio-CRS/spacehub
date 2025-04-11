@@ -1,6 +1,6 @@
 {
   "name": "spaceapp",
-  "version": "1.0.37",
+  "version": "1.0.38",
   "description": "Electron App with Modern UI",
   "author": "Charles Sampaio",
   "main": "src/main.js",
@@ -9,7 +9,7 @@
     "prestart": "node scripts/generate-config.js",
     "prebuild": "npm run bump-version && node scripts/generate-config.js",
     "start": "electron .",
-    "build": "npm run prebuild && electron-builder",
+    "build": "npm run prebuild && electron-builder --win --linux",
     "dist": "electron-builder",
     "build:win": "npm run prebuild && electron-builder --win",
     "build:mac": "npm run prebuild && electron-builder --mac",
