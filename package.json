@@ -1,6 +1,6 @@
 {
   "name": "spaceapp",
-  "version": "1.0.35",
+  "version": "1.0.36",
   "description": "Electron App with Modern UI",
   "author": "Charles Sampaio",
   "main": "src/main.js",
@@ -67,15 +67,13 @@
     "win": {
       "target": [
         "nsis",
-        "zip"
+        "exe"
       ],
       "icon": "assets/spaceapp.ico"
     },
     "linux": {
       "target": [
-        "AppImage",
-        "deb",
-        "rpm"
+        "deb"
       ],
       "icon": "assets/spaceapp",
       "category": "Utility",
