@@ -107,6 +107,7 @@
 
       // Botões
       const homeButton = document.getElementById('home-button');
+      const profileBtn = document.getElementById('profile-button');
       const settingsBtn = document.getElementById('settings-button');
       const logoutBtn = document.getElementById('logout-button');
       const notificationsBtn = document.getElementById('notifications-button');
@@ -118,6 +119,11 @@
       homeButton?.addEventListener('click', () => {
         getApplications();
         smoothLoadWebview('../home/home.html');
+      });
+
+     profileBtn?.addEventListener('click', () => {
+        smoothLoadWebview('../profile/profile.html');
+        dropdownMenu?.classList.add('hidden');
       });
 
       // Botão Configurações

@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (event.target.type === 'checkbox') {
         const checkbox = event.target;
         const appId = checkbox.id.replace('toggle-', '');
-        const appName = checkbox.dataset.appname;
         const statusLabel = document.getElementById(`status-label-${appId}`);
         const previousChecked = !checkbox.checked;
         const newStatus = checkbox.checked ? 'Ativo' : 'Inativo';
