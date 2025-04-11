@@ -43,13 +43,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           <label class="switch">
             <input 
               type="checkbox" 
-              id="toggle-${app.id}" 
+              id="toggle-${app.uuid}" 
               data-appname="${app.application}" 
               data-uuid="${app.uuid}" 
               ${isActive ? 'checked' : ''}>
             <span class="slider"></span>
           </label>
-          <span class="status-label" id="status-label-${app.id}">${isActive ? 'Ativo' : 'Inativo'}</span>
+          <span class="status-label" id="status-label-${app.uuid}">${isActive ? 'Ativo' : 'Inativo'}</span>
         </div>
       `;
 
