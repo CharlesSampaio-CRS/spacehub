@@ -14,28 +14,25 @@ fi
 # Verifica se o GH_TOKEN está definido
 if [ -z "$GH_TOKEN" ]; then
   echo "❌ Variável GH_TOKEN não está definida."
-  echo "Defina com: export GH_TOKEN=seu_token"
   exit 1
 fi
 
-# Puxa a imagem do Docker
+# Puxa imagem docker do electron-builder com suporte ao Wine
 docker pull electronuserland/builder:wine
 
-# Rodando o Docker com as variáveis do repositório
+# Roda o container com tudo pronto
 docker run --rm -ti \
   -v "$PWD":/project \
-  -e GH_TOKEN=$GH_TOKEN \
+  -e GH_TOKEN="$GH_TOKEN" \
   -w /project \
   electronuserland/builder:wine \
   bash -c "
     echo '📦 Instalando dependências...';
     npm install;
 
-    # Gerar configurações, incrementando a versão
     echo '🔧 Gerando config...';
     node scripts/generate-config.js;
 
-    # Atualiza a versão no package.json
     echo '🚀 Atualizando versão...';
     node -e '
       const fs = require(\"fs\");
@@ -50,19 +47,19 @@ docker run --rm -ti \
       console.log(\`Versão atualizada para \${newVersion}\`);
     ';
 
-    # Obtém a versão atualizada para o commit
-    VERSION=$(node -e 'console.log(require("./package.json").version)');
+    VERSION=\$(node -e 'console.log(require(\"./package.json\").version)');
 
-    # Fazendo commit e criando tag
-    echo '🔧 Fazendo commit e criando tag...';
-    git add package.json;
-    git commit -m \"release: v\$VERSION\";
-    git tag v\$VERSION;
-    git push && git push --tags;
+    echo '🔧 Fazendo commit e tag...';
+    git config --global user.email \"you@example.com\"
+    git config --global user.name \"Your Name\"
+    git add package.json
+    git commit -m \"release: v\$VERSION\" || echo '⚠️ Nenhuma alteração para commitar.'
+    git tag -f v\$VERSION
+    git push origin main
+    git push origin --tags -f
 
-    # Build e publica
-    echo '🚀 Buildando e publicando para Linux e Windows...';
-    npx electron-builder --publish always --win --linux;
+    echo '🚀 Buildando e publicando...';
+    npx electron-builder --publish always --win --linux
   "
 
 echo "✅ Build e publicação finalizados! Verifique o release no GitHub."
