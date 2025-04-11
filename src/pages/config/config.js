@@ -26,35 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const applications = appsResponse.data;
     const userApplicationsUuid = spaceResponse.data.applications.map(app => app.uuid);
 
-    applications.forEach(app => {
-      const isActive = userApplicationsUuid.includes(app.uuid);
-      const card = document.createElement('div');
-      card.classList.add('application-card');
-      const iconSrc = `../../assets/${app.application.toLowerCase()}.png`;
-      const inactiveClass = isActive ? '' : 'inactive';
-
-      card.innerHTML = `
-        <div class="application-info">
-          <img src="${iconSrc}" alt="${app.application} icon" class="application-icon" />
-          <h1>${app.application}</h1>
-        </div>
-        <div class="application-status ${inactiveClass}">
-          <p>Status:</p>
-          <label class="switch">
-            <input 
-              type="checkbox" 
-              id="toggle-${app.uuid}" 
-              data-appname="${app.application}" 
-              data-uuid="${app.uuid}" 
-              ${isActive ? 'checked' : ''}>
-            <span class="slider"></span>
-          </label>
-          <span class="status-label" id="status-label-${app.uuid}">${isActive ? 'Ativo' : 'Inativo'}</span>
-        </div>
-      `;
-
-      applicationsList.appendChild(card);
-    });
+    renderApplications(applications, userApplicationsUuid);
 
     applicationsList.addEventListener('change', async (event) => {
       if (event.target.type === 'checkbox') {
@@ -78,12 +50,12 @@ document.addEventListener('DOMContentLoaded', async () => {
               applicationsUuid: selectedApps
             },
             {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
+              headers: { Authorization: `Bearer ${token}` }
             }
           );
+
           statusLabel.textContent = newStatus;
+          renderApplications(applications, selectedApps);
         } catch (err) {
           console.error('Erro ao atualizar status:', {
             message: err.message,
@@ -109,6 +81,51 @@ document.addEventListener('DOMContentLoaded', async () => {
     applicationsList.innerHTML = '<p>Erro ao carregar aplicações. Verifique sua conexão ou tente novamente mais tarde.</p>';
   }
 });
+
+function renderApplications(applications, activeUuids) {
+  const applicationsList = document.getElementById('applicationsList');
+  applicationsList.innerHTML = '';
+
+  applicationsList.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const sortedApps = [...applications].sort((a, b) => {
+    const aIsActive = activeUuids.includes(a.uuid);
+    const bIsActive = activeUuids.includes(b.uuid);
+    return aIsActive === bIsActive ? 0 : aIsActive ? -1 : 1;
+  });
+
+  sortedApps.forEach(app => {
+    const isActive = activeUuids.includes(app.uuid);
+    const card = document.createElement('div');
+    card.classList.add('application-card');
+    if (!isActive) card.classList.add('inactive');
+
+    const iconSrc = `../../assets/${app.application.toLowerCase()}.png`;
+
+    card.innerHTML = `
+      <div class="application-info">
+        <img src="${iconSrc}" alt="${app.application} icon" class="application-icon" />
+        <h1>${app.application}</h1>
+      </div>
+      <div class="application-status">
+        <p>Status:</p>
+        <label class="switch">
+          <input 
+            type="checkbox" 
+            id="toggle-${app.uuid}" 
+            data-appname="${app.application}" 
+            data-uuid="${app.uuid}" 
+            ${isActive ? 'checked' : ''}>
+          <span class="slider"></span>
+        </label>
+        <span class="status-label" id="status-label-${app.uuid}">${isActive ? 'Ativo' : 'Inativo'}</span>
+      </div>
+    `;
+
+    card.style.animation = 'fadeIn 0.3s ease-in-out';
+    applicationsList.appendChild(card);
+  });
+}
 
 function parseJwt(token) {
   try {
