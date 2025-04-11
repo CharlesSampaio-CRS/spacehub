@@ -22,6 +22,6 @@ execSync(`git tag v${newVersion}`, { stdio: "inherit" });
 execSync("git push && git push --tags", { stdio: "inherit" });
 
 console.log("Buildando e publicando...");
-execSync("npx electron-builder --publish always", { stdio: "inherit" });
+execSync("npx electron-builder --win --linux", { stdio: "inherit" });
 
 console.log("Release finalizado com sucesso!");
