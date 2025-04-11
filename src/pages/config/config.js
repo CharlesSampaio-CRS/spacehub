@@ -7,14 +7,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  const payload = parseJwt(token); 
+  const payload = parseJwt(token);
   if (!payload || !payload.uuid) {
     applicationsList.innerHTML = '<p>Token inválido.</p>';
     return;
   }
 
   try {
-    // 1. Buscar todas as aplicações
     const [appsResponse, spaceResponse] = await Promise.all([
       axios.get('https://spaceapp-digital-api.onrender.com/applications', {
         headers: { Authorization: `Bearer ${token}` }
@@ -27,19 +26,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const applications = appsResponse.data;
     const userApplicationsUuid = spaceResponse.data.applications.map(app => app.uuid);
 
-    // 2. Renderizar os cards com status baseado nas aplicações do usuário
     applications.forEach(app => {
       const isActive = userApplicationsUuid.includes(app.uuid);
       const card = document.createElement('div');
       card.classList.add('application-card');
       const iconSrc = `../../assets/${app.application.toLowerCase()}.png`;
+      const inactiveClass = isActive ? '' : 'inactive';
 
       card.innerHTML = `
         <div class="application-info">
           <img src="${iconSrc}" alt="${app.application} icon" class="application-icon" />
           <h1>${app.application}</h1>
         </div>
-        <div class="application-status">
+        <div class="application-status ${inactiveClass}">
           <p>Status:</p>
           <label class="switch">
             <input 
@@ -57,7 +56,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       applicationsList.appendChild(card);
     });
 
-    // 3. Atualizar status ao alternar checkbox
     applicationsList.addEventListener('change', async (event) => {
       if (event.target.type === 'checkbox') {
         const checkbox = event.target;
@@ -70,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         checkbox.disabled = true;
 
         const selectedApps = Array.from(document.querySelectorAll('.application-status input[type="checkbox"]:checked'))
-          .map(cb => cb.dataset.uuid); 
+          .map(cb => cb.dataset.uuid);
 
         try {
           await axios.put(
@@ -102,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
   } catch (error) {
-    console.error('❌ Erro ao buscar dados:', {
+    console.error('Erro ao buscar dados:', {
       message: error.message,
       response: error.response?.data,
       status: error.response?.status
@@ -118,7 +116,7 @@ function parseJwt(token) {
     const payload = atob(base64Payload);
     return JSON.parse(payload);
   } catch (e) {
-    console.error('Failed to parse JWT', e);
+    console.error('Erro ao decodificar token JWT', e);
     return null;
   }
 }

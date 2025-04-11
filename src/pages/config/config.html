@@ -3,25 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpaceApp - Configurações</title>
+
+  <!-- Estilos -->
   <link rel="stylesheet" href="./style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="./config.js" defer></script>
 </head>
 
 <body>
-  <!-- Wrapper principal centralizado -->
   <div class="main-wrapper">
-    
     <!-- Painel de Aplicações -->
-    <div id="content-container">
+    <section id="content-container">
       <div class="applications-list" id="applicationsList">
-        <!-- Aplicações carregadas dinamicamente -->
       </div>
-    </div>
+    </section>
 
     <!-- Painel de Configurações -->
-    <div id="settings-panel">
+    <aside id="settings-panel">
       <div class="setting-item">
         <span class="setting-label">Notificações</span>
         <label class="toggle-switch">
@@ -61,7 +63,7 @@
           <span class="slider"></span>
         </label>
       </div>
-    </div>
+    </aside>
   </div>
 </body>
 </html>
