@@ -292,9 +292,7 @@
         showUpdateModal(`O aplicativo já está na versão <strong>${version}</strong>.`);
       });
 
-      ipcRenderer.on('update-available', () => {
-        showUpdateModal(`Uma nova atualização está disponível. Baixando...`);
-      });
+      ipcRenderer.on('update-available');
 
       ipcRenderer.on('update-error', (event, message) => {
         showUpdateModal(`Erro ao verificar atualizações: ${message}`);
