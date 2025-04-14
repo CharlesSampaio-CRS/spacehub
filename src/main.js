@@ -119,7 +119,27 @@ function generateFakePassword(email) {
 }
 
 ipcMain.on('check-for-updates', () => {
-  autoUpdater.checkForUpdates(); 
+  autoUpdater.checkForUpdates();  // Verifica se há atualizações
+
+  // Evento disparado quando a atualização é encontrada
+  autoUpdater.on('update-available', () => {
+    // Se houver atualização disponível
+    console.log('Uma nova versão está disponível');
+    mainWindow.webContents.send('update-available', 'Uma nova versão está disponível!');
+  });
+
+  // Evento disparado quando a versão está atualizada
+  autoUpdater.on('update-not-available', () => {
+    // Se a versão está atualizada
+    console.log('O aplicativo já está na versão mais recente');
+    mainWindow.webContents.send('update-not-available', `O aplicativo já está na versão ${app.getVersion()}`);
+  });
+
+  // Caso ocorra algum erro na verificação
+  autoUpdater.on('error', (err) => {
+    console.error('Erro ao verificar atualizações:', err);
+    mainWindow.webContents.send('update-error', 'Erro ao verificar atualizações.');
+  });
 });
 
 ipcMain.handle('get-app-version', () => {
