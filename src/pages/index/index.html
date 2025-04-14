@@ -87,6 +87,24 @@
     footer {
       font-size: 0.85rem;
       text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+
+    .footer-button {
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: #007bff;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-button:hover {
+      color: #0056b3;
     }
 
     @media (max-width: 768px) {
@@ -126,23 +144,6 @@
 
 <body>
   <div class="d-flex flex-column h-100">
-    <header class="d-flex justify-content-between align-items-center">
-      <button id="home-button" class="btn btn-outline-primary d-flex align-items-center gap-2">
-        <i class="fas fa-home"></i>
-      </button>
-
-      <div class="dropdown">
-        <button id="menu-button" class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
-          <span>Olá, user</span>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-          <li><a id="profile-button" class="dropdown-item d-flex align-items-center gap-2"><i class="fas fa-user"></i> Perfil</a></li>
-          <li><a id="settings-button" class="dropdown-item d-flex align-items-center gap-2"><i class="fas fa-cog"></i> Configurações</a></li>
-          <li><a id="logout-button" class="dropdown-item d-flex align-items-center gap-2 text-danger"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-        </ul>
-      </div>
-    </header>
-
     <div class="d-flex flex-grow-1 overflow-hidden flex-column flex-md-row">
       <aside id="sidebar" class="d-flex flex-md-column align-items-center py-2">
         <div id="nav-applications" class="w-100 d-flex flex-wrap justify-content-center justify-content-md-start"></div>
@@ -153,10 +154,25 @@
         <webview id="preloader" style="display: none; width: 0; height: 0;" partition="persist:preloader"></webview>
       </main>
     </div>
-
     <footer class="text-center">
-      V<span id="version-number">Carregando...</span>
-    </footer>
+      <div class="dropdown">
+        <button class="footer-button dropdown-toggle" type="button" id="footerMenu" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-bars"></i> Menu
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="footerMenu">
+          <li><a class="dropdown-item" href="#" id="profile-button"><i class="fas fa-user"></i> Perfil</a></li>
+          <li><a class="dropdown-item" href="#" id="applications-button"><i class="fas fa-th"></i> Aplicativos</a></li>
+          <li><a class="dropdown-item" href="#" id="notifications-button"><i class="fas fa-bell"></i> Notificações</a></li>
+          <li><a class="dropdown-item" href="#" id="support-button"><i class="fas fa-life-ring"></i> Suporte</a></li>
+          <li><a class="dropdown-item" href="#" id="configurations-button"><i class="fas fa-cog"></i> Configurações</a></li>
+          <li><a class="dropdown-item" href="#" id="update-button"><i class="fas fa-sync"></i> Atualizar versão</a></li>
+        </ul>
+      </div>
+    
+      <button id="logout-button" class="footer-button">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </footer>    
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -197,24 +213,50 @@
         document.getElementById('menu-button').classList.remove('active');
       });
 
+      document.getElementById('applications-button')?.addEventListener('click', () => {
+        smoothLoadWebview('../applications/applications.html');
+      });
+      
       document.getElementById('profile-button')?.addEventListener('click', () => {
-        smoothLoadWebview('../profile/profile.html');
-        document.getElementById('menu-button').classList.add('active');
-        document.getElementById('home-button').classList.remove('active');
+        smoothLoadWebview('../profile/profile.html')
       });
 
-      document.getElementById('settings-button')?.addEventListener('click', () => {
-        smoothLoadWebview('../config/config.html');
+      document.getElementById('notifications-button')?.addEventListener('click', () => {
+        smoothLoadWebview('../notifications/notifications.html');
+      });
+
+      document.getElementById('support-button')?.addEventListener('click', () => {
+        smoothLoadWebview('../support/support.html'); // Página de Suporte
+      });
+
+
+      document.getElementById('configurations-button')?.addEventListener('click', () => {
+        smoothLoadWebview('../configurations/configurations.html');
+      });
+
+      document.getElementById('update-button')?.addEventListener('click', async () => {
+        const version = await ipcRenderer.invoke('get-app-version');
+        alert(`Versão atual: ${version}`);
       });
 
       document.getElementById('logout-button')?.addEventListener('click', () => {
         ipcRenderer.send('logout-success');
       });
 
+      ipcRenderer.on('update-available', () => {
+  const updateBtn = document.getElementById('update-btn');
+
+  // Evita criar badge duplicada
+  if (!updateBtn.querySelector('.update-badge')) {
+    const badge = document.createElement('span');
+    badge.classList.add('update-badge');
+    updateBtn.appendChild(badge);
+  }
+});
       const version = await ipcRenderer.invoke('get-app-version');
       const versionSpan = document.getElementById('version-number');
       if (versionSpan) {
-        versionSpan.textContent = version || 'Desconhecida';
+        versionSpan.innerText = `v${version}`;
       }
     });
   </script>
