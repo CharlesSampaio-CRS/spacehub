@@ -15,12 +15,50 @@ async function getApplications() {
     );
 
     const applications = data.applications || [];
-
-    if (!applications.length) return console.warn('No applications found.');
-
     applications.sort((a, b) => a.popularity - b.popularity);
 
     const fragment = document.createDocumentFragment();
+
+    // 🔸 Botão fixo de HOME
+    const homeButton = document.createElement('button');
+    homeButton.className = 'nav-button';
+    homeButton.title = 'Home';
+
+    Object.assign(homeButton.style, {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '42px',
+      height: '42px',
+      margin: '6px',
+      padding: '6px',
+      border: 'none',
+      borderRadius: '12px',
+      backgroundColor: '#fff',
+      boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)',
+      cursor: 'pointer',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+    });
+
+    homeButton.innerHTML = `<i class="fas fa-home" style="font-size: 24px; color: #007bff;"></i>`;
+
+    homeButton.addEventListener('mouseover', () => {
+      homeButton.style.transform = 'scale(1.1)';
+      homeButton.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.2)';
+    });
+
+    homeButton.addEventListener('mouseout', () => {
+      homeButton.style.transform = 'scale(1)';
+      homeButton.style.boxShadow = '0 1px 4px rgba(0, 0, 0, 0.1)';
+    });
+
+    homeButton.addEventListener('click', () => {
+      smoothLoadWebview('../home/home.html');
+    });
+
+    fragment.appendChild(homeButton); // 🔸 Adiciona antes dos apps
+
+    // 🔹 Botões dinâmicos da API
     applications.forEach(app => fragment.appendChild(createApplicationButton(app)));
 
     container.replaceChildren(fragment);
@@ -29,20 +67,61 @@ async function getApplications() {
   }
 }
 
+
 function createApplicationButton(app) {
   const button = document.createElement('button');
   button.className = 'nav-button';
   button.dataset.nav = app.application.toLowerCase();
   button.title = app.application;
 
+  // Estilo compacto e moderno do botão
+  Object.assign(button.style, {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '42px',
+    height: '42px',
+    margin: '6px',
+    padding: '6px',
+    border: 'none',
+    borderRadius: '12px',
+    backgroundColor: '#fff',
+    boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)',
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+  });
+
+  // Efeito hover
+  button.addEventListener('mouseover', () => {
+    button.style.transform = 'scale(1.1)';
+    button.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.2)';
+  });
+
+  button.addEventListener('mouseout', () => {
+    button.style.transform = 'scale(1)';
+    button.style.boxShadow = '0 1px 4px rgba(0, 0, 0, 0.1)';
+  });
+
+  // Ícone do app
   const img = document.createElement('img');
   img.src = `../../assets/${app.application.toLowerCase()}.png`;
   img.alt = app.application;
 
-  img.onerror = () => img.src = app.icon;
+  Object.assign(img.style, {
+    width: '28px',
+    height: '28px',
+    objectFit: 'contain',
+    borderRadius: '6px',
+  });
+
+  // Fallback pro ícone remoto
+  img.onerror = () => {
+    img.src = app.icon;
+  };
 
   button.appendChild(img);
 
+  // Click carrega app
   button.addEventListener('click', () => {
     const webview = document.getElementById('webview');
     if (webview && webview.src !== app.url) {
@@ -52,6 +131,7 @@ function createApplicationButton(app) {
 
   return button;
 }
+
 
 async function getUserNameFromToken() {
   const token = localStorage.getItem('token');

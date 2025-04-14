@@ -3,169 +3,261 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self';
-    script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
-    font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
-    connect-src *; img-src * data:; frame-src *; object-src 'none';">
-  <link rel="stylesheet" href="./style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src *; img-src * data:; frame-src *; object-src 'none';">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Axios -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <!-- Seus scripts -->
   <script src="./index.js" defer></script>
   <script src="../renderer.js" defer></script>
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f9;
+    }
+
+    #sidebar button i,
+    .dropdown-menu i {
+      font-size: 1.4rem;
+    }
+
+    #sidebar {
+      width: 64px;
+      background-color: #ffffff;
+      border-right: 1px solid #dee2e6;
+      overflow-y: auto;
+      height: 100%;
+      scrollbar-width: thin;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    #sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #sidebar::-webkit-scrollbar-track {
+      background: #f1f3f5;
+    }
+
+    #sidebar::-webkit-scrollbar-thumb {
+      background-color: #adb5bd;
+      border-radius: 3px;
+    }
+
+    .nav-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      margin: 8px auto;
+      border-radius: 50%;
+      background-color: #f8f9fa;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: 0.2s ease;
+    }
+
+    .nav-button:hover {
+      background-color: #e2e6ea;
+      transform: scale(1.1);
+    }
+
+    webview {
+      border: none;
+      border-radius: 8px; /* Adiciona o border-radius */
+    }
+
+    header, footer {
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      padding: 0.5rem 1rem;
+    }
+
+    footer {
+      font-size: 0.85rem;
+      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+
+    .footer-button {
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: #007bff;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-button:hover {
+      color: #0056b3;
+    }
+
+    @media (max-width: 768px) {
+      #sidebar {
+        flex-direction: row !important;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+        justify-content: center;
+      }
+
+      .nav-button {
+        margin: 6px;
+      }
+
+      /* Define a cor padrão dos ícones e a opacidade dos inativos */
+      .nav-button i {
+        opacity: 0.6; /* Ícones inativos com opacidade reduzida */
+        transition: opacity 0.3s ease, color 0.3s ease; /* Transições suaves */
+      }
+
+      .nav-button.active i {
+        opacity: 1; /* Ícones ativos terão opacidade normal */
+        color: #007bff; /* Cor ativa do ícone */
+      }
+
+      /* Aplique cor padrão para ícones ativos */
+      #menu-button.active i,
+      #home-button.active i {
+        color: #007bff; /* Cor ativa */
+        opacity: 1; /* Garantir opacidade normal */
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <div id="app">
-    <div id="sidebar">
-      <button id="home-button" class="nav-button" title="Início">
-        <img src="../../assets/home.png" alt="Home" />
-      </button>
-      <div class="nav-section" id="nav-applications">
-        <!-- Buttons dinâmicos aqui -->
-      </div>
-    </div>
+  <div class="d-flex flex-column h-100">
+    <div class="d-flex flex-grow-1 overflow-hidden flex-column flex-md-row">
+      <aside id="sidebar" class="d-flex flex-md-column align-items-center py-2">
+        <div id="nav-applications" class="w-100 d-flex flex-wrap justify-content-center justify-content-md-start"></div>
+      </aside>
 
-    <div id="content">
-      <div id="header">
-        <div class="menu-container">
-          <button id="menu-button" aria-label="Usuário">
-            <span>Olá user</span>
-            <i class="fas fa-caret-down" style="margin-left: 5px;"></i>
-          </button>
-          <div id="dropdown-menu" class="hidden">
-            <button id="profile-button">
-              <i class="fas fa-user"></i> Perfil
-            </button>
-            <button id="settings-button">
-              <i class="fas fa-cog"></i> Configurações
-            </button>
-            <button id="logout-button">
-              <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div id="content-container">
-        <webview id="webview"
-          webpreferences="contextIsolation=false, nodeIntegration=false, nativeWindowOpen=false"
-          partition="persist:mainSession"
-          useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
-        </webview>
+      <main class="flex-grow-1">
+        <webview id="webview" webpreferences="contextIsolation=false, nodeIntegration=false" partition="persist:mainSession" class="w-100 h-100" useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"></webview>
         <webview id="preloader" style="display: none; width: 0; height: 0;" partition="persist:preloader"></webview>
-      </div>
+      </main>
     </div>
+    <footer class="text-center">
+      <div class="dropdown">
+        <button class="footer-button dropdown-toggle" type="button" id="footerMenu" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-bars"></i> Menu
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="footerMenu">
+          <li><a class="dropdown-item" href="#" id="profile-button"><i class="fas fa-user"></i> Perfil</a></li>
+          <li><a class="dropdown-item" href="#" id="applications-button"><i class="fas fa-th"></i> Aplicativos</a></li>
+          <li><a class="dropdown-item" href="#" id="notifications-button"><i class="fas fa-bell"></i> Notificações</a></li>
+          <li><a class="dropdown-item" href="#" id="support-button"><i class="fas fa-life-ring"></i> Suporte</a></li>
+          <li><a class="dropdown-item" href="#" id="configurations-button"><i class="fas fa-cog"></i> Configurações</a></li>
+          <li><a class="dropdown-item" href="#" id="update-button"><i class="fas fa-sync"></i> Atualizar versão</a></li>
+        </ul>
+      </div>
+    
+      <button id="logout-button" class="footer-button">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </footer>    
   </div>
-  <footer id="app-version">
-    Versão <span id="version-number">carregando...</span>
-  </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const { ipcRenderer } = require('electron');
       const webview = document.getElementById('webview');
+      if (webview) webview.src = '../home/home.html';
 
-      // Inicializa webview com a home
-      if (webview) {
-        webview.src = '../home/home.html';
-      }
-
-      // Função para obter o nome do usuário do token
-      async function getUserNameFromToken() {
-        const token = localStorage.getItem('token');
-        if (!token) return console.warn('Token not found! Is the user logged in?');
-
-        const payload = parseJwt(token);
-        if (!payload?.name) return console.warn('No name found in token payload.');
-
-        return payload.name;
-      }
-
-      // Função para parsear o JWT
       function parseJwt(token) {
         try {
           const base64Payload = token.split('.')[1];
           const payload = atob(base64Payload);
           return JSON.parse(payload);
         } catch (e) {
-          console.error('Failed to parse JWT', e);
+          console.error('Erro ao ler JWT:', e);
           return null;
         }
       }
 
-      // Obter o nome do usuário e atualizar o conteúdo
-      const userName = await getUserNameFromToken();
-      if (userName) {
-        const menuButton = document.getElementById('menu-button');
-        const userNameSpan = menuButton.querySelector('span');
-        if (userNameSpan) {
-          userNameSpan.textContent = `Olá, ${userName}`; // Exibe o nome do usuário
-        }
+      async function getUserNameFromToken() {
+        const token = localStorage.getItem('token');
+        if (!token) return null;
+        const payload = parseJwt(token);
+        return payload?.name || null;
       }
 
-      // Botões
-      const homeButton = document.getElementById('home-button');
-      const profileBtn = document.getElementById('profile-button');
-      const settingsBtn = document.getElementById('settings-button');
-      const logoutBtn = document.getElementById('logout-button');
-      const notificationsBtn = document.getElementById('notifications-button');
-      const menuBtn = document.getElementById('menu-button');
-      const dropdownMenu = document.getElementById('dropdown-menu');
-      const notificationsPanel = document.getElementById('notifications-panel');
+      const userName = await getUserNameFromToken();
+      if (userName) {
+        const span = document.querySelector('#menu-button span');
+        if (span) span.textContent = `Olá, ${userName}`;
+      }
 
-      // Botão Home
-      homeButton?.addEventListener('click', () => {
+      document.getElementById('home-button')?.addEventListener('click', () => {
         getApplications();
         smoothLoadWebview('../home/home.html');
+        document.getElementById('home-button').classList.add('active');
+        document.getElementById('menu-button').classList.remove('active');
       });
 
-     profileBtn?.addEventListener('click', () => {
-        smoothLoadWebview('../profile/profile.html');
-        dropdownMenu?.classList.add('hidden');
+      document.getElementById('applications-button')?.addEventListener('click', () => {
+        smoothLoadWebview('../applications/applications.html');
+      });
+      
+      document.getElementById('profile-button')?.addEventListener('click', () => {
+        smoothLoadWebview('../profile/profile.html')
       });
 
-      // Botão Configurações
-      settingsBtn?.addEventListener('click', () => {
-        smoothLoadWebview('../config/config.html');
-        dropdownMenu?.classList.add('hidden');
+      document.getElementById('notifications-button')?.addEventListener('click', () => {
+        smoothLoadWebview('../notifications/notifications.html');
       });
 
-      // Botão Logout
-      logoutBtn?.addEventListener('click', () => {
+      document.getElementById('support-button')?.addEventListener('click', () => {
+        smoothLoadWebview('../support/support.html'); // Página de Suporte
+      });
+
+
+      document.getElementById('configurations-button')?.addEventListener('click', () => {
+        smoothLoadWebview('../configurations/configurations.html');
+      });
+
+      document.getElementById('update-button')?.addEventListener('click', async () => {
+        const version = await ipcRenderer.invoke('get-app-version');
+        alert(`Versão atual: ${version}`);
+      });
+
+      document.getElementById('logout-button')?.addEventListener('click', () => {
         ipcRenderer.send('logout-success');
       });
 
-      // Toggle Notificações
-      notificationsBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleNotifications();
-      });
+      ipcRenderer.on('update-available', () => {
+  const updateBtn = document.getElementById('update-btn');
 
-      function toggleNotifications() {
-        const rect = notificationsBtn.getBoundingClientRect();
-        notificationsPanel.style.top = `${rect.bottom + 5}px`;
-        notificationsPanel.style.left = `${rect.left}px`;
-        notificationsPanel.style.display = (notificationsPanel.style.display === 'block') ? 'none' : 'block';
+  // Evita criar badge duplicada
+  if (!updateBtn.querySelector('.update-badge')) {
+    const badge = document.createElement('span');
+    badge.classList.add('update-badge');
+    updateBtn.appendChild(badge);
+  }
+});
+      const version = await ipcRenderer.invoke('get-app-version');
+      const versionSpan = document.getElementById('version-number');
+      if (versionSpan) {
+        versionSpan.innerText = `v${version}`;
       }
-
-      // Dropdown Menu
-      menuBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        console.log('Menu button clicked'); // Adicionei log para depuração
-        dropdownMenu.classList.toggle('hidden');
-      });
-
-      // Fecha dropdown e painel de notificações ao clicar fora
-      document.addEventListener('click', (e) => {
-        if (!dropdownMenu.contains(e.target) && !menuBtn.contains(e.target)) {
-          dropdownMenu.classList.add('hidden');
-        }
-        if (!notificationsBtn.contains(e.target) && !notificationsPanel.contains(e.target)) {
-          notificationsPanel.style.display = 'none';
-        }
-      });
     });
   </script>
 </body>
