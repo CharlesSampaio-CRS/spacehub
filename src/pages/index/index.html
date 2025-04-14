@@ -287,16 +287,16 @@
       });
 
       // Atualizações
-      ipcRenderer.on('update-not-available', async () => {
+      autoUpdater.on('update-not-available', async () => {
         const version = await ipcRenderer.invoke('get-app-version');
         showUpdateModal(`O aplicativo já está na versão <strong>${version}</strong>.`);
       });
 
-      ipcRenderer.on('update-available', () => {
+      autoUpdater.on('update-available', () => {
         showUpdateModal(`Uma nova atualização está disponível. Baixando...`);
       });
 
-      ipcRenderer.on('update-error', (event, message) => {
+      autoUpdater.on('update-error', (event, message) => {
         showUpdateModal(`Erro ao verificar atualizações: ${message}`);
       });
     });
