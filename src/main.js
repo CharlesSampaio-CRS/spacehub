@@ -17,9 +17,7 @@ global.sharedObject = {
   }
 };
 
-
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // ⚠️ apenas para debug/teste
-
 
 let mainWindow = null;
 let loginWindow = null;
@@ -52,7 +50,6 @@ function createMainWindow() {
       partition: 'persist:mainSession'
     }
   });
-
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
@@ -272,7 +269,6 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-// Quando uma atualização estiver disponível
 autoUpdater.on('update-available', () => {
   dialog.showMessageBox({
     type: 'info',
@@ -282,7 +278,6 @@ autoUpdater.on('update-available', () => {
   });
 });
 
-// Quando a atualização for baixada
 autoUpdater.on('update-downloaded', () => {
   dialog.showMessageBox({
     type: 'info',
@@ -290,6 +285,6 @@ autoUpdater.on('update-downloaded', () => {
     message: 'A nova versão foi baixada. O aplicativo será reiniciado para instalar a atualização.',
     buttons: ['Reiniciar agora']
   }).then(() => {
-    autoUpdater.quitAndInstall(); // Atualiza e reinicia
+    autoUpdater.quitAndInstall(); 
   });
 });
