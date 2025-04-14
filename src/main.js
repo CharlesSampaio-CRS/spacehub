@@ -118,6 +118,10 @@ function generateFakePassword(email) {
   return email + '_googleAuth!';
 }
 
+ipcMain.on('check-for-updates', () => {
+  autoUpdater.checkForUpdates(); 
+});
+
 ipcMain.handle('get-app-version', () => {
   return app.getVersion();
 });
