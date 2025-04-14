@@ -235,9 +235,15 @@
       });
 
       document.getElementById('update-button')?.addEventListener('click', async () => {
-        const version = await ipcRenderer.invoke('get-app-version');
-        alert(`Versão atual: ${version}`);
-      });
+  const updateBtn = document.getElementById('update-button');
+  
+  // Remove bolinha se estiver presente
+  const badge = updateBtn.querySelector('.update-badge');
+  if (badge) badge.remove();
+
+  // Solicita ao processo principal que verifique por atualizações
+  ipcRenderer.send('check-for-updates');
+});
 
       document.getElementById('logout-button')?.addEventListener('click', () => {
         ipcRenderer.send('logout-success');
