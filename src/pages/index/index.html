@@ -242,22 +242,6 @@
       document.getElementById('logout-button')?.addEventListener('click', () => {
         ipcRenderer.send('logout-success');
       });
-
-      ipcRenderer.on('update-available', () => {
-  const updateBtn = document.getElementById('update-btn');
-
-  // Evita criar badge duplicada
-  if (!updateBtn.querySelector('.update-badge')) {
-    const badge = document.createElement('span');
-    badge.classList.add('update-badge');
-    updateBtn.appendChild(badge);
-  }
-});
-      const version = await ipcRenderer.invoke('get-app-version');
-      const versionSpan = document.getElementById('version-number');
-      if (versionSpan) {
-        versionSpan.innerText = `v${version}`;
-      }
     });
   </script>
 </body>
