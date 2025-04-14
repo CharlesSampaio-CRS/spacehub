@@ -185,6 +185,24 @@
         </ul>
       </div>
 
+      <!-- Modal de Atualização -->
+<div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="updateModalLabel"><i class="fas fa-info-circle"></i> Atualização</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body" id="updateModalBody">
+        O aplicativo está na versão mais recente.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
       <button id="logout-button" class="footer-button">
         <i class="fas fa-sign-out-alt"></i> Logout
       </button>
@@ -258,6 +276,32 @@
       document.getElementById('logout-button')?.addEventListener('click', () => {
         ipcRenderer.send('logout-success');
       });
+
+      ipcRenderer.on('update-not-available', async (event, message) => {
+  const version = await ipcRenderer.invoke('get-app-version');
+  const modalBody = document.getElementById('updateModalBody');
+  modalBody.innerHTML = `O aplicativo já está na versão <strong>${version}</strong>.`;
+
+  const updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
+  updateModal.show();
+});
+
+ipcRenderer.on('update-available', (event, message) => {
+  const modalBody = document.getElementById('updateModalBody');
+  modalBody.innerHTML = `Uma nova atualização está disponível. Baixando...`;
+
+  const updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
+  updateModal.show();
+});
+
+ipcRenderer.on('update-error', (event, message) => {
+  const modalBody = document.getElementById('updateModalBody');
+  modalBody.innerHTML = `Erro ao verificar atualizações: ${message}`;
+
+  const updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
+  updateModal.show();
+});
+
     });
   </script>
 </body>
