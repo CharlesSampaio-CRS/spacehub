@@ -272,7 +272,7 @@ app.on('window-all-closed', () => {
 autoUpdater.on('update-available', () => {
   dialog.showMessageBox({
     type: 'info',
-    title: 'Atualização disponível',
+    title: 'Atualização',
     message: 'Uma nova versão do SpaceApp está disponível. Ela será baixada em segundo plano.',
     buttons: ['OK']
   });
@@ -281,7 +281,7 @@ autoUpdater.on('update-available', () => {
 autoUpdater.on('update-downloaded', () => {
   dialog.showMessageBox({
     type: 'info',
-    title: 'Atualização pronta',
+    title: 'Atualização',
     message: 'A nova versão foi baixada. O aplicativo será reiniciado para instalar a atualização.',
     buttons: ['Reiniciar agora']
   }).then(() => {

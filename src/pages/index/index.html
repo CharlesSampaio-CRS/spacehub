@@ -286,17 +286,13 @@
         ipcRenderer.send('logout-success');
       });
 
-      // Atualizações
       ipcRenderer.on('update-not-available', async () => {
         const version = await ipcRenderer.invoke('get-app-version');
-        showUpdateModal(`O aplicativo já está na versão <strong>${version}</strong>.`);
+        showUpdateModal(`Versão <strong>${version}</strong>.`);
       });
 
       ipcRenderer.on('update-available');
 
-      ipcRenderer.on('update-error', (event, message) => {
-        showUpdateModal(`Erro ao verificar atualizações: ${message}`);
-      });
     });
   </script>
 </body>
