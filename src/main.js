@@ -43,6 +43,7 @@ function createMainWindow() {
     width: 1200,
     height: 800,
     icon: path.join(__dirname, './assets/spaceapp.png'),
+    webviewTag: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
