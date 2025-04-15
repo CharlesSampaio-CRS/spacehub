@@ -23,49 +23,53 @@
     <div id="sidebar">
       <div class="nav-section">
         <!-- Botões de redes sociais e aplicativos -->
-        <button id="whatsapp-button" class="nav-button active">
+        <button id="home-button" class="nav-button active" alt="Página Inicial">
+          <i class="fas fa-home"></i>
+        </button>
+        <button id="whatsapp-button" class="nav-button" alt="WhatsApp">
           <i class="fab fa-whatsapp"></i>
         </button>
-        <button id="instagram-button" class="nav-button">
+        <button id="instagram-button" class="nav-button" alt="Instagram">
           <i class="fab fa-instagram"></i>
         </button>
-        <button id="linkedin-button" class="nav-button">
+        <button id="linkedin-button" class="nav-button" alt="LinkedIn">
           <i class="fab fa-linkedin"></i>
         </button>
-        <button id="telegram-button" class="nav-button">
+        <button id="telegram-button" class="nav-button" alt="Telegram">
           <i class="fab fa-telegram"></i>
         </button>
-        <button id="messenger-button" class="nav-button">
+        <button id="messenger-button" class="nav-button" alt="Messenger">
           <i class="fab fa-facebook-messenger"></i>
         </button>
-        <button id="google-chat-button" class="nav-button">
+        <button id="google-chat-button" class="nav-button" alt="Google Chat">
           <i class="fab fa-google"></i>
         </button>
-        <button id="slack-button" class="nav-button">
+        <button id="slack-button" class="nav-button" alt="Slack">
           <i class="fab fa-slack"></i>
         </button>
-        <button id="discord-button" class="nav-button">
+        <button id="discord-button" class="nav-button" alt="Discord">
           <i class="fab fa-discord"></i>
         </button>
-        <button id="teams-button" class="nav-button">
+        <button id="teams-button" class="nav-button" alt="Microsoft Teams">
           <i class="fab fa-microsoft"></i>
         </button>
-        <button id="skype-button" class="nav-button">
+        <button id="skype-button" class="nav-button" alt="Skype">
           <i class="fab fa-skype"></i>
         </button>
-        <button id="wechat-button" class="nav-button">
+        <button id="wechat-button" class="nav-button" alt="WeChat">
           <i class="fab fa-weixin"></i>
         </button>
-        <button id="snapchat-button" class="nav-button">
+        <button id="snapchat-button" class="nav-button" alt="Snapchat">
           <i class="fab fa-snapchat"></i>
         </button>
-        <button id="twitter-button" class="nav-button">
+        <button id="twitter-button" class="nav-button" alt="Twitter">
           <i class="fab fa-twitter"></i>
         </button>
-        <button id="threads-button" class="nav-button">
+        <button id="threads-button" class="nav-button" alt="Threads">
           <i class="fab fa-threads"></i>
         </button>
       </div>
+
     </div>
 
     <div id="content">
@@ -121,13 +125,21 @@
           <!-- Menu Dropdown -->
           <div class="menu-container">
             <button class="menu-button" id="menu-button">
-              <i class="fas fa-ellipsis-v"></i>
+              <i class="fas fa-bars"></i>
             </button>
             <div class="dropdown-menu" id="dropdown-menu">
-              <a href="#" class="dropdown-item"><i class="fas fa-user"></i><span>Perfil</span></a>
-              <a href="#" class="dropdown-item"><i class="fas fa-th"></i><span>Aplicativos</span></a>
-              <a href="#" class="dropdown-item"><i class="fas fa-cog"></i><span>Configurações</span></a>
-              <a href="#" class="dropdown-item"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+              <button id="profile-button" class="dropdown-item" type="button">
+                <i class="fas fa-user"></i><span>Perfil</span>
+              </button>
+              <button id="applications-button" class="dropdown-item" type="button">
+                <i class="fas fa-th"></i><span>Aplicativos</span>
+              </button>
+              <button id="configurations-button" class="dropdown-item" type="button">
+                <i class="fas fa-cog"></i><span>Configurações</span>
+              </button>
+              <button id="logout-link" class="dropdown-item" type="button">
+                <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+              </button>
             </div>
           </div>
         </div>
@@ -135,6 +147,10 @@
 
       <div class="webview-container">
         <div class="webview-wrapper">
+          <webview id="webview-configurations" class="webview" src="../../pages/configurations/configurations.html">
+          </webview>
+          <webview id="webview-applications" class="webview" src="../../pages/applications/applications.html"></webview>
+          <webview id="webview-profile" class="webview" src="../../pages/profile/profile.html"></webview>
           <webview id="webview-whatsapp" src="https://web.whatsapp.com" partition="persist:mainSession"
             class="w-100 h-100 active"
             useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
@@ -180,16 +196,21 @@
   <script>
     const menuButton = document.getElementById("menu-button");
     const dropdownMenu = document.getElementById("dropdown-menu");
-
-    menuButton.addEventListener("click", () => {
-      dropdownMenu.classList.toggle("show");
-    });
-
     const notificationBell = document.getElementById("notification-bell");
     const notificationMenu = document.getElementById("notification-menu");
     const clearNotificationsBtn = document.getElementById("clear-notifications");
     const notificationList = document.getElementById("notification-list");
     const notificationBadge = document.querySelector(".notification-badge");
+
+    menuButton.addEventListener("click", () => {
+      dropdownMenu.classList.toggle("show");
+    });
+
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+      item.addEventListener('click', () => {
+        dropdownMenu.classList.remove('show');
+      });
+    });
 
     notificationBell.addEventListener("click", () => {
       notificationMenu.classList.toggle("show");
@@ -207,16 +228,6 @@
       notificationBadge.style.display = "none";
     });
 
-    document.addEventListener("click", (e) => {
-      if (!menuButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
-        dropdownMenu.classList.remove("show");
-      }
-
-      if (!notificationBell.contains(e.target) && !notificationMenu.contains(e.target)) {
-        notificationMenu.classList.remove("show");
-      }
-    });
-
     document.addEventListener('DOMContentLoaded', () => {
       const services = {
         'whatsapp-button': 'webview-whatsapp',
@@ -232,7 +243,10 @@
         'twitter-button': 'webview-twitter',
         'threads-button': 'webview-threads',
         'instagram-button': 'webview-instagram',
-        'linkedin-button': 'webview-linkedin'
+        'linkedin-button': 'webview-linkedin',
+        'profile-button': 'webview-profile',
+        'configurations-button': 'webview-configurations',
+        'applications-button': 'webview-applications'
       };
 
       const showWebview = (webviewId, buttonId) => {
@@ -254,10 +268,12 @@
         }
 
         const selectedButton = document.getElementById(buttonId);
-        if (selectedButton) {
+        if (selectedButton && selectedButton.classList.contains('nav-button')) {
           selectedButton.classList.add('active');
         }
       };
+
+      dropdownMenu.classList.remove('show');
 
       Object.entries(services).forEach(([buttonId, webviewId]) => {
         const button = document.getElementById(buttonId);
@@ -286,6 +302,38 @@
       });
     });
 
+    document.getElementById('clear-notifications').onclick = () => {
+      const notificationList = document.getElementById('notification-list');
+      notificationList.innerHTML = '';
+      updateNotificationBadge();
+    };
+
+    document.querySelectorAll('.notification-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const service = item.getAttribute('data-service');
+        const webview = document.getElementById(`webview-${service}`);
+
+        if (webview) {
+          document.querySelectorAll('webview').forEach(w => w.classList.remove('active'));
+          webview.classList.add('active');
+        } item.remove();
+        updateNotificationBadge();
+      });
+    });
+
+    document.getElementById('profile-button').addEventListener('click', () => {
+      showWebview('webview-profile', 'profile-button', false);
+    });
+
+    document.getElementById('applications-button').addEventListener('click', () => {
+      showWebview('webview-applications', 'applications-button', false);
+    });
+
+    document.getElementById('configurations-button').addEventListener('click', () => {
+      showWebview('webview-configurations', 'configurations-button', false);
+    });
+
+
     function showNotification(title, body) {
       if (Notification.permission === "granted") {
         new Notification(title, { body });
@@ -309,28 +357,6 @@
         badge.style.display = 'none';
       }
     }
-
-    document.getElementById('clear-notifications').onclick = () => {
-      const notificationList = document.getElementById('notification-list');
-      notificationList.innerHTML = '';
-      updateNotificationBadge();
-    };
-
-    document.querySelectorAll('.notification-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const service = item.getAttribute('data-service');  
-        const webview = document.getElementById(`webview-${service}`);  
-
-        if (webview) {
-          document.querySelectorAll('webview').forEach(w => w.classList.remove('active')); 
-          webview.classList.add('active');
-        }
-
-        item.remove();
-        updateNotificationBadge();
-      });
-    });
-
 
   </script>
 </body>

@@ -54,7 +54,7 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
-  mainWindow.setMenu(null)
+  //mainWindow.setMenu(null)
   // mainWindow.webContents.on('did-attach-webview', (event, webContents) => {
   //   webContents.openDevTools(); // abre DevTools da webview
   // });
