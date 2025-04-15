@@ -15,313 +15,11 @@
 
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-<style>
-  /* ---------------------- */
-/* VARIÁVEIS */
-/* ---------------------- */
-:root {
-  --primary-color: #6366f1;
-  --primary-light: #a5b4fc;
-  --background: #f8fafc;
-  --sidebar-bg: linear-gradient(160deg, #f0f4ff 0%, #e0e7ff 100%);
-  --card-bg: #ffffff;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --hover-color: rgba(99, 102, 241, 0.1);
-  --active-color: rgba(99, 102, 241, 0.2);
-  --border-radius: 16px;
-  --sidebar-width: 80px;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ---------------------- */
-/* BASE */
-/* ---------------------- */
-body,
-html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: var(--background);
-  color: var(--text-primary);
-  overflow: hidden;
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* ---------------------- */
-/* ESTRUTURA PRINCIPAL */
-/* ---------------------- */
-#app {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-}
-
-/* ---------------------- */
-/* SIDEBAR */
-/* ---------------------- */
-#sidebar {
-  width: var(--sidebar-width);
-  background: var(--sidebar-bg);
-  padding: 20px 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
-  z-index: 10;
-  flex-shrink: 0;
-  overflow-y: auto;
-  transition: var(--transition);
-}
-
-.nav-section {
-  flex: 1;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 0 10px;
-  overflow-y: auto;
-}
-
-.nav-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  position: relative;
-  transition: var(--transition);
-  text-decoration: none;
-}
-
-.nav-button i,
-.nav-button img {
-  font-size: 20px;
-  width: 24px;
-  height: 24px;
-  transition: var(--transition);
-}
-
-.nav-button img {
-  filter: grayscale(100%) brightness(0.8);
-}
-
-.nav-button:hover {
-  background: var(--hover-color);
-  color: var(--primary-color);
-}
-
-.nav-button:hover img {
-  filter: grayscale(0) brightness(1);
-  transform: scale(1.1);
-}
-
-.nav-button.active {
-  background: var(--active-color);
-  color: var(--primary-color);
-}
-
-.nav-button.active img {
-  filter: grayscale(0) brightness(1);
-  transform: scale(1.1);
-}
-
-.nav-button.active::after {
-  content: '';
-  position: absolute;
-  left: -8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 24px;
-  background: var(--primary-color);
-  border-radius: 2px;
-}
-
-/* ---------------------- */
-/* CONTEÚDO */
-/* ---------------------- */
-#content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-  background-color: var(--background);
-}
-
-/* ---------------------- */
-/* HEADER */
-/* ---------------------- */
-#header {
-  height: 60px;
-  background-color: var(--card-bg);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  justify-content: space-between;
-}
-
-.header-title {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.menu-container {
-  position: relative;
-}
-
-.menu-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  color: var(--text-secondary);
-  padding: 8px;
-  border-radius: 50%;
-  transition: var(--transition);
-}
-
-.menu-button:hover {
-  background-color: var(--hover-color);
-  color: var(--primary-color);
-}
-
-.dropdown-menu {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  background-color: var(--card-bg);
-  border-radius: var(--border-radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 8px 0;
-  min-width: 200px;
-  z-index: 100;
-  display: none;
-}
-
-.dropdown-menu.show {
-  display: block;
-}
-
-.dropdown-item {
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--text-primary);
-  text-decoration: none;
-  transition: var(--transition);
-}
-
-.dropdown-item:hover {
-  background-color: var(--hover-color);
-  color: var(--primary-color);
-}
-
-.dropdown-item i {
-  width: 20px;
-  text-align: center;
-}
-
-/* ---------------------- */
-/* WEBVIEW */
-/* ---------------------- */
-.webview-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  margin: 0;
-}
-
-.webview-wrapper {
-  flex: 1;
-  display: flex;
-  height: 100%;
-  width: 100%;
-  background-color: var(--card-bg);
-  overflow: hidden;
-  border: none;
-}
-
-webview {
-  flex: 1;
-  display: none;
-  height: 100%;
-  width: 100%;
-  border: none;
-}
-
-webview.active {
-  display: flex;
-}
-
-/* ---------------------- */
-/* SCROLLBAR */
-/* ---------------------- */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.2);
-}
-</style>
+  <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
   <div id="app">
-    <div id="header">
-      <div class="header-title">SpaceChat</div>
-      <div class="menu-container">
-        <button class="menu-button" id="menu-button">
-          <i class="fas fa-ellipsis-v"></i>
-        </button>
-        <div class="dropdown-menu" id="dropdown-menu">
-          <a href="#" class="dropdown-item">
-            <i class="fas fa-user"></i>
-            <span>Perfil</span>
-          </a>
-          <a href="#" class="dropdown-item">
-            <i class="fas fa-th"></i>
-            <span>Aplicativos</span>
-          </a>
-          <a href="#" class="dropdown-item">
-            <i class="fas fa-cog"></i>
-            <span>Configurações</span>
-          </a>
-          <a href="#" class="dropdown-item">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
-          </a>
-        </div>
-      </div>
-    </div>
     <div id="sidebar">
       <div class="nav-section">
         <!-- Botões de redes sociais e aplicativos -->
@@ -371,63 +69,125 @@ webview.active {
     </div>
 
     <div id="content">
+      <div id="header">
+        <div class="header-actions">
+          <!-- Sino de Notificação -->
+          <button class="notification-bell" id="notification-bell">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge">3</span>
+          </button>
+      
+          <!-- Menu de Notificações -->
+          <div class="notification-container">
+            <div class="notification-menu" id="notification-menu">
+              <div class="notification-header">
+                <div class="notification-title">Notificações</div>
+                <button class="notification-clear" id="clear-notifications">Limpar tudo</button>
+              </div>
+              <div class="notification-list" id="notification-list">
+                <div class="notification-item">
+                  <div class="notification-icon">
+                    <i class="fab fa-whatsapp"></i>
+                  </div>
+                  <div class="notification-content">
+                    <div class="notification-message">Nova mensagem de João no WhatsApp</div>
+                    <div class="notification-time">5 minutos atrás</div>
+                  </div>
+                </div>
+                <div class="notification-item">
+                  <div class="notification-icon">
+                    <i class="fab fa-instagram"></i>
+                  </div>
+                  <div class="notification-content">
+                    <div class="notification-message">Maria comentou em sua foto no Instagram</div>
+                    <div class="notification-time">20 minutos atrás</div>
+                  </div>
+                </div>
+                <div class="notification-item">
+                  <div class="notification-icon">
+                    <i class="fab fa-slack"></i>
+                  </div>
+                  <div class="notification-content">
+                    <div class="notification-message">Reunião em 15 minutos no canal #geral</div>
+                    <div class="notification-time">30 minutos atrás</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      
+          <!-- Menu Dropdown -->
+          <div class="menu-container">
+            <button class="menu-button" id="menu-button">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <div class="dropdown-menu" id="dropdown-menu">
+              <a href="#" class="dropdown-item"><i class="fas fa-user"></i><span>Perfil</span></a>
+              <a href="#" class="dropdown-item"><i class="fas fa-th"></i><span>Aplicativos</span></a>
+              <a href="#" class="dropdown-item"><i class="fas fa-cog"></i><span>Configurações</span></a>
+              <a href="#" class="dropdown-item"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div class="webview-container">
         <div class="webview-wrapper">
           <webview id="webview-whatsapp" src="https://web.whatsapp.com" partition="persist:mainSession"
-            class="w-100 h-100"
+            class="w-100 h-100 active"
             useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
           </webview>
           <webview id="webview-telegram" src="https://web.telegram.org" partition="persist:mainSession"
             class="w-100 h-100"
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+            >
           </webview>
           <webview id="webview-messenger" src="https://www.messenger.com" partition="persist:mainSession"
             class="w-100 h-100"
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+            >
           </webview>
           <webview id="webview-google-chat" src="https://chat.google.com" partition="persist:mainSession"
             class="w-100 h-100"
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+            >
           </webview>
           <webview id="webview-slack" src="https://slack.com" partition="persist:mainSession"
             class="w-100 h-100"
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+            >
           </webview>
           <webview id="webview-discord" src="https://discord.com/channels/@me" partition="persist:mainSession"
             class="w-100 h-100"
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+            >
           </webview>
           <webview id="webview-teams" src="https://teams.microsoft.com" partition="persist:mainSession"
             class="w-100 h-100"
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+            >
           </webview>
           <webview id="webview-skype" src="https://web.skype.com" partition="persist:mainSession"
             class="w-100 h-100"
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+            >
           </webview>
           <webview id="webview-wechat" src="https://web.wechat.com" partition="persist:mainSession"
             class="w-100 h-100"
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+            >
           </webview>
           <webview id="webview-snapchat" src="https://web.snapchat.com" partition="persist:mainSession"
             class="w-100 h-100"
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+            >
           </webview>
           <webview id="webview-twitter" src="https://twitter.com" partition="persist:mainSession"
             class="w-100 h-100"
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+            >
           </webview>
           <webview id="webview-threads" src="https://threads.net" partition="persist:mainSession"
             class="w-100 h-100"
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+            >
           </webview>
           <webview id="webview-instagram" src="https://www.instagram.com" partition="persist:mainSession"
             class="w-100 h-100"
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+            >
           </webview>
           <webview id="webview-linkedin" src="https://www.linkedin.com" partition="persist:mainSession"
             class="w-100 h-100"
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+            >
           </webview>
         </div>        
       </div>
@@ -438,19 +198,48 @@ webview.active {
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-     // Ativar menu dropdown do topo
-  const menuButton = document.getElementById("menu-button");
-  const dropdownMenu = document.getElementById("dropdown-menu");
+    // Ativar menu dropdown do topo
+    const menuButton = document.getElementById("menu-button");
+    const dropdownMenu = document.getElementById("dropdown-menu");
 
-  menuButton.addEventListener("click", () => {
-    dropdownMenu.classList.toggle("show");
-  });
+    menuButton.addEventListener("click", () => {
+      dropdownMenu.classList.toggle("show");
+    });
 
-  document.addEventListener("click", (e) => {
-    if (!menuButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
-      dropdownMenu.classList.remove("show");
-    }
-  });
+    // Ativar menu de notificações
+    const notificationBell = document.getElementById("notification-bell");
+    const notificationMenu = document.getElementById("notification-menu");
+    const clearNotificationsBtn = document.getElementById("clear-notifications");
+    const notificationList = document.getElementById("notification-list");
+    const notificationBadge = document.querySelector(".notification-badge");
+
+    notificationBell.addEventListener("click", () => {
+      notificationMenu.classList.toggle("show");
+      if (dropdownMenu.classList.contains("show")) {
+        dropdownMenu.classList.remove("show");
+      }
+    });
+
+    clearNotificationsBtn.addEventListener("click", () => {
+      notificationList.innerHTML = `
+        <div class="notification-empty">
+          Nenhuma notificação disponível
+        </div>
+      `;
+      notificationBadge.style.display = "none";
+    });
+
+    // Fechar menus ao clicar fora
+    document.addEventListener("click", (e) => {
+      if (!menuButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
+        dropdownMenu.classList.remove("show");
+      }
+      
+      if (!notificationBell.contains(e.target) && !notificationMenu.contains(e.target)) {
+        notificationMenu.classList.remove("show");
+      }
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
       const services = {
         'whatsapp-button': 'webview-whatsapp',
@@ -470,28 +259,28 @@ webview.active {
       };
 
       const showWebview = (webviewId, buttonId) => {
-  document.querySelectorAll('webview').forEach(webview => {
-    webview.classList.remove('active');
-  });
+        document.querySelectorAll('webview').forEach(webview => {
+          webview.classList.remove('active');
+        });
 
-  document.querySelectorAll('.nav-button').forEach(button => {
-    button.classList.remove('active');
-  });
+        document.querySelectorAll('.nav-button').forEach(button => {
+          button.classList.remove('active');
+        });
 
-  const selectedWebview = document.getElementById(webviewId);
-  if (selectedWebview) {
-    selectedWebview.classList.add('active');
+        const selectedWebview = document.getElementById(webviewId);
+        if (selectedWebview) {
+          selectedWebview.classList.add('active');
 
-    if (!selectedWebview.getURL() || selectedWebview.getURL() === 'about:blank') {
-      selectedWebview.reload();
-    }
-  }
+          if (!selectedWebview.getURL || !selectedWebview.getURL() || selectedWebview.getURL() === 'about:blank') {
+            selectedWebview.reload();
+          }
+        }
 
-  const selectedButton = document.getElementById(buttonId);
-  if (selectedButton) {
-    selectedButton.classList.add('active');
-  }
-};
+        const selectedButton = document.getElementById(buttonId);
+        if (selectedButton) {
+          selectedButton.classList.add('active');
+        }
+      };
 
       Object.entries(services).forEach(([buttonId, webviewId]) => {
         const button = document.getElementById(buttonId);
@@ -524,22 +313,66 @@ webview.active {
     });
 
     function showNotification(title, body) {
-  if (Notification.permission === "granted") {
-    new Notification(title, { body });
-  } else if (Notification.permission !== "denied") {
-    Notification.requestPermission().then((perm) => {
-      if (perm === "granted") {
+      if (Notification.permission === "granted") {
         new Notification(title, { body });
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then((perm) => {
+          if (perm === "granted") {
+            new Notification(title, { body });
+          }
+        });
       }
-    });
-  }
-}
+    }
 
-// Exemplo de uso
-document.getElementById("notifyBtn").addEventListener("click", () => {
-  showNotification("Nova mensagem", "Você tem uma nova mensagem em SpaceChat.");
-});
+    // Função para adicionar notificações ao menu
+    function addNotification(service, message, time) {
+      const serviceIcons = {
+        'whatsapp': 'fab fa-whatsapp',
+        'instagram': 'fab fa-instagram',
+        'linkedin': 'fab fa-linkedin',
+        'telegram': 'fab fa-telegram',
+        'messenger': 'fab fa-facebook-messenger',
+        'google-chat': 'fab fa-google',
+        'slack': 'fab fa-slack',
+        'discord': 'fab fa-discord',
+        'teams': 'fab fa-microsoft',
+        'skype': 'fab fa-skype',
+        'wechat': 'fab fa-weixin',
+        'snapchat': 'fab fa-snapchat',
+        'twitter': 'fab fa-twitter',
+        'threads': 'fab fa-threads'
+      };
 
+      const notificationItem = document.createElement('div');
+      notificationItem.className = 'notification-item';
+      notificationItem.innerHTML = `
+        <div class="notification-icon">
+          <i class="${serviceIcons[service] || 'fas fa-bell'}"></i>
+        </div>
+        <div class="notification-content">
+          <div class="notification-message">${message}</div>
+          <div class="notification-time">${time}</div>
+        </div>
+      `;
+
+      const emptyNotification = document.querySelector('.notification-empty');
+      if (emptyNotification) {
+        notificationList.innerHTML = '';
+      }
+
+      notificationList.prepend(notificationItem);
+      
+      // Atualizar contador de notificações
+      const count = notificationList.querySelectorAll('.notification-item').length;
+      notificationBadge.textContent = count;
+      notificationBadge.style.display = count > 0 ? 'flex' : 'none';
+      
+      // Mostrar notificação do sistema
+      showNotification("SpaceChat", message);
+    }
+
+    // Exemplo de como usar - isso pode ser chamado quando uma webview recebe uma nova mensagem
+    // addNotification('whatsapp', 'Nova mensagem de Carlos', 'Agora mesmo');
   </script>
 </body>
 </html>
