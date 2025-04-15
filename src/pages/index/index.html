@@ -260,9 +260,15 @@
         if (selectedWebview) {
           selectedWebview.classList.add('active');
 
-          if (!selectedWebview.getURL || !selectedWebview.getURL() || selectedWebview.getURL() === 'about:blank') {
-            selectedWebview.reload();
-          }
+          selectedWebview.addEventListener('dom-ready', () => {
+            try {
+              if (!selectedWebview.getURL || selectedWebview.getURL() === 'about:blank') {
+                selectedWebview.reload();
+              }
+            } catch (e) {
+              console.error('Erro ao acessar getURL do webview:', e);
+            }
+          });
         }
 
         const selectedButton = document.getElementById(buttonId);
