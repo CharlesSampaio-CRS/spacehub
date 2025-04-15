@@ -17,6 +17,8 @@ async function getApplications() {
     const applications = data.applications || [];
     applications.sort((a, b) => a.popularity - b.popularity);
 
+    createAndPreloadWebviews(applications);
+    
     const fragment = document.createDocumentFragment();
 
     // 🔸 Botão fixo de HOME
@@ -65,6 +67,36 @@ async function getApplications() {
   } catch (error) {
     console.error('Failed to fetch applications:', error);
   }
+}
+
+function createAndPreloadWebviews(applications) {
+  const webviewContainer = document.getElementById('webviews');
+  if (!webviewContainer) return console.warn('"webviews" container not found.');
+
+  applications.forEach(app => {
+    const existing = document.getElementById(`wv-${app.application.toLowerCase()}`);
+    if (existing) return; // Evita duplicação
+
+    const webview = document.createElement('webview');
+    webview.id = `wv-${app.application.toLowerCase()}`;
+    webview.src = app.url;
+    webview.preload = './preload.js'; // se necessário
+    webview.style.cssText = `
+      width: 100%;
+      height: 100%;
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+    `;
+
+    // Marcar como carregado
+    webview.addEventListener('did-finish-load', () => {
+      console.log(`[WebView] ${app.application} carregado`);
+    });
+
+    webviewContainer.appendChild(webview);
+  });
 }
 
 

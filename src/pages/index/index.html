@@ -79,6 +79,7 @@
     webview {
       border: none;
       border-radius: 8px;
+      transition: opacity 0.3s ease;
     }
 
     header, footer {
@@ -159,11 +160,11 @@
 
     <footer>
       <div class="dropdown">
-        <button class="footer-button dropdown-toggle" type="button" id="footerMenu" data-bs-toggle="dropdown"
+        <button class="footer-button dropdown-toggle" type="button" id="menu-button" data-bs-toggle="dropdown"
           aria-expanded="false">
-          <i class="fas fa-bars"></i> Menu
+          <i class="fas fa-bars"></i> <span>Menu</span>
         </button>
-        <ul class="dropdown-menu" aria-labelledby="footerMenu">
+        <ul class="dropdown-menu" aria-labelledby="menu-button">
           <li><a class="dropdown-item" href="#" id="profile-button"><i class="fas fa-user"></i> Perfil</a></li>
           <li><a class="dropdown-item" href="#" id="applications-button"><i class="fas fa-th"></i> Aplicativos</a></li>
           <li><a class="dropdown-item" href="#" id="notifications-button"><i class="fas fa-bell"></i> Notificações</a></li>
@@ -173,7 +174,7 @@
         </ul>
       </div>
 
-      <button id="logout-button" class="footer-button">
+      <button id="logout-button" class="footer-button" aria-label="Sair">
         <i class="fas fa-sign-out-alt"></i> Logout
       </button>
     </footer>
@@ -234,15 +235,15 @@
         if (span) span.textContent = `Olá, ${userName}`;
       }
 
-      // Função utilitária
       function smoothLoadWebview(url) {
-        if (webview && url) {
-          webview.style.opacity = 0;
+        if (!webview || !url) return;
+        webview.style.opacity = 0;
+        setTimeout(() => {
+          webview.src = url;
           setTimeout(() => {
-            webview.src = url;
             webview.style.opacity = 1;
           }, 150);
-        }
+        }, 150);
       }
 
       function showUpdateModal(message) {
@@ -250,12 +251,11 @@
         updateModal.show();
       }
 
-      // Navegação
       document.getElementById('home-button')?.addEventListener('click', () => {
-        getApplications();
+        getApplications?.();
         smoothLoadWebview('../home/home.html');
-        document.getElementById('home-button').classList.add('active');
-        document.getElementById('menu-button').classList.remove('active');
+        document.getElementById('home-button')?.classList.add('active');
+        document.getElementById('menu-button')?.classList.remove('active');
       });
 
       document.getElementById('applications-button')?.addEventListener('click', () => {
@@ -291,8 +291,9 @@
         showUpdateModal(`Versão <strong>${version}</strong>.`);
       });
 
-      ipcRenderer.on('update-available');
-
+      ipcRenderer.on('update-available', () => {
+        showUpdateModal('Nova versão disponível. O download será iniciado automaticamente.');
+      });
     });
   </script>
 </body>
