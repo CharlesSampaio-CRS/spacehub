@@ -321,19 +321,6 @@
       });
     });
 
-    document.getElementById('profile-button').addEventListener('click', () => {
-      showWebview('webview-profile', 'profile-button', false);
-    });
-
-    document.getElementById('applications-button').addEventListener('click', () => {
-      showWebview('webview-applications', 'applications-button', false);
-    });
-
-    document.getElementById('configurations-button').addEventListener('click', () => {
-      showWebview('webview-configurations', 'configurations-button', false);
-    });
-
-
     function showNotification(title, body) {
       if (Notification.permission === "granted") {
         new Notification(title, { body });
