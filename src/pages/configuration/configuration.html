@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="./configuration.js" defer></script>
+</head>
+
+<body>
+  <div class="main-wrapper">
+    <main id="content-container">
+
+      <section id="profile-section" class="config-section">
+        <h2>Perfil</h2>
+        <div class="applications-list">
+          <div class="application-card">
+            <div class="application-info">
+              <i class="fa-solid fa-id-badge fa-2x"></i>
+              <div>
+                <div class="status-label">Perfil</div>
+                <div id="userType">Carregando...</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="application-card">
+            <div class="application-info">
+              <i class="fa-solid fa-user fa-2x"></i>
+              <div>
+                <div class="status-label">Nome</div>
+                <div id="userName">Carregando...</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="application-card">
+            <div class="application-info">
+              <i class="fa-solid fa-envelope fa-2x"></i>
+              <div>
+                <div class="status-label">Email</div>
+                <div id="userEmail">Carregando...</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="application-card">
+            <div class="application-info">
+              <i class="fa-solid fa-gem fa-2x"></i>
+              <div>
+                <div class="status-label">Plano</div>
+                <div id="userPlan">Carregando...</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="application-card">
+            <div class="application-info">
+              <i class="fa-brands fa-google fa-2x"></i>
+              <div>
+                <div class="status-label">Usuário Google</div>
+              </div>
+            </div>
+            <div class="application-status">
+              <label class="toggle-switch">
+                <input type="checkbox" id="userGoogleToggle" disabled />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="applications-section" class="config-section">
+        <h2>Aplicações</h2>
+        <div class="applications-list" id="applicationsList">
+          <div class="application-item">
+            <div class="application-info">
+              <i class="fa-brands fa-whatsapp fa-2x"></i>
+              <p><strong>WhatsApp</strong></p>
+            </div>
+            <div class="application-toggle">
+              <label class="toggle-switch">
+                <input type="checkbox" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+      
+          <div class="application-item">
+            <div class="application-info">
+              <i class="fa-brands fa-telegram fa-2x"></i>
+              <p><strong>Telegram</strong></p>
+            </div>
+            <div class="application-toggle">
+              <label class="toggle-switch">
+                <input type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+      
+          <div class="application-item">
+            <div class="application-info">
+              <i class="fa-brands fa-slack fa-2x"></i>
+              <p><strong>Slack</strong></p>
+            </div>
+            <div class="application-toggle">
+              <label class="toggle-switch">
+                <input type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings-section" class="config-section">
+        <h2>Configurações</h2>
+        <aside id="settings-panel">
+          <div class="setting-item">
+            <span class="setting-label">Notificações</span>
+            <label class="toggle-switch">
+              <input type="checkbox" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <span class="setting-label">Modo Escuro</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="dark-mode-toggle" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <span class="setting-label">Auto Login</span>
+            <label class="toggle-switch">
+              <input type="checkbox" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <span class="setting-label">Compactar Layout</span>
+            <label class="toggle-switch">
+              <input type="checkbox" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <span class="setting-label">Abrir em Tela Cheia</span>
+            <label class="toggle-switch">
+              <input type="checkbox" />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </aside>
+      </section>
+
+      <section id="version-section" class="config-section">
+        <h2>Versão do Sistema</h2>
+        <div class="version-info">
+          <p><strong>Versão:</strong> 1.2.3</p>
+          <p><strong>Data de Atualização:</strong> 15 de Abril de 2025</p>
+        </div>
+      </section>
+
+      <section id="language-section" class="config-section">
+        <h2>Idioma</h2>
+        <select id="language-select">
+          <option value="pt-BR" selected>Português</option>
+          <option value="en-US">English</option>
+          <option value="es-ES">Español</option>
+        </select>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const darkModeToggle = document.getElementById("dark-mode-toggle");
+      if (darkModeToggle) {
+        darkModeToggle.addEventListener("change", () => {
+          document.body.classList.toggle("dark-mode", darkModeToggle.checked);
+        });
+      }
+
+      const languageSelect = document.getElementById("language-select");
+      if (languageSelect) {
+        languageSelect.addEventListener("change", (event) => {
+          const selectedLanguage = event.target.value;
+          console.log("Idioma selecionado:", selectedLanguage);
+        });
+      }
+
+      const applicationsList = document.getElementById("applicationsList");
+      applicationsList.querySelectorAll('.btn-toggle').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.target.textContent = e.target.textContent === 'Desconectar' ? 'Conectar' : 'Desconectar';
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>
