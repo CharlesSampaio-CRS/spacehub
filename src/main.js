@@ -45,7 +45,7 @@ function createMainWindow() {
     webviewTag: true,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false,
+      contextIsolation: true,
       webviewTag: true,
       partition: 'persist:mainSession',
       preload: path.join(__dirname, 'preload.js') 
@@ -137,11 +137,11 @@ ipcMain.handle('get-app-version', () => {
 });
 
 ipcMain.on('login-success', (event, token) => {
-  store.set('token', token); // Save token in store
+  store.set('token', token);
   loginWindow = closeWindow(loginWindow);
   createMainWindow();
   mainWindow.webContents.once('did-finish-load', () => {
-    mainWindow.webContents.send('set-token', token); // Pass token to main window
+    mainWindow.webContents.send('set-token', token); 
   });
 });
 
@@ -150,7 +150,7 @@ ipcMain.on('show-login', createLoginWindow);
 ipcMain.on('logout-success', handleLogout);
 
 ipcMain.handle('get-token', () => {
-  return store.get('token'); // Retrieve the stored token
+  return store.get('token'); 
 });
 
 ipcMain.on('clear-sessions', async (event) => {

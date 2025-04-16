@@ -75,7 +75,7 @@
         <div class="header-actions">
           <!-- Sino de Notificação -->
           <button class="notification-bell" id="notification-bell">
-            <img width="24" height="24" src="https://img.icons8.com/material-rounded/48/bell--v1.png" alt="bell--v1"/>
+            <img width="24" height="24" src="https://img.icons8.com/material-rounded/48/bell--v1.png" alt="bell--v1" />
             <span class="notification-badge">3</span>
           </button>
           <!-- Menu de Notificações -->
@@ -98,7 +98,7 @@
 
                 <div class="notification-item" data-service="instagram">
                   <div class="notification-icon">
-                    <img width="24" height="24" src="https://img.icons8.com/fluency/24/instagram-new.png"/>
+                    <img width="24" height="24" src="https://img.icons8.com/fluency/24/instagram-new.png" />
                   </div>
                   <div class="notification-content">
                     <div class="notification-message">Maria comentou em sua foto no Instagram</div>
@@ -108,7 +108,7 @@
 
                 <div class="notification-item" data-service="slack">
                   <div class="notification-icon">
-                    <img width="24" height="24" src="https://img.icons8.com/color/24/slack.png"/>
+                    <img width="24" height="24" src="https://img.icons8.com/color/24/slack.png" />
                   </div>
                   <div class="notification-content">
                     <div class="notification-message">Reunião em 15 minutos no canal #geral</div>
@@ -120,14 +120,16 @@
           </div>
           <div class="menu-container">
             <button class="menu-button" id="menu-button">
-              <img width="24" height="24" src="https://img.icons8.com/fluency/48/menu--v1.png" alt="menu--v1"/>
+              <img width="24" height="24" src="https://img.icons8.com/fluency/48/menu--v1.png" alt="menu--v1" />
             </button>
             <div class="dropdown-menu" id="dropdown-menu">
               <button id="configuration-button" class="dropdown-item" type="button">
-                <img width="24" height="24" src="https://img.icons8.com/color/48/settings--v1.png" alt="settings--v1"/><span>Configuração</span>
+                <img width="24" height="24" src="https://img.icons8.com/color/48/settings--v1.png"
+                  alt="settings--v1" /><span>Configuração</span>
               </button>
               <button id="logout-button" class="dropdown-item" type="button">
-                <img width="24" height="24" src="https://img.icons8.com/color/24/exit.png" alt="exit"/><span>Logout</span>
+                <img width="24" height="24" src="https://img.icons8.com/color/24/exit.png"
+                  alt="exit" /><span>Logout</span>
               </button>
             </div>
           </div>
@@ -179,7 +181,7 @@
       </div>
     </div>
   </div>
-  <script>
+    <script>
     document.addEventListener('DOMContentLoaded', () => {
       const services = {
         'whatsapp-button': 'webview-whatsapp',
@@ -207,6 +209,7 @@
       const clearNotificationsBtn = document.getElementById("clear-notifications");
       const notificationList = document.getElementById("notification-list");
       const notificationBadge = document.querySelector(".notification-badge");
+      const logoutButton = document.getElementById('logout-button');
 
       // Função para mostrar o webview
       const showWebview = (webviewId, buttonId) => {
@@ -239,12 +242,9 @@
       // Exibe o webview inicial (WhatsApp)
       showWebview('webview-whatsapp', 'whatsapp-button');
 
-
-        const logoutButton = document.getElementById('logout-button');
-    logoutButton.addEventListener('click', () => {
-      console.log('Deveria fechar...kkkkkkkk')
-      window.electronAPI.logout();
-    });
+      logoutButton.addEventListener('click', () => {
+        window.electronAPI.logout();
+      });
 
       // Ajuste de zoom dos webviews
       document.querySelectorAll('webview').forEach(webview => {
@@ -321,24 +321,6 @@
         }
       };
 
-      // Funções de navegação com base no token
-      const handleNavigation = (buttonId, webviewId, urlPrefix) => {
-        document.getElementById(buttonId).addEventListener("click", () => {
-          const token = localStorage.getItem("token");
-          const webview = document.getElementById(webviewId);
-
-          if (token && webview) {
-            const encodedToken = encodeURIComponent(token);
-            webview.src = `${urlPrefix}?token=${encodedToken}`;
-            showWebview(webviewId, buttonId);
-          }
-        });
-      };
-
-      // Configuração das rotas para "Perfil" e "Aplicativos"
-      handleNavigation("profile-button", "webview-profile", "../../pages/profile/profile.html");
-      handleNavigation("applications-button", "webview-applications", "../../pages/applications/applications.html");
-
       // Ajuste para o sidebar
       const sidebar = document.getElementById('sidebar');
       sidebar.addEventListener('wheel', (e) => {
@@ -348,6 +330,7 @@
     });
 
   </script>
+  
 </body>
 
 </html>
