@@ -7,295 +7,330 @@
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src *; img-src * data:; frame-src *; object-src 'none';">
 
+  <!-- Font Google -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
-  <!-- Axios -->
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
-  <!-- Scripts locais -->
-  <script src="./index.js" defer></script>
-  <script src="../renderer.js" defer></script>
-
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f6f9;
-    }
-
-    #sidebar button i,
-    .dropdown-menu i {
-      font-size: 1.4rem;
-    }
-
-    #sidebar {
-      width: 64px;
-      background-color: #ffffff;
-      border-right: 1px solid #dee2e6;
-      overflow-y: auto;
-      height: 100%;
-      scrollbar-width: thin;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    #sidebar::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    #sidebar::-webkit-scrollbar-track {
-      background: #f1f3f5;
-    }
-
-    #sidebar::-webkit-scrollbar-thumb {
-      background-color: #adb5bd;
-      border-radius: 3px;
-    }
-
-    .nav-button {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 44px;
-      height: 44px;
-      margin: 8px auto;
-      border-radius: 50%;
-      background-color: #f8f9fa;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      transition: 0.2s ease;
-    }
-
-    .nav-button:hover {
-      background-color: #e2e6ea;
-      transform: scale(1.1);
-    }
-
-    webview {
-      border: none;
-      border-radius: 8px;
-      transition: opacity 0.3s ease;
-    }
-
-    header, footer {
-      background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-      padding: 0.5rem 1rem;
-    }
-
-    footer {
-      font-size: 0.85rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-    }
-
-    .footer-button {
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: #007bff;
-      font-size: 1rem;
-      transition: color 0.3s ease;
-    }
-
-    .footer-button:hover {
-      color: #0056b3;
-    }
-
-    @media (max-width: 768px) {
-      #sidebar {
-        flex-direction: row !important;
-        width: 100%;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid #dee2e6;
-        justify-content: center;
-      }
-
-      .nav-button {
-        margin: 6px;
-      }
-
-      .nav-button i {
-        opacity: 0.6;
-        transition: opacity 0.3s ease, color 0.3s ease;
-      }
-
-      .nav-button.active i {
-        opacity: 1;
-        color: #007bff;
-      }
-
-      #menu-button.active i,
-      #home-button.active i {
-        color: #007bff;
-        opacity: 1;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
-  <div class="d-flex flex-column h-100">
-    <div class="d-flex flex-grow-1 overflow-hidden flex-column flex-md-row">
-      <aside id="sidebar" class="d-flex flex-md-column align-items-center py-2">
-        <div id="nav-applications" class="w-100 d-flex flex-wrap justify-content-center justify-content-md-start"></div>
-      </aside>
-
-      <main class="flex-grow-1">
-        <webview id="webview" webpreferences="contextIsolation=false, nodeIntegration=false"
-          partition="persist:mainSession" class="w-100 h-100"
-          useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
-        </webview>
-        <webview id="preloader" style="display: none; width: 0; height: 0;" partition="persist:preloader"></webview>
-      </main>
-    </div>
-
-    <footer>
-      <div class="dropdown">
-        <button class="footer-button dropdown-toggle" type="button" id="menu-button" data-bs-toggle="dropdown"
-          aria-expanded="false">
-          <i class="fas fa-bars"></i> <span>Menu</span>
+  <div id="app">
+    <div id="sidebar">
+      <div class="nav-section">
+        <!-- Botões de redes sociais e aplicativos com ícones via imagem -->
+        <button id="home-button" class="nav-button" title="Página Inicial">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/home.png" alt="Página Inicial" />
         </button>
-        <ul class="dropdown-menu" aria-labelledby="menu-button">
-          <li><a class="dropdown-item" href="#" id="profile-button"><i class="fas fa-user"></i> Perfil</a></li>
-          <li><a class="dropdown-item" href="#" id="applications-button"><i class="fas fa-th"></i> Aplicativos</a></li>
-          <li><a class="dropdown-item" href="#" id="notifications-button"><i class="fas fa-bell"></i> Notificações</a></li>
-          <li><a class="dropdown-item" href="#" id="support-button"><i class="fas fa-life-ring"></i> Suporte</a></li>
-          <li><a class="dropdown-item" href="#" id="configurations-button"><i class="fas fa-cog"></i> Configurações</a></li>
-          <li><a class="dropdown-item" href="#" id="update-button"><i class="fas fa-sync"></i> Atualizar versão</a></li>
-        </ul>
+        <button id="whatsapp-button" class="nav-button" title="WhatsApp">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/whatsapp.png" alt="WhatsApp" />
+        </button>
+        <button id="instagram-button" class="nav-button" title="Instagram">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/instagram-new.png" alt="Instagram" />
+        </button>
+        <button id="linkedin-button" class="nav-button" title="LinkedIn">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/linkedin.png" alt="LinkedIn" />
+        </button>
+        <button id="telegram-button" class="nav-button" title="Telegram">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/telegram-app.png" alt="Telegram" />
+        </button>
+        <button id="messenger-button" class="nav-button" title="Messenger">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/facebook-messenger.png" alt="Messenger" />
+        </button>
+        <button id="google-chat-button" class="nav-button" title="Google Chat">
+          <img width="48" height="48" src="https://img.icons8.com/color/48/google-chat.png" alt="Google Chat" />
+        </button>
+        <button id="slack-button" class="nav-button" title="Slack">
+          <img width="48" height="48" src="https://img.icons8.com/color/48/slack.png" alt="slack"/>
+        </button>
+        <button id="discord-button" class="nav-button" title="Discord">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/discord-logo.png" alt="Discord" />
+        </button>
+        <button id="teams-button" class="nav-button" title="Microsoft Teams">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/microsoft-teams-2019.png" alt="Microsoft Teams" />
+        </button>
+        <button id="skype-button" class="nav-button" title="Skype">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/skype.png" alt="Skype" />
+        </button>
+        <button id="wechat-button" class="nav-button" title="WeChat">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/weixing.png" alt="WeChat" />
+        </button>
+        <button id="snapchat-button" class="nav-button" title="Snapchat">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/snapchat.png" alt="Snapchat" />
+        </button>
+        <button id="twitter-button" class="nav-button" title="Twitter">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/twitter.png" alt="Twitter" />
+        </button>
+        <button id="threads-button" class="nav-button" title="Threads">
+          <img width="48" height="48" src="https://img.icons8.com/ios-filled/48/000000/threads.png" alt="Threads" />
+        </button>
       </div>
+    </div>
+    <div id="content">
+      <div id="header">
+        <div class="header-actions">
+          <!-- Sino de Notificação -->
+          <button class="notification-bell" id="notification-bell">
+            <img width="24" height="24" src="https://img.icons8.com/material-rounded/48/bell--v1.png" alt="bell--v1" />
+            <span class="notification-badge">3</span>
+          </button>
+          <!-- Menu de Notificações -->
+          <div class="notification-container">
+            <div class="notification-menu" id="notification-menu">
+              <div class="notification-header">
+                <div class="notification-title">Notificações</div>
+                <button class="notification-clear" id="clear-notifications">Limpar tudo</button>
+              </div>
+              <div class="notification-list" id="notification-list">
+                <div class="notification-item" data-service="whatsapp">
+                  <div class="notification-icon">
+                    <img width="24" height="24" src="https://img.icons8.com/fluency/24/whatsapp.png" alt="WhatsApp" />
+                  </div>
+                  <div class="notification-content">
+                    <div class="notification-message">Nova mensagem de João no WhatsApp</div>
+                    <div class="notification-time">5 minutos atrás</div>
+                  </div>
+                </div>
 
-      <button id="logout-button" class="footer-button" aria-label="Sair">
-        <i class="fas fa-sign-out-alt"></i> Logout
-      </button>
-    </footer>
-  </div>
+                <div class="notification-item" data-service="instagram">
+                  <div class="notification-icon">
+                    <img width="24" height="24" src="https://img.icons8.com/fluency/24/instagram-new.png" />
+                  </div>
+                  <div class="notification-content">
+                    <div class="notification-message">Maria comentou em sua foto no Instagram</div>
+                    <div class="notification-time">20 minutos atrás</div>
+                  </div>
+                </div>
 
-  <!-- Modal de Atualização -->
-  <div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="updateModalLabel"><i class="fas fa-info-circle"></i> Atualização</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <div class="notification-item" data-service="slack">
+                  <div class="notification-icon">
+                    <img width="24" height="24" src="https://img.icons8.com/color/24/slack.png" />
+                  </div>
+                  <div class="notification-content">
+                    <div class="notification-message">Reunião em 15 minutos no canal #geral</div>
+                    <div class="notification-time">30 minutos atrás</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="menu-container">
+            <button class="menu-button" id="menu-button">
+              <img width="24" height="24" src="https://img.icons8.com/fluency/48/menu--v1.png" alt="menu--v1" />
+            </button>
+            <div class="dropdown-menu" id="dropdown-menu">
+              <button id="configuration-button" class="dropdown-item" type="button">
+                <img width="24" height="24" src="https://img.icons8.com/color/48/settings--v1.png"
+                  alt="settings--v1" /><span>Configuração</span>
+              </button>
+              <button id="logout-button" class="dropdown-item" type="button">
+                <img width="24" height="24" src="https://img.icons8.com/color/24/exit.png"
+                  alt="exit" /><span>Logout</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="modal-body" id="updateModalBody">O aplicativo está na versão mais recente.</div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+      <div class="webview-container">
+        <div class="webview-wrapper">
+          <webview id="webview-configuration" class="webview" src="../../pages/configuration/configuration.html">
+          </webview>
+          <webview id="webview-whatsapp" src="https://web.whatsapp.com" partition="persist:mainSession"
+            class="w-100 h-100 active"
+            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
+          </webview>
+          <webview id="webview-telegram" src="https://web.telegram.org" partition="persist:mainSession"
+            class="w-100 h-100">
+          </webview>
+          <webview id="webview-messenger" src="https://www.messenger.com" partition="persist:mainSession"
+            class="w-100 h-100">
+          </webview>
+          <webview id="webview-google-chat" src="https://chat.google.com" partition="persist:mainSession"
+            class="w-100 h-100">
+          </webview>
+          <webview id="webview-slack" src="https://slack.com" partition="persist:mainSession" class="w-100 h-100">
+          </webview>
+          <webview id="webview-discord" src="https://discord.com/channels/@me" partition="persist:mainSession"
+            class="w-100 h-100">
+          </webview>
+          <webview id="webview-teams" src="https://teams.microsoft.com" partition="persist:mainSession"
+            class="w-100 h-100">
+          </webview>
+          <webview id="webview-skype" src="https://web.skype.com" partition="persist:mainSession" class="w-100 h-100">
+          </webview>
+          <webview id="webview-wechat" src="https://web.wechat.com" partition="persist:mainSession" class="w-100 h-100">
+          </webview>
+          <webview id="webview-snapchat" src="https://web.snapchat.com" partition="persist:mainSession"
+            class="w-100 h-100">
+          </webview>
+          <webview id="webview-twitter" src="https://twitter.com" partition="persist:mainSession" class="w-100 h-100">
+          </webview>
+          <webview id="webview-threads" src="https://threads.net" partition="persist:mainSession" class="w-100 h-100">
+          </webview>
+          <webview id="webview-instagram" src="https://www.instagram.com" partition="persist:mainSession"
+            class="w-100 h-100">
+          </webview>
+          <webview id="webview-linkedin" src="https://www.linkedin.com" partition="persist:mainSession"
+            class="w-100 h-100">
+          </webview>
         </div>
       </div>
     </div>
   </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const services = {
+        'whatsapp-button': 'webview-whatsapp',
+        'telegram-button': 'webview-telegram',
+        'messenger-button': 'webview-messenger',
+        'google-chat-button': 'webview-google-chat',
+        'slack-button': 'webview-slack',
+        'discord-button': 'webview-discord',
+        'teams-button': 'webview-teams',
+        'skype-button': 'webview-skype',
+        'wechat-button': 'webview-wechat',
+        'snapchat-button': 'webview-snapchat',
+        'twitter-button': 'webview-twitter',
+        'threads-button': 'webview-threads',
+        'instagram-button': 'webview-instagram',
+        'linkedin-button': 'webview-linkedin',
+        'configuration-button': 'webview-configuration'
+      };
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+      // Elementos DOM
+      const menuButton = document.getElementById("menu-button");
+      const dropdownMenu = document.getElementById("dropdown-menu");
+      const notificationBell = document.getElementById("notification-bell");
+      const notificationMenu = document.getElementById("notification-menu");
+      const clearNotificationsBtn = document.getElementById("clear-notifications");
+      const notificationList = document.getElementById("notification-list");
+      const notificationBadge = document.querySelector(".notification-badge");
+      const logoutButton = document.getElementById('logout-button');
 
-  <!-- Script principal -->
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const { ipcRenderer } = require('electron');
+      // Função para mostrar o webview
+      const showWebview = (webviewId, buttonId) => {
+        document.querySelectorAll('webview').forEach(webview => webview.classList.remove('active'));
+        document.querySelectorAll('.nav-button').forEach(button => button.classList.remove('active'));
 
-      const webview = document.getElementById('webview');
-      const updateModalElement = document.getElementById('updateModal');
-      const updateModalBody = document.getElementById('updateModalBody');
-      const updateModal = new bootstrap.Modal(updateModalElement);
+        const selectedWebview = document.getElementById(webviewId);
+        const selectedButton = document.getElementById(buttonId);
 
-      if (webview) webview.src = '../home/home.html';
-
-      function parseJwt(token) {
-        try {
-          const base64Payload = token.split('.')[1];
-          const payload = atob(base64Payload);
-          return JSON.parse(payload);
-        } catch (e) {
-          console.error('Erro ao ler JWT:', e);
-          return null;
+        if (selectedWebview) {
+          selectedWebview.classList.add('active');
+          selectedWebview.addEventListener('dom-ready', () => {
+            if (!selectedWebview.getURL || selectedWebview.getURL() === 'about:blank') {
+              selectedWebview.reload();
+            }
+          });
         }
-      }
 
-      async function getUserNameFromToken() {
-        const token = localStorage.getItem('token');
-        if (!token) return null;
-        const payload = parseJwt(token);
-        return payload?.name || null;
-      }
+        if (selectedButton && selectedButton.classList.contains('nav-button')) {
+          selectedButton.classList.add('active');
+        }
+      };
 
-      const userName = await getUserNameFromToken();
-      if (userName) {
-        const span = document.querySelector('#menu-button span');
-        if (span) span.textContent = `Olá, ${userName}`;
-      }
-
-      function smoothLoadWebview(url) {
-        if (!webview || !url) return;
-        webview.style.opacity = 0;
-        setTimeout(() => {
-          webview.src = url;
-          setTimeout(() => {
-            webview.style.opacity = 1;
-          }, 150);
-        }, 150);
-      }
-
-      function showUpdateModal(message) {
-        updateModalBody.innerHTML = message;
-        updateModal.show();
-      }
-
-      document.getElementById('home-button')?.addEventListener('click', () => {
-        getApplications?.();
-        smoothLoadWebview('../home/home.html');
-        document.getElementById('home-button')?.classList.add('active');
-        document.getElementById('menu-button')?.classList.remove('active');
+      // Inicializa o evento de clique nos botões de navegação
+      Object.entries(services).forEach(([buttonId, webviewId]) => {
+        const button = document.getElementById(buttonId);
+        button?.addEventListener('click', () => showWebview(webviewId, buttonId));
       });
 
-      document.getElementById('applications-button')?.addEventListener('click', () => {
-        smoothLoadWebview('../applications/applications.html');
+      // Exibe o webview inicial (WhatsApp)
+      showWebview('webview-whatsapp', 'whatsapp-button');
+
+      logoutButton.addEventListener('click', () => {
+        window.electronAPI.logout();
       });
 
-      document.getElementById('profile-button')?.addEventListener('click', () => {
-        smoothLoadWebview('../profile/profile.html');
+      // Ajuste de zoom dos webviews
+      document.querySelectorAll('webview').forEach(webview => {
+        webview.addEventListener('dom-ready', () => {
+          webview.setZoomFactor(0.9);
+          webview.insertCSS('body { zoom: 0.9; }');
+        });
       });
 
-      document.getElementById('notifications-button')?.addEventListener('click', () => {
-        smoothLoadWebview('../notifications/notifications.html');
+      document.addEventListener("click", (e) => {
+        if (!dropdownMenu.contains(e.target) && !menuButton.contains(e.target)) {
+          dropdownMenu.classList.remove("show");
+        }
+
+        if (!notificationMenu.contains(e.target) && !notificationBell.contains(e.target)) {
+          notificationMenu.classList.remove("show");
+        }
       });
 
-      document.getElementById('support-button')?.addEventListener('click', () => {
-        smoothLoadWebview('../support/support.html');
+      // Função para mostrar o menu suspenso
+      const toggleMenu = () => dropdownMenu.classList.toggle("show");
+
+      // Adiciona evento de clique no menu
+      menuButton.addEventListener("click", toggleMenu);
+      document.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', () => dropdownMenu.classList.remove('show'));
       });
 
-      document.getElementById('configurations-button')?.addEventListener('click', () => {
-        smoothLoadWebview('../configurations/configurations.html');
+      // Exibe o menu de notificações
+      notificationBell.addEventListener("click", () => {
+        notificationMenu.classList.toggle("show");
+        if (dropdownMenu.classList.contains("show")) {
+          dropdownMenu.classList.remove("show");
+        }
       });
 
-      document.getElementById('update-button')?.addEventListener('click', () => {
-        ipcRenderer.send('check-for-updates');
+      // Limpa notificações
+      clearNotificationsBtn.addEventListener("click", () => {
+        notificationList.innerHTML = '<div class="notification-empty">Nenhuma notificação disponível</div>';
+        notificationBadge.style.display = "none";
       });
 
-      document.getElementById('logout-button')?.addEventListener('click', () => {
-        ipcRenderer.send('logout-success');
+      // Função para atualizar o badge de notificações
+      const updateNotificationBadge = () => {
+        const notifications = document.querySelectorAll('.notification-item');
+        notificationBadge.textContent = notifications.length > 0 ? notifications.length : '';
+        notificationBadge.style.display = notifications.length > 0 ? 'flex' : 'none';
+      };
+
+      // Manipulação das notificações
+      document.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const service = item.getAttribute('data-service');
+          const webview = document.getElementById(`webview-${service}`);
+          if (webview) {
+            document.querySelectorAll('webview').forEach(w => w.classList.remove('active'));
+            webview.classList.add('active');
+          }
+          item.remove();
+          updateNotificationBadge();
+        });
       });
 
-      ipcRenderer.on('update-not-available', async () => {
-        const version = await ipcRenderer.invoke('get-app-version');
-        showUpdateModal(`Versão <strong>${version}</strong>.`);
-      });
+      // Função para mostrar notificações no navegador
+      const showNotification = (title, body) => {
+        if (Notification.permission === "granted") {
+          new Notification(title, { body });
+        } else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then((perm) => {
+            if (perm === "granted") {
+              new Notification(title, { body });
+            }
+          });
+        }
+      };
 
-      ipcRenderer.on('update-available', () => {
-        showUpdateModal('Nova versão disponível. O download será iniciado automaticamente.');
+      // Ajuste para o sidebar
+      const sidebar = document.getElementById('sidebar');
+      sidebar.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        sidebar.scrollTop += e.deltaY;
       });
     });
+
   </script>
+  
 </body>
 
 </html>
