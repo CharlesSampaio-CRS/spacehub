@@ -2,7 +2,7 @@
     --primary-color: #6366f1;
     --primary-light: #a5b4fc;
     --background: #f8fafc;
-    --sidebar-bg: linear-gradient(160deg, #f0f4ff 0%, #e0e7ff 100%);
+    --sidebar-bg: #ffffff;
     --card-bg: #ffffff;
     --text-primary: #1e293b;
     --text-secondary: #64748b;
@@ -246,7 +246,7 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background-color: var(--primary-light);
+    background-color: #ffffff;
     color: var(--primary-color);
     display: flex;
     align-items: center;
