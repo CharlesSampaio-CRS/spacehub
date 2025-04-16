@@ -24,7 +24,6 @@ let loginWindow = null;
 let registerWindow = null;
 let authWindow = null;
 
-
 function closeWindow(winRef) {
   if (winRef && !winRef.isDestroyed()) winRef.close();
   return null;
@@ -48,12 +47,13 @@ function createMainWindow() {
       nodeIntegration: true,
       contextIsolation: false,
       webviewTag: true,
-      partition: 'persist:mainSession'
+      partition: 'persist:mainSession',
+      preload: path.join(__dirname, 'preload.js') 
     }
   });
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
-  mainWindow.maximize();
+  mainWindow.maximize();  
   //mainWindow.setMenu(null)
   // mainWindow.webContents.on('did-attach-webview', (event, webContents) => {
   //   webContents.openDevTools(); // abre DevTools da webview
@@ -77,7 +77,7 @@ function createLoginWindow() {
       contextIsolation: false
     }
   });
-  loginWindow.setMenu(null)
+  loginWindow.setMenu(null);
   loginWindow.loadFile(path.join(__dirname, 'pages/login/login.html'));
   loginWindow.on('closed', () => { loginWindow = null; });
 }
@@ -95,7 +95,7 @@ function createRegisterWindow(userData) {
     }
   });
 
-  registerWindow.setMenu(null)
+  registerWindow.setMenu(null);
   registerWindow.loadFile(path.join(__dirname, 'pages/register/register.html'));
   registerWindow.center();
   registerWindow.webContents.on('did-finish-load', () => {
@@ -108,6 +108,7 @@ function createRegisterWindow(userData) {
 }
 
 function handleLogout() {
+  store.delete('token'); // Remove token on logout
   mainWindow = closeWindow(mainWindow);
   createLoginWindow();
 }
@@ -136,11 +137,11 @@ ipcMain.handle('get-app-version', () => {
 });
 
 ipcMain.on('login-success', (event, token) => {
-  store.set('token', token);
+  store.set('token', token); // Save token in store
   loginWindow = closeWindow(loginWindow);
   createMainWindow();
   mainWindow.webContents.once('did-finish-load', () => {
-    mainWindow.webContents.send('set-token', token);
+    mainWindow.webContents.send('set-token', token); // Pass token to main window
   });
 });
 
@@ -148,6 +149,9 @@ ipcMain.on('show-register', () => createRegisterWindow());
 ipcMain.on('show-login', createLoginWindow);
 ipcMain.on('logout-success', handleLogout);
 
+ipcMain.handle('get-token', () => {
+  return store.get('token'); // Retrieve the stored token
+});
 
 ipcMain.on('clear-sessions', async (event) => {
   try {
@@ -200,7 +204,6 @@ ipcMain.on('start-google-login', () => {
 
       try {
         const code = new URL(url).searchParams.get('code');
-
         const tokenRes = await axios.post(
           'https://oauth2.googleapis.com/token',
           qs.stringify({
@@ -248,7 +251,7 @@ ipcMain.on('start-google-login', () => {
           password: fakePassword
         });
         const token = loginRes.data.token;
-        ipcMain.emit('login-success', null, token );
+        ipcMain.emit('login-success', null, token);
 
       } catch (error) {
         console.error('Erro no login com o Google:', error);

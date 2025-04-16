@@ -126,7 +126,7 @@
               <button id="configuration-button" class="dropdown-item" type="button">
                 <img width="24" height="24" src="https://img.icons8.com/color/48/settings--v1.png" alt="settings--v1"/><span>Configuração</span>
               </button>
-              <button id="logout-link" class="dropdown-item" type="button">
+              <button id="logout-button" class="dropdown-item" type="button">
                 <img width="24" height="24" src="https://img.icons8.com/color/24/exit.png" alt="exit"/><span>Logout</span>
               </button>
             </div>
@@ -238,6 +238,13 @@
 
       // Exibe o webview inicial (WhatsApp)
       showWebview('webview-whatsapp', 'whatsapp-button');
+
+
+        const logoutButton = document.getElementById('logout-button');
+    logoutButton.addEventListener('click', () => {
+      console.log('Deveria fechar...kkkkkkkk')
+      window.electronAPI.logout();
+    });
 
       // Ajuste de zoom dos webviews
       document.querySelectorAll('webview').forEach(webview => {
