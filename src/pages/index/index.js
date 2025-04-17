@@ -21,7 +21,6 @@ async function getApplications() {
     
     const fragment = document.createDocumentFragment();
 
-    // 🔸 Botão fixo de HOME
     const homeButton = document.createElement('button');
     homeButton.className = 'nav-button';
     homeButton.title = 'Home';
@@ -58,9 +57,8 @@ async function getApplications() {
       smoothLoadWebview('../home/home.html');
     });
 
-    fragment.appendChild(homeButton); // 🔸 Adiciona antes dos apps
+    fragment.appendChild(homeButton); 
 
-    // 🔹 Botões dinâmicos da API
     applications.forEach(app => fragment.appendChild(createApplicationButton(app)));
 
     container.replaceChildren(fragment);
@@ -75,12 +73,12 @@ function createAndPreloadWebviews(applications) {
 
   applications.forEach(app => {
     const existing = document.getElementById(`wv-${app.application.toLowerCase()}`);
-    if (existing) return; // Evita duplicação
+    if (existing) return; 
 
     const webview = document.createElement('webview');
     webview.id = `wv-${app.application.toLowerCase()}`;
     webview.src = app.url;
-    webview.preload = './preload.js'; // se necessário
+    webview.preload = './preload.js'; 
     webview.style.cssText = `
       width: 100%;
       height: 100%;
@@ -90,7 +88,6 @@ function createAndPreloadWebviews(applications) {
       left: 0;
     `;
 
-    // Marcar como carregado
     webview.addEventListener('did-finish-load', () => {
       console.log(`[WebView] ${app.application} carregado`);
     });
