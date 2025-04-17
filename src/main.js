@@ -56,7 +56,7 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();  
-  //mainWindow.setMenu(null)
+  mainWindow.setMenu(null)
   mainWindow.webContents.on('did-attach-webview', (event, webContents) => {
     webContents.on('did-finish-load', () => {
       webContents.setZoomFactor(1.1); // Zoom de 110% // Deve ter isso no settings 
