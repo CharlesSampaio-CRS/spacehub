@@ -1,90 +1,87 @@
+
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f9f9f9;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
-    }
-
-    h1 {
-      font-size: 2.4rem;
-      margin-bottom: 0.5rem;
-      color: #2c3e50;
-    }
-
-    p {
-      font-size: 1.1rem;
-      margin-bottom: 2rem;
-      color: #555;
-      text-align: center;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.5rem;
-      width: 100%;
-      max-width: 1000px;
-    }
-
-    .card {
-      background: #ffffff;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      padding: 1.5rem;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-      border-color: #007bff;
-    }
-
-    .card h3 {
-      margin-bottom: 0.5rem;
-      font-size: 1.3rem;
-      color: #007bff;
-    }
-
-    .card p {
-      font-size: 0.95rem;
-      color: #666;
-    }
-
-    .icon {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-      color: #007bff;
-    }
-
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 2rem;
-      }
-
-      .cards {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+  <div class="container">
+    <div class="chat-apps">
+      <!-- WhatsApp -->
+      <div class="app-card left">
+        <div class="app-icon">
+          <img src="https://img.icons8.com/fluency/48/whatsapp.png" alt="WhatsApp" />
+        </div>
+        <h3 class="app-name">WhatsApp</h3>
+        <p class="app-description">Todas as suas conversas pessoais e grupos em um só lugar.</p>
+      </div>
 
-  <h1>👋 Bem-vindo ao SpaceApp</h1>
-  <p>Gerencie todos os seus chats favoritos em um só lugar.</p>
+      <!-- Telegram -->
+      <div class="app-card right">
+        <div class="app-icon">
+          <img src="https://img.icons8.com/fluency/48/telegram-app.png" alt="Telegram" />
+        </div>
+        <h3 class="app-name">Telegram</h3>
+        <p class="app-description">Canais, grupos e conversas particulares integrados.</p>
+      </div>
 
+      <!-- Discord -->
+      <div class="app-card left">
+        <div class="app-icon">
+          <img src="https://img.icons8.com/fluency/48/instagram-new.png" alt="Discord" />
+        </div>
+        <h3 class="app-name">Discord</h3>
+        <p class="app-description">Seus servidores, canais e DMs em um formato unificado.</p>
+      </div>
+
+      <!-- Slack -->
+      <div class="app-card right">
+        <div class="app-icon">
+          <img src="https://img.icons8.com/color/48/slack.png" alt="Slack" />
+        </div>
+        <h3 class="app-name">Slack</h3>
+        <p class="app-description">Comunique-se com sua equipe sem sair do espaço.</p>
+      </div>
+    </div>
+
+    <!-- Features Section -->
+    <h2 class="section-title">
+      <img src="https://img.icons8.com/color/48/hearts.png" alt="hearts"/>
+      Por que usar o SpaceApp?
+    </h2>
+    <div class="features">
+      <div class="feature-card">
+        <div class="app-icon">
+          <img src="https://img.icons8.com/external-zen-filled-royyan-wijaya/48/external-chats-communication-zen-filled-royyan-wijaya.png" alt="external-chats-communication-zen-filled-royyan-wijaya"/>
+        </div>
+        <h3 class="feature-title">Tudo em Um Só Lugar</h3>
+        <p class="feature-description">Acesse todas as suas conversas de diferentes plataformas em uma única interface,
+          sem precisar alternar entre aplicativos.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="app-icon">
+          <img src="https://img.icons8.com/fluency/48/info.png" alt="info" />
+        </div>
+        <h3 class="feature-title">Personalização Completa</h3>
+        <p class="feature-description">Escolha os chats que usa e não perca notificações e nem fique alternando de tela.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="app-icon">
+          <img src="https://img.icons8.com/emoji/48/bell-emoji.png" alt="bell-emoji" />
+        </div>
+        <h3 class="feature-title">Notificações em uma unica tela</h3>
+        <p class="feature-description">Receba alertas de todas as suas plataformas em um só lugar, com controle total
+          sobre o que você quer ver.</p>
+      </div>
+    </div>
+  </div>
 </body>
+
 </html>

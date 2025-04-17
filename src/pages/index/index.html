@@ -24,7 +24,7 @@
       <div class="nav-section">
         <!-- Botões de redes sociais e aplicativos com ícones via imagem -->
         <button id="home-button" class="nav-button" title="Página Inicial">
-          <img width="48" height="48" src="https://img.icons8.com/fluency/48/home.png" alt="Página Inicial" />
+          <img width="48" height="48" src="https://img.icons8.com/color/48/planet.png" alt="Página Inicial" />
         </button>
         <button id="whatsapp-button" class="nav-button" title="WhatsApp">
           <img width="48" height="48" src="https://img.icons8.com/fluency/48/whatsapp.png" alt="WhatsApp" />
@@ -56,17 +56,20 @@
         <button id="skype-button" class="nav-button" title="Skype">
           <img width="48" height="48" src="https://img.icons8.com/fluency/48/skype.png" alt="Skype" />
         </button>
-        <button id="wechat-button" class="nav-button" title="WeChat">
-          <img width="48" height="48" src="https://img.icons8.com/fluency/48/weixing.png" alt="WeChat" />
-        </button>
-        <button id="snapchat-button" class="nav-button" title="Snapchat">
-          <img width="48" height="48" src="https://img.icons8.com/fluency/48/snapchat.png" alt="Snapchat" />
+        <button id="zoom-button" class="nav-button" title="Zoom">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/zoom.png" alt="Zoom" />
         </button>
         <button id="twitter-button" class="nav-button" title="Twitter">
           <img width="48" height="48" src="https://img.icons8.com/fluency/48/twitter.png" alt="Twitter" />
         </button>
         <button id="threads-button" class="nav-button" title="Threads">
           <img width="48" height="48" src="https://img.icons8.com/ios-filled/48/000000/threads.png" alt="Threads" />
+        </button>
+        <button id="wechat-button" class="nav-button" title="WeChat">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/weixing.png" alt="WeChat" />
+        </button>
+        <button id="snapchat-button" class="nav-button" title="Snapchat">
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/snapchat.png" alt="Snapchat" />
         </button>
       </div>
     </div>
@@ -144,6 +147,8 @@
         <div class="webview-wrapper">
           <webview id="webview-configuration" class="webview" src="../../pages/configuration/configuration.html">
           </webview>
+          <webview id="webview-home" class="webview" src="../../pages/home/home.html">
+          </webview>
           <webview id="webview-whatsapp" src="https://web.whatsapp.com" partition="persist:mainSession"
             class="w-100 h-100 active"
             useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
@@ -186,6 +191,9 @@
           <webview id="webview-todoist" src="https://app.todoist.com/auth/login" partition="persist:mainSession"
           class="w-100 h-100">
         </webview>
+        <webview id="webview-zoom" src="https://zoom.us/pt/signin#/login" partition="persist:mainSession"
+        class="w-100 h-100">
+      </webview>
         </div>
       </div>
     </div>
@@ -193,6 +201,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
       const services = {
+        'home-button':'webview-home',
         'whatsapp-button': 'webview-whatsapp',
         'telegram-button': 'webview-telegram',
         'messenger-button': 'webview-messenger',
@@ -208,7 +217,8 @@
         'instagram-button': 'webview-instagram',
         'linkedin-button': 'webview-linkedin',
         'configuration-button': 'webview-configuration',
-        'todoist-button':'webview-todoist'
+        'todoist-button':'webview-todoist',
+        'zoom-button':'webview-zoom'
       };
 
       // Elementos DOM
@@ -249,8 +259,8 @@
         button?.addEventListener('click', () => showWebview(webviewId, buttonId));
       });
 
-      // Exibe o webview inicial (WhatsApp)
-      showWebview('webview-whatsapp', 'whatsapp-button');
+      // Exibe o webview inicial (Home)
+      showWebview('webview-home', 'home-button');
 
       logoutButton.addEventListener('click', () => {
         window.electronAPI.logout();

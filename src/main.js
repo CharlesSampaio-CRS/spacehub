@@ -44,7 +44,7 @@ function createMainWindow() {
     icon: path.join(__dirname, './assets/spaceapp.png'),
     webviewTag: true,
     webPreferences: {
-      nodeIntegration: true,
+      nodeIntegration: false,
       contextIsolation: true,
       webviewTag: true,
       partition: 'persist:mainSession',
