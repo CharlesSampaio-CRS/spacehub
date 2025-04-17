@@ -145,63 +145,14 @@
       </div>
       <div class="webview-container">
         <div class="webview-wrapper">
-          <webview id="webview-configuration" class="webview" src="../../pages/configuration/configuration.html">
-          </webview>
-          <webview id="webview-home" class="webview" src="../../pages/home/home.html">
-          </webview>
-          <webview id="webview-whatsapp" src="https://web.whatsapp.com" partition="persist:mainSession"
-            class="w-100 h-100 active" allowpopups
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
-          </webview>
-          <webview id="webview-telegram" src="https://web.telegram.org" partition="persist:mainSession"
-            class="w-100 h-100" allowpopups>
-          </webview>
-          <webview id="webview-messenger" src="https://www.messenger.com" partition="persist:mainSession"
-            class="w-100 h-100" allowpopups>
-          </webview>
-          <webview id="webview-google-chat" src="https://chat.google.com" partition="persist:mainSession"
-            class="w-100 h-100" allowpopups>
-          </webview>
-          <webview id="webview-slack" src="https://slack.com" partition="persist:mainSession" class="w-100 h-100" allowpopups>
-          </webview>
-          <webview id="webview-discord" src="https://discord.com/channels/@me" partition="persist:mainSession"
-            class="w-100 h-100" allowpopups>
-          </webview>
-          <webview id="webview-teams" src="https://teams.microsoft.com" partition="persist:mainSession"
-            class="w-100 h-100" allowpopups>
-          </webview>
-          <webview id="webview-skype" src="https://web.skype.com" partition="persist:mainSession" class="w-100 h-100" allowpopups>
-          </webview>
-          <webview id="webview-wechat" src="https://web.wechat.com" partition="persist:mainSession" class="w-100 h-100" allowpopups>
-          </webview>
-          <webview id="webview-snapchat" src="https://web.snapchat.com" partition="persist:mainSession"
-            class="w-100 h-100" allowpopups
-            useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36">
-          </webview>
-          <webview id="webview-twitter" src="https://twitter.com" partition="persist:mainSession" class="w-100 h-100" allowpopups>
-          </webview>
-          <webview id="webview-threads" src="https://threads.net" partition="persist:mainSession" class="w-100 h-100" allowpopups>
-          </webview>
-          <webview id="webview-instagram" src="https://www.instagram.com" partition="persist:mainSession"
-            class="w-100 h-100" allowpopups>
-          </webview>
-          <webview id="webview-linkedin" src="https://www.linkedin.com" partition="persist:mainSession"
-            class="w-100 h-100" allowpopups>
-          </webview>
-          <webview id="webview-todoist" src="https://app.todoist.com/auth/login" partition="persist:mainSession"
-          class="w-100 h-100" allowpopups>
-        </webview>
-        <webview id="webview-zoom" src="https://zoom.us/pt/signin#/login" partition="persist:mainSession"
-        class="w-100 h-100" allowpopups>
-          </webview>
         </div>
       </div>
     </div>
   </div>
-    <script>
+  <script>
     document.addEventListener('DOMContentLoaded', () => {
       const services = {
-        'home-button':'webview-home',
+        'home-button': 'webview-home',
         'whatsapp-button': 'webview-whatsapp',
         'telegram-button': 'webview-telegram',
         'messenger-button': 'webview-messenger',
@@ -217,139 +168,159 @@
         'instagram-button': 'webview-instagram',
         'linkedin-button': 'webview-linkedin',
         'configuration-button': 'webview-configuration',
-        'todoist-button':'webview-todoist',
-        'zoom-button':'webview-zoom'
+        'todoist-button': 'webview-todoist',
+        'zoom-button': 'webview-zoom'
       };
-
-      // Elementos DOM
-      const menuButton = document.getElementById("menu-button");
-      const dropdownMenu = document.getElementById("dropdown-menu");
-      const notificationBell = document.getElementById("notification-bell");
-      const notificationMenu = document.getElementById("notification-menu");
-      const clearNotificationsBtn = document.getElementById("clear-notifications");
-      const notificationList = document.getElementById("notification-list");
-      const notificationBadge = document.querySelector(".notification-badge");
-      const logoutButton = document.getElementById('logout-button');
-
-      // Função para mostrar o webview
+    
+      const serviceMap = {
+        'webview-home': '../../pages/home/home.html',
+        'webview-configuration': '../../pages/configuration/configuration.html',
+        'webview-whatsapp': 'https://web.whatsapp.com',
+        'webview-telegram': 'https://web.telegram.org',
+        'webview-messenger': 'https://www.messenger.com',
+        'webview-google-chat': 'https://chat.google.com',
+        'webview-slack': 'https://slack.com',
+        'webview-discord': 'https://discord.com/channels/@me',
+        'webview-teams': 'https://teams.microsoft.com',
+        'webview-skype': 'https://web.skype.com',
+        'webview-wechat': 'https://web.wechat.com',
+        'webview-snapchat': 'https://web.snapchat.com',
+        'webview-twitter': 'https://twitter.com',
+        'webview-threads': 'https://threads.net',
+        'webview-instagram': 'https://www.instagram.com',
+        'webview-linkedin': 'https://www.linkedin.com',
+        'webview-todoist': 'https://app.todoist.com/auth/login',
+        'webview-zoom': 'https://zoom.us/pt/signin#/login'
+      };
+    
+      const webviewContainer = document.querySelector('.webview-wrapper');
+    
+      const createWebview = (webviewId) => {
+        const webview = document.createElement('webview');
+        webview.id = webviewId;
+        webview.className = 'webview w-100 h-100 active';
+        webview.setAttribute('partition', 'persist:mainSession');
+        webview.setAttribute('allowpopups', '');
+        webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
+        webview.src = serviceMap[webviewId] || 'about:blank';
+    
+        webview.addEventListener('dom-ready', () => {
+          webview.setZoomFactor(0.9);
+          webview.insertCSS('body { zoom: 0.9; }');
+        });
+    
+        webviewContainer.appendChild(webview);
+        return webview;
+      };
+    
       const showWebview = (webviewId, buttonId) => {
-        document.querySelectorAll('webview').forEach(webview => webview.classList.remove('active'));
-        document.querySelectorAll('.nav-button').forEach(button => button.classList.remove('active'));
-
-        const selectedWebview = document.getElementById(webviewId);
+        document.querySelectorAll('webview').forEach(w => w.classList.remove('active'));
+        document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+    
+        let selectedWebview = document.getElementById(webviewId);
         const selectedButton = document.getElementById(buttonId);
-
-        if (selectedWebview) {
+    
+        if (!selectedWebview) {
+          selectedWebview = createWebview(webviewId);
+        } else {
           selectedWebview.classList.add('active');
-          selectedWebview.addEventListener('dom-ready', () => {
-            if (!selectedWebview.getURL || selectedWebview.getURL() === 'about:blank') {
-              selectedWebview.reload();
-            }
-          });
         }
-
+    
         if (selectedButton && selectedButton.classList.contains('nav-button')) {
           selectedButton.classList.add('active');
         }
       };
-
+    
       // Inicializa o evento de clique nos botões de navegação
       Object.entries(services).forEach(([buttonId, webviewId]) => {
         const button = document.getElementById(buttonId);
         button?.addEventListener('click', () => showWebview(webviewId, buttonId));
       });
-
+    
       // Exibe o webview inicial (Home)
       showWebview('webview-home', 'home-button');
-
-      logoutButton.addEventListener('click', () => {
-        window.electronAPI.logout();
-      });
-
-      // Ajuste de zoom dos webviews
-      document.querySelectorAll('webview').forEach(webview => {
-        webview.addEventListener('dom-ready', () => {
-          webview.setZoomFactor(0.9);
-          webview.insertCSS('body { zoom: 0.9; }');
-        });
-      });
-
-      document.addEventListener("click", (e) => {
-        if (!dropdownMenu.contains(e.target) && !menuButton.contains(e.target)) {
-          dropdownMenu.classList.remove("show");
-        }
-
-        if (!notificationMenu.contains(e.target) && !notificationBell.contains(e.target)) {
-          notificationMenu.classList.remove("show");
-        }
-      });
-
-      // Função para mostrar o menu suspenso
-      const toggleMenu = () => dropdownMenu.classList.toggle("show");
-
-      // Adiciona evento de clique no menu
-      menuButton.addEventListener("click", toggleMenu);
+    
+      const logoutButton = document.getElementById('logout-button');
+      logoutButton?.addEventListener('click', () => window.electronAPI.logout());
+    
+      // Menu lateral
+      const menuButton = document.getElementById("menu-button");
+      const dropdownMenu = document.getElementById("dropdown-menu");
+      menuButton?.addEventListener("click", () => dropdownMenu.classList.toggle("show"));
+    
       document.querySelectorAll('.dropdown-item').forEach(item => {
         item.addEventListener('click', () => dropdownMenu.classList.remove('show'));
       });
-
-      // Exibe o menu de notificações
-      notificationBell.addEventListener("click", () => {
+    
+      // Notificações
+      const notificationBell = document.getElementById("notification-bell");
+      const notificationMenu = document.getElementById("notification-menu");
+      const clearNotificationsBtn = document.getElementById("clear-notifications");
+      const notificationList = document.getElementById("notification-list");
+      const notificationBadge = document.querySelector(".notification-badge");
+    
+      notificationBell?.addEventListener("click", () => {
         notificationMenu.classList.toggle("show");
-        if (dropdownMenu.classList.contains("show")) {
-          dropdownMenu.classList.remove("show");
-        }
+        if (dropdownMenu.classList.contains("show")) dropdownMenu.classList.remove("show");
       });
-
-      // Limpa notificações
-      clearNotificationsBtn.addEventListener("click", () => {
+    
+      clearNotificationsBtn?.addEventListener("click", () => {
         notificationList.innerHTML = '<div class="notification-empty">Nenhuma notificação disponível</div>';
         notificationBadge.style.display = "none";
       });
-
-      // Função para atualizar o badge de notificações
+    
       const updateNotificationBadge = () => {
         const notifications = document.querySelectorAll('.notification-item');
         notificationBadge.textContent = notifications.length > 0 ? notifications.length : '';
         notificationBadge.style.display = notifications.length > 0 ? 'flex' : 'none';
       };
-
-      // Manipulação das notificações
+    
       document.querySelectorAll('.notification-item').forEach(item => {
         item.addEventListener('click', () => {
           const service = item.getAttribute('data-service');
-          const webview = document.getElementById(`webview-${service}`);
-          if (webview) {
-            document.querySelectorAll('webview').forEach(w => w.classList.remove('active'));
-            webview.classList.add('active');
-          }
+          const webviewId = `webview-${service}`;
+          let webview = document.getElementById(webviewId);
+          if (!webview) webview = createWebview(webviewId);
+    
+          document.querySelectorAll('webview').forEach(w => w.classList.remove('active'));
+          webview.classList.add('active');
+    
           item.remove();
           updateNotificationBadge();
         });
       });
-
-      // Função para mostrar notificações no navegador
+    
+      // Fecha menus ao clicar fora
+      document.addEventListener("click", (e) => {
+        if (!dropdownMenu.contains(e.target) && !menuButton.contains(e.target)) {
+          dropdownMenu.classList.remove("show");
+        }
+    
+        if (!notificationMenu.contains(e.target) && !notificationBell.contains(e.target)) {
+          notificationMenu.classList.remove("show");
+        }
+      });
+    
+      // Scroll da sidebar com mouse
+      const sidebar = document.getElementById('sidebar');
+      sidebar?.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        sidebar.scrollTop += e.deltaY;
+      });
+    
+      // Notificação no navegador
       const showNotification = (title, body) => {
         if (Notification.permission === "granted") {
           new Notification(title, { body });
         } else if (Notification.permission !== "denied") {
           Notification.requestPermission().then((perm) => {
-            if (perm === "granted") {
-              new Notification(title, { body });
-            }
+            if (perm === "granted") new Notification(title, { body });
           });
         }
       };
-
-      // Ajuste para o sidebar
-      const sidebar = document.getElementById('sidebar');
-      sidebar.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        sidebar.scrollTop += e.deltaY;
-      });
     });
-
-  </script>
+    </script>
+      
   
 </body>
 
