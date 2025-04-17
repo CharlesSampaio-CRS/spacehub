@@ -89,6 +89,7 @@ function createAndPreloadWebviews(applications) {
     `;
 
     webview.addEventListener('did-finish-load', () => {
+      webview.setZoomFactor(1.25); 
       console.log(`[WebView] ${app.application} carregado`);
     });
 

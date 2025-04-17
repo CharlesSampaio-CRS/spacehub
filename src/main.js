@@ -48,18 +48,30 @@ function createMainWindow() {
       contextIsolation: true,
       webviewTag: true,
       partition: 'persist:mainSession',
-      preload: path.join(__dirname, 'preload.js') 
+      preload: path.join(__dirname, 'preload.js'),
+      sandbox: false, // <-- importante
+      nativeWindowOpen: true
     }
   });
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();  
   //mainWindow.setMenu(null)
-  // mainWindow.webContents.on('did-attach-webview', (event, webContents) => {
-  //   webContents.openDevTools(); // abre DevTools da webview
-  // });
+  mainWindow.webContents.on('did-attach-webview', (event, webContents) => {
+    webContents.on('did-finish-load', () => {
+      webContents.setZoomFactor(1.1); // Zoom de 110% // Deve ter isso no settings 
+      //webContents.openDevTools(); // abre DevTools da webview
+    });
+  });
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:\/\//.test(url)) shell.openExternal(url);
+    if (url.includes('accounts.google.com')) {
+      shell.openExternal(url);
+      return { action: 'deny' };
+    }
+    if (/^https?:\/\//.test(url)) {
+      shell.openExternal(url);
+      return { action: 'deny' };
+    }
     return { action: 'deny' };
   });
 
@@ -187,7 +199,9 @@ ipcMain.on('start-google-login', () => {
     show: true,
     webPreferences: {
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      partition: 'persist:mainSession',
+    enableBlinkFeatures: "Popups"
     }
   });
 
