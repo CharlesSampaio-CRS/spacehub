@@ -120,16 +120,21 @@
           </div>
           <div class="menu-container">
             <button class="menu-button" id="menu-button">
-              <img width="24" height="24" src="https://img.icons8.com/fluency/48/menu--v1.png" alt="menu--v1" />
+              <img width="24" height="24" src="https://img.icons8.com/fluency/48/menu--v1.png" alt="Menu" />
             </button>
             <div class="dropdown-menu" id="dropdown-menu">
+              <button id="todoist-button" class="dropdown-item" type="button">
+                <img width="24" height="24" src="https://img.icons8.com/color/48/todoist.png" alt="Todoist"/>
+                <span>Todoist</span>
+              </button>
+              
               <button id="configuration-button" class="dropdown-item" type="button">
                 <img width="24" height="24" src="https://img.icons8.com/color/48/settings--v1.png"
-                  alt="settings--v1" /><span>Configuração</span>
+                  alt="Configuração" /><span>Configuração</span>
               </button>
               <button id="logout-button" class="dropdown-item" type="button">
                 <img width="24" height="24" src="https://img.icons8.com/color/24/exit.png"
-                  alt="exit" /><span>Logout</span>
+                  alt="Sair" /><span>Logout</span>
               </button>
             </div>
           </div>
@@ -178,6 +183,9 @@
           <webview id="webview-linkedin" src="https://www.linkedin.com" partition="persist:mainSession"
             class="w-100 h-100">
           </webview>
+          <webview id="webview-todoist" src="https://app.todoist.com/auth/login" partition="persist:mainSession"
+          class="w-100 h-100">
+        </webview>
         </div>
       </div>
     </div>
@@ -199,7 +207,8 @@
         'threads-button': 'webview-threads',
         'instagram-button': 'webview-instagram',
         'linkedin-button': 'webview-linkedin',
-        'configuration-button': 'webview-configuration'
+        'configuration-button': 'webview-configuration',
+        'todoist-button':'webview-todoist'
       };
 
       // Elementos DOM

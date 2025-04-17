@@ -70,6 +70,16 @@ h2 {
   color: var(--text-primary);
 }
 
+#profile-section {
+  max-width: 100%;
+}
+
+.applications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 button.btn-toggle {
   background-color: var(--primary-color);
   color: white;
