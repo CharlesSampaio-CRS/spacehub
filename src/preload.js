@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  setZoomFactor: (factor) => ipcRenderer.send('set-zoom-factor', factor),
   logout: () => ipcRenderer.send('logout-success'),
   getToken: () => ipcRenderer.invoke('get-token'),
   setToken: (token) => ipcRenderer.send('login-success', token),
@@ -28,3 +29,4 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+

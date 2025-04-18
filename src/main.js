@@ -5,10 +5,16 @@ const axios = require('axios');
 const qs = require('querystring');
 const { autoUpdater } = require('electron-updater');
 require('dotenv').config();
-const config = require(path.join(__dirname, '../config'));
 
+const config = require(path.join(__dirname, '../config'));
 const store = new Store();
 
+// ⚠️ Apenas para debug/teste - remova em produção
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+let mainWindow, loginWindow, registerWindow, authWindow;
+
+// Variáveis globais para acesso às configs do Google
 global.sharedObject = {
   env: {
     GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID,
@@ -17,12 +23,7 @@ global.sharedObject = {
   }
 };
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // ⚠️ apenas para debug/teste
-
-let mainWindow = null;
-let loginWindow = null;
-let registerWindow = null;
-let authWindow = null;
+// --- Funções auxiliares ---
 
 function closeWindow(winRef) {
   if (winRef && !winRef.isDestroyed()) winRef.close();
@@ -36,39 +37,43 @@ function closeAllWindowsExcept(except) {
   if (except !== 'auth') authWindow = closeWindow(authWindow);
 }
 
+function generateFakePassword(email) {
+  return `${email}_googleAuth!`;
+}
+
+// --- Janela principal ---
+
 function createMainWindow() {
   closeAllWindowsExcept('main');
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     icon: path.join(__dirname, './assets/spaceapp.png'),
-    webviewTag: true,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      webviewTag: true,
-      partition: 'persist:mainSession',
       preload: path.join(__dirname, 'preload.js'),
-      sandbox: false, // <-- importante
+      partition: 'persist:mainSession',
+      webviewTag: true,
+      sandbox: false,
       nativeWindowOpen: true
     }
   });
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
-  mainWindow.maximize();  
-  mainWindow.setMenu(null)
+  mainWindow.maximize();
+  mainWindow.setMenu(null);
+
   mainWindow.webContents.on('did-attach-webview', (event, webContents) => {
     webContents.on('did-finish-load', () => {
       webContents.setZoomFactor(1.1); // Zoom de 110% // Deve ter isso no settings 
       //webContents.openDevTools(); // abre DevTools da webview
     });
   });
+
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.includes('accounts.google.com')) {
-      shell.openExternal(url);
-      return { action: 'deny' };
-    }
-    if (/^https?:\/\//.test(url)) {
+    if (/^https?:\/\//.test(url) || url.includes('accounts.google.com')) {
       shell.openExternal(url);
       return { action: 'deny' };
     }
@@ -78,8 +83,11 @@ function createMainWindow() {
   mainWindow.on('closed', () => { mainWindow = null; });
 }
 
+// --- Janela de login ---
+
 function createLoginWindow() {
   closeAllWindowsExcept('login');
+
   loginWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -89,13 +97,17 @@ function createLoginWindow() {
       contextIsolation: false
     }
   });
+
   loginWindow.setMenu(null);
   loginWindow.loadFile(path.join(__dirname, 'pages/login/login.html'));
   loginWindow.on('closed', () => { loginWindow = null; });
 }
 
+// --- Janela de registro ---
+
 function createRegisterWindow(userData) {
   closeAllWindowsExcept('register');
+
   registerWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -110,6 +122,7 @@ function createRegisterWindow(userData) {
   registerWindow.setMenu(null);
   registerWindow.loadFile(path.join(__dirname, 'pages/register/register.html'));
   registerWindow.center();
+
   registerWindow.webContents.on('did-finish-load', () => {
     if (userData) {
       registerWindow.webContents.send('google-user-data', userData);
@@ -119,63 +132,20 @@ function createRegisterWindow(userData) {
   registerWindow.on('closed', () => { registerWindow = null; });
 }
 
+// --- Logout ---
+
 function handleLogout() {
-  store.delete('token'); // Remove token on logout
-  mainWindow = closeWindow(mainWindow);
+  store.delete('token');
+  closeWindow(mainWindow);
   createLoginWindow();
 }
 
-function generateFakePassword(email) {
-  return email + '_googleAuth!';
-}
 
-ipcMain.on('check-for-updates', () => {
-  autoUpdater.checkForUpdates();
-  autoUpdater.on('update-available', () => {
-    mainWindow.webContents.send('update-available', 'Uma nova versão está disponível!');
-  });
-  autoUpdater.on('update-not-available', () => {
-    mainWindow.webContents.send('update-not-available', `O aplicativo já está na versão ${app.getVersion()}`);
-  });
-
-  autoUpdater.on('error', (err) => {
-    console.error('Erro ao verificar atualizações:', err);
-    mainWindow.webContents.send('update-error', 'Erro ao verificar atualizações.');
-  });
-});
-
-ipcMain.handle('get-app-version', () => {
-  return app.getVersion();
-});
-
-ipcMain.on('login-success', (event, token) => {
-  store.set('token', token);
-  loginWindow = closeWindow(loginWindow);
-  createMainWindow();
-  mainWindow.webContents.once('did-finish-load', () => {
-    mainWindow.webContents.send('set-token', token); 
-  });
-});
-
-ipcMain.on('show-register', () => createRegisterWindow());
-ipcMain.on('show-login', createLoginWindow);
-ipcMain.on('logout-success', handleLogout);
-
-ipcMain.handle('get-token', () => {
-  return store.get('token'); 
-});
-
-ipcMain.on('clear-sessions', async (event) => {
-  try {
-    await session.defaultSession.clearStorageData();
-    event.reply('sessions-cleared', 'Sessões limpas com sucesso');
-  } catch (error) {
-    event.reply('sessions-cleared', 'Erro: ' + error.message);
+ipcMain.on('set-zoom-factor', (event, factor) => {
+  const webContents = event.sender;
+  if (webContents && typeof factor === 'number') {
+    webContents.setZoomFactor(factor);
   }
-});
-
-ipcMain.on('open-external', (event, url) => {
-  if (/^https?:\/\//.test(url)) shell.openExternal(url);
 });
 
 ipcMain.on('start-google-login', () => {
@@ -201,91 +171,125 @@ ipcMain.on('start-google-login', () => {
       nodeIntegration: false,
       contextIsolation: true,
       partition: 'persist:mainSession',
-    enableBlinkFeatures: "Popups"
+      enableBlinkFeatures: "Popups"
     }
   });
 
-  authWindow.setMenu(null)
+  authWindow.setMenu(null);
   authWindow.loadURL(authUrl);
 
-  authWindow.on('closed', () => {
-    authWindow = null;
-  });
+  authWindow.on('closed', () => { authWindow = null; });
 
   authWindow.webContents.on('will-redirect', async (event, url) => {
-    if (url.startsWith('http://localhost')) {
-      event.preventDefault();
+    if (!url.startsWith('http://localhost')) return;
+
+    event.preventDefault();
+
+    try {
+      const code = new URL(url).searchParams.get('code');
+
+      const tokenRes = await axios.post('https://oauth2.googleapis.com/token', qs.stringify({
+        code,
+        client_id: global.sharedObject.env.GOOGLE_CLIENT_ID,
+        redirect_uri: global.sharedObject.env.GOOGLE_REDIRECT_URI,
+        client_secret: global.sharedObject.env.GOOGLE_CLIENT_SECRET,
+        grant_type: 'authorization_code'
+      }), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+
+      const accessToken = tokenRes.data.access_token;
+
+      const userRes = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+
+      const { id: googleId, name, email } = userRes.data;
+      const fakePassword = generateFakePassword(email);
 
       try {
-        const code = new URL(url).searchParams.get('code');
-        const tokenRes = await axios.post(
-          'https://oauth2.googleapis.com/token',
-          qs.stringify({
-            code,
-            client_id: global.sharedObject.env.GOOGLE_CLIENT_ID,
-            redirect_uri: global.sharedObject.env.GOOGLE_REDIRECT_URI,
-            client_secret: global.sharedObject.env.GOOGLE_CLIENT_SECRET,
-            grant_type: 'authorization_code'
-          }),
-          {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-          }
-        );
-
-        const accessToken = tokenRes.data.access_token;
-        const userRes = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
-          headers: { Authorization: `Bearer ${accessToken}` }
+        await axios.post('https://spaceapp-digital-api.onrender.com/register', {
+          name, email, password: fakePassword, googleId
         });
-
-        const { id: googleId, name, email } = userRes.data;
-        const fakePassword = generateFakePassword(email);
-
-        try {
-          await axios.post('https://spaceapp-digital-api.onrender.com/register', {
-            name,
-            email,
-            password: fakePassword,
-            googleId
-          });
-        } catch (err) {
-          if (err.response?.status !== 409) {
-            const msg = err.response?.status === 500
-              ? 'Erro ao realizar login com o Google. Tente novamente.'
-              : 'Erro inesperado ao registrar com o Google.';
-            
-            loginWindow.webContents.executeJavaScript(`alert("${msg}");`);
-            loginWindow = closeWindow(loginWindow);
-            createLoginWindow();
-            return;
-          }
+      } catch (err) {
+        if (err.response?.status !== 409) {
+          const msg = err.response?.status === 500
+            ? 'Erro ao realizar login com o Google. Tente novamente.'
+            : 'Erro inesperado ao registrar com o Google.';
+          loginWindow.webContents.executeJavaScript(`alert("${msg}");`);
+          closeWindow(loginWindow);
+          createLoginWindow();
+          return;
         }
-
-        const loginRes = await axios.post('https://spaceapp-digital-api.onrender.com/login', {
-          email,
-          password: fakePassword
-        });
-        const token = loginRes.data.token;
-        ipcMain.emit('login-success', null, token);
-
-      } catch (error) {
-        console.error('Erro no login com o Google:', error);
-        loginWindow?.webContents.send('google-login-failed', error.message);
-        loginWindow = closeWindow(loginWindow);
-        createLoginWindow();
-      } finally {
-        authWindow = closeWindow(authWindow);
       }
+
+      const loginRes = await axios.post('https://spaceapp-digital-api.onrender.com/login', {
+        email, password: fakePassword
+      });
+
+      const token = loginRes.data.token;
+      ipcMain.emit('login-success', null, token);
+    } catch (error) {
+      console.error('Erro no login com o Google:', error);
+      loginWindow?.webContents.send('google-login-failed', error.message);
+      closeWindow(loginWindow);
+      createLoginWindow();
+    } finally {
+      closeWindow(authWindow);
     }
   });
 });
 
-app.whenReady().then(() => {
-  createLoginWindow();
+// --- IPC handlers e eventos ---
+
+ipcMain.on('login-success', (event, token) => {
+  store.set('token', token);
+  closeWindow(loginWindow);
+  createMainWindow();
+
+  mainWindow.webContents.once('did-finish-load', () => {
+    mainWindow.webContents.send('set-token', token);
+  });
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+ipcMain.on('show-register', () => createRegisterWindow());
+ipcMain.on('show-login', createLoginWindow);
+ipcMain.on('logout-success', handleLogout);
+
+ipcMain.handle('get-token', () => store.get('token'));
+ipcMain.handle('get-app-version', () => app.getVersion());
+
+ipcMain.on('clear-sessions', async (event) => {
+  try {
+    await session.defaultSession.clearStorageData();
+    event.reply('sessions-cleared', 'Sessões limpas com sucesso');
+  } catch (error) {
+    event.reply('sessions-cleared', 'Erro: ' + error.message);
+  }
 });
+
+ipcMain.on('open-external', (event, url) => {
+  if (/^https?:\/\//.test(url)) shell.openExternal(url);
+});
+
+ipcMain.on('check-for-updates', () => {
+  autoUpdater.checkForUpdates();
+
+  autoUpdater.on('update-available', () => {
+    mainWindow?.webContents.send('update-available', 'Uma nova versão está disponível!');
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    mainWindow?.webContents.send('update-not-available', `O aplicativo já está na versão ${app.getVersion()}`);
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error('Erro ao verificar atualizações:', err);
+    mainWindow?.webContents.send('update-error', 'Erro ao verificar atualizações.');
+  });
+});
+
+// --- Atualizações automáticas ---
 
 autoUpdater.on('update-available', () => {
   dialog.showMessageBox({
@@ -303,6 +307,14 @@ autoUpdater.on('update-downloaded', () => {
     message: 'A nova versão foi baixada. O aplicativo será reiniciado para instalar a atualização.',
     buttons: ['Reiniciar agora']
   }).then(() => {
-    autoUpdater.quitAndInstall(); 
+    autoUpdater.quitAndInstall();
   });
+});
+
+// --- Inicialização do app ---
+
+app.whenReady().then(createLoginWindow);
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
 });
