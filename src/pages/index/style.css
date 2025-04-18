@@ -141,10 +141,12 @@
     justify-content: flex-end;
     flex-shrink: 0;
   }
-  
+
   .header-title {
     font-weight: 600;
     color: var(--text-primary);
+    text-align: center;
+    flex: 1;
   }
   
   .header-actions {

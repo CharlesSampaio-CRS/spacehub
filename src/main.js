@@ -9,12 +9,10 @@ require('dotenv').config();
 const config = require(path.join(__dirname, '../config'));
 const store = new Store();
 
-// ⚠️ Apenas para debug/teste - remova em produção
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 let mainWindow, loginWindow, registerWindow, authWindow;
 
-// Variáveis globais para acesso às configs do Google
 global.sharedObject = {
   env: {
     GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID,
@@ -22,26 +20,6 @@ global.sharedObject = {
     GOOGLE_CLIENT_SECRET: config.GOOGLE_CLIENT_SECRET
   }
 };
-
-// --- Funções auxiliares ---
-
-function closeWindow(winRef) {
-  if (winRef && !winRef.isDestroyed()) winRef.close();
-  return null;
-}
-
-function closeAllWindowsExcept(except) {
-  if (except !== 'main') mainWindow = closeWindow(mainWindow);
-  if (except !== 'login') loginWindow = closeWindow(loginWindow);
-  if (except !== 'register') registerWindow = closeWindow(registerWindow);
-  if (except !== 'auth') authWindow = closeWindow(authWindow);
-}
-
-function generateFakePassword(email) {
-  return `${email}_googleAuth!`;
-}
-
-// --- Janela principal ---
 
 function createMainWindow() {
   closeAllWindowsExcept('main');
@@ -63,15 +41,7 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
-  mainWindow.setMenu(null);
-
-  mainWindow.webContents.on('did-attach-webview', (event, webContents) => {
-    webContents.on('did-finish-load', () => {
-      webContents.setZoomFactor(1.1); // Zoom de 110% // Deve ter isso no settings 
-      //webContents.openDevTools(); // abre DevTools da webview
-    });
-  });
-
+  //mainWindow.setMenu(null)
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url) || url.includes('accounts.google.com')) {
       shell.openExternal(url);
@@ -82,8 +52,6 @@ function createMainWindow() {
 
   mainWindow.on('closed', () => { mainWindow = null; });
 }
-
-// --- Janela de login ---
 
 function createLoginWindow() {
   closeAllWindowsExcept('login');
@@ -102,8 +70,6 @@ function createLoginWindow() {
   loginWindow.loadFile(path.join(__dirname, 'pages/login/login.html'));
   loginWindow.on('closed', () => { loginWindow = null; });
 }
-
-// --- Janela de registro ---
 
 function createRegisterWindow(userData) {
   closeAllWindowsExcept('register');
@@ -132,21 +98,27 @@ function createRegisterWindow(userData) {
   registerWindow.on('closed', () => { registerWindow = null; });
 }
 
-// --- Logout ---
+function closeWindow(winRef) {
+  if (winRef && !winRef.isDestroyed()) winRef.close();
+  return null;
+}
+
+function closeAllWindowsExcept(except) {
+  if (except !== 'main') mainWindow = closeWindow(mainWindow);
+  if (except !== 'login') loginWindow = closeWindow(loginWindow);
+  if (except !== 'register') registerWindow = closeWindow(registerWindow);
+  if (except !== 'auth') authWindow = closeWindow(authWindow);
+}
+
+function generateFakePassword(email) {
+  return `${email}_googleAuth!`;
+}
 
 function handleLogout() {
   store.delete('token');
   closeWindow(mainWindow);
   createLoginWindow();
 }
-
-
-ipcMain.on('set-zoom-factor', (event, factor) => {
-  const webContents = event.sender;
-  if (webContents && typeof factor === 'number') {
-    webContents.setZoomFactor(factor);
-  }
-});
 
 ipcMain.on('start-google-login', () => {
   if (authWindow && !authWindow.isDestroyed()) {
@@ -240,8 +212,6 @@ ipcMain.on('start-google-login', () => {
   });
 });
 
-// --- IPC handlers e eventos ---
-
 ipcMain.on('login-success', (event, token) => {
   store.set('token', token);
   closeWindow(loginWindow);
@@ -289,8 +259,6 @@ ipcMain.on('check-for-updates', () => {
   });
 });
 
-// --- Atualizações automáticas ---
-
 autoUpdater.on('update-available', () => {
   dialog.showMessageBox({
     type: 'info',
@@ -310,8 +278,6 @@ autoUpdater.on('update-downloaded', () => {
     autoUpdater.quitAndInstall();
   });
 });
-
-// --- Inicialização do app ---
 
 app.whenReady().then(createLoginWindow);
 

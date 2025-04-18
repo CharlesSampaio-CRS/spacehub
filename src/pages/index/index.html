@@ -45,13 +45,14 @@
           <img width="48" height="48" src="https://img.icons8.com/color/48/google-chat.png" alt="Google Chat" />
         </button>
         <button id="slack-button" class="nav-button" title="Slack">
-          <img width="48" height="48" src="https://img.icons8.com/color/48/slack.png" alt="slack"/>
+          <img width="48" height="48" src="https://img.icons8.com/color/48/slack.png" alt="slack" />
         </button>
         <button id="discord-button" class="nav-button" title="Discord">
           <img width="48" height="48" src="https://img.icons8.com/fluency/48/discord-logo.png" alt="Discord" />
         </button>
         <button id="teams-button" class="nav-button" title="Microsoft Teams">
-          <img width="48" height="48" src="https://img.icons8.com/fluency/48/microsoft-teams-2019.png" alt="Microsoft Teams" />
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/microsoft-teams-2019.png"
+            alt="Microsoft Teams" />
         </button>
         <button id="skype-button" class="nav-button" title="Skype">
           <img width="48" height="48" src="https://img.icons8.com/fluency/48/skype.png" alt="Skype" />
@@ -75,10 +76,10 @@
     </div>
     <div id="content">
       <div id="header">
+        <div class="header-title" id="active-view-name">Página Inicial</div>
         <div class="header-actions">
-          <!-- Sino de Notificação -->
           <button class="notification-bell" id="notification-bell">
-            <img width="24" height="24" src="https://img.icons8.com/emoji/48/bell-emoji.png" alt="bell-emoji"/>
+            <img width="24" height="24" src="https://img.icons8.com/emoji/48/bell-emoji.png" alt="bell-emoji" />
             <span class="notification-badge">3</span>
           </button>
           <!-- Menu de Notificações -->
@@ -127,10 +128,10 @@
             </button>
             <div class="dropdown-menu" id="dropdown-menu">
               <button id="todoist-button" class="dropdown-item" type="button">
-                <img width="24" height="24" src="https://img.icons8.com/color/48/todoist.png" alt="Todoist"/>
+                <img width="24" height="24" src="https://img.icons8.com/color/48/todoist.png" alt="Todoist" />
                 <span>Todoist</span>
               </button>
-              
+
               <button id="configuration-button" class="dropdown-item" type="button">
                 <img width="24" height="24" src="https://img.icons8.com/color/48/settings--v1.png"
                   alt="Configuração" /><span>Configuração</span>
@@ -145,12 +146,15 @@
       </div>
       <div class="webview-container">
         <div class="webview-wrapper">
+          <div id="webview-loader" class="loader hidden"></div>
         </div>
       </div>
     </div>
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      let currentZoom = 1.0;
+
       const services = {
         'home-button': 'webview-home',
         'whatsapp-button': 'webview-whatsapp',
@@ -171,7 +175,7 @@
         'todoist-button': 'webview-todoist',
         'zoom-button': 'webview-zoom'
       };
-    
+
       const serviceMap = {
         'webview-home': '../../pages/home/home.html',
         'webview-configuration': '../../pages/configuration/configuration.html',
@@ -192,10 +196,14 @@
         'webview-todoist': 'https://app.todoist.com/auth/login',
         'webview-zoom': 'https://zoom.us/pt/signin#/login'
       };
-    
+
       const webviewContainer = document.querySelector('.webview-wrapper');
-    
+      const loader = document.getElementById('webview-loader');
+
+      // Função para criar e configurar o webview
       const createWebview = (webviewId) => {
+        loader.classList.remove('hidden');
+
         const webview = document.createElement('webview');
         webview.id = webviewId;
         webview.className = 'webview w-100 h-100 active';
@@ -203,111 +211,184 @@
         webview.setAttribute('allowpopups', '');
         webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
         webview.src = serviceMap[webviewId] || 'about:blank';
-    
+
+        // Adiciona o título usando o atributo alt
+        const webviewTitleMap = {
+          'webview-home': 'Página Inicial',
+          'webview-configuration': 'Configurações',
+          'webview-whatsapp': 'WhatsApp',
+          'webview-telegram': 'Telegram',
+          'webview-messenger': 'Messenger',
+          'webview-google-chat': 'Google Chat',
+          'webview-slack': 'Slack',
+          'webview-discord': 'Discord',
+          'webview-teams': 'Teams',
+          'webview-skype': 'Skype',
+          'webview-wechat': 'WeChat',
+          'webview-snapchat': 'Snapchat',
+          'webview-twitter': 'Twitter',
+          'webview-threads': 'Threads',
+          'webview-instagram': 'Instagram',
+          'webview-linkedin': 'LinkedIn',
+          'webview-todoist': 'Todoist',
+          'webview-zoom': 'Zoom'
+        };
+        webview.setAttribute('alt', webviewTitleMap[webviewId] || 'Sem título');
+
         webview.addEventListener('dom-ready', () => {
-          webview.setZoomFactor(0.9);
-          webview.insertCSS('body { zoom: 0.9; }');
+          webview.setZoomFactor(currentZoom);
+          loader.classList.add('hidden');
         });
-    
+
+        webview.addEventListener('did-fail-load', () => {
+          loader.classList.add('hidden');
+        });
+
+        webview.addEventListener('new-window', (e) => {
+          e.preventDefault();
+          webview.loadURL(e.url);
+        });
+
+        webview.addEventListener('will-navigate', (e) => {
+          if (e.url !== webview.src) {
+            e.preventDefault();
+            webview.loadURL(e.url);
+          }
+        });
+
         webviewContainer.appendChild(webview);
         return webview;
       };
-    
+
+      // Função para exibir o webview e atualizar o título da view ativa
       const showWebview = (webviewId, buttonId) => {
         document.querySelectorAll('webview').forEach(w => w.classList.remove('active'));
         document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
-    
+
         let selectedWebview = document.getElementById(webviewId);
         const selectedButton = document.getElementById(buttonId);
-    
+
         if (!selectedWebview) {
           selectedWebview = createWebview(webviewId);
         } else {
           selectedWebview.classList.add('active');
         }
-    
+
         if (selectedButton && selectedButton.classList.contains('nav-button')) {
           selectedButton.classList.add('active');
         }
+
+        // Atualiza o título da view ativa
+        updateActiveViewTitle(selectedWebview);
       };
-    
-      // Inicializa o evento de clique nos botões de navegação
-      Object.entries(services).forEach(([buttonId, webviewId]) => {
-        const button = document.getElementById(buttonId);
-        button?.addEventListener('click', () => showWebview(webviewId, buttonId));
-      });
-    
-      // Exibe o webview inicial (Home)
+
+      // Função para atualizar o título da view ativa
+      const updateActiveViewTitle = (webviewOrServiceName) => {
+        let webview;
+
+        if (typeof webviewOrServiceName === 'string') {
+          const webviewId = `webview-${webviewOrServiceName}`;
+          webview = document.getElementById(webviewId);
+          if (!webview) {
+            webview = createWebview(webviewId);
+          }
+        } else {
+          webview = webviewOrServiceName;
+        }
+
+        if (!webview || typeof webview.getAttribute !== 'function') return;
+
+        const titleElement = document.getElementById('active-view-name');
+        const activeViewName = webview.getAttribute('alt');
+
+        if (titleElement && activeViewName) {
+          titleElement.textContent = activeViewName;
+        }
+      };
+
+      // Função para configurar eventos de botões
+      const setupButtonEvents = () => {
+        Object.entries(services).forEach(([buttonId, webviewId]) => {
+          const button = document.getElementById(buttonId);
+          button?.addEventListener('click', () => showWebview(webviewId, buttonId));
+        });
+      };
+
+      // Inicializa a primeira view (Home)
       showWebview('webview-home', 'home-button');
-    
+      setupButtonEvents();
+
+      // Logout
       const logoutButton = document.getElementById('logout-button');
       logoutButton?.addEventListener('click', () => window.electronAPI.logout());
-    
+
       // Menu lateral
       const menuButton = document.getElementById("menu-button");
       const dropdownMenu = document.getElementById("dropdown-menu");
       menuButton?.addEventListener("click", () => dropdownMenu.classList.toggle("show"));
-    
+
       document.querySelectorAll('.dropdown-item').forEach(item => {
-        item.addEventListener('click', () => dropdownMenu.classList.remove('show'));
+        item.addEventListener('click', () => dropdownMenu.classList.remove("show"));
       });
-    
+
       // Notificações
       const notificationBell = document.getElementById("notification-bell");
       const notificationMenu = document.getElementById("notification-menu");
       const clearNotificationsBtn = document.getElementById("clear-notifications");
       const notificationList = document.getElementById("notification-list");
       const notificationBadge = document.querySelector(".notification-badge");
-    
+
       notificationBell?.addEventListener("click", () => {
         notificationMenu.classList.toggle("show");
         if (dropdownMenu.classList.contains("show")) dropdownMenu.classList.remove("show");
       });
-    
+
       clearNotificationsBtn?.addEventListener("click", () => {
         notificationList.innerHTML = '<div class="notification-empty">Nenhuma notificação disponível</div>';
         notificationBadge.style.display = "none";
       });
-    
+
       const updateNotificationBadge = () => {
         const notifications = document.querySelectorAll('.notification-item');
         notificationBadge.textContent = notifications.length > 0 ? notifications.length : '';
         notificationBadge.style.display = notifications.length > 0 ? 'flex' : 'none';
       };
-    
+
       document.querySelectorAll('.notification-item').forEach(item => {
         item.addEventListener('click', () => {
           const service = item.getAttribute('data-service');
+          console.log(service)
+          updateActiveViewTitle(service);
           const webviewId = `webview-${service}`;
           let webview = document.getElementById(webviewId);
           if (!webview) webview = createWebview(webviewId);
-    
+
           document.querySelectorAll('webview').forEach(w => w.classList.remove('active'));
           webview.classList.add('active');
-    
+
           item.remove();
           updateNotificationBadge();
         });
       });
-    
+
       // Fecha menus ao clicar fora
       document.addEventListener("click", (e) => {
         if (!dropdownMenu.contains(e.target) && !menuButton.contains(e.target)) {
           dropdownMenu.classList.remove("show");
         }
-    
+
         if (!notificationMenu.contains(e.target) && !notificationBell.contains(e.target)) {
           notificationMenu.classList.remove("show");
         }
       });
-    
+
       // Scroll da sidebar com mouse
       const sidebar = document.getElementById('sidebar');
       sidebar?.addEventListener('wheel', (e) => {
         e.preventDefault();
         sidebar.scrollTop += e.deltaY;
       });
-    
+
       // Notificação no navegador
       const showNotification = (title, body) => {
         if (Notification.permission === "granted") {
@@ -319,9 +400,9 @@
         }
       };
     });
-    </script>
-      
-  
+
+  </script>
+
 </body>
 
 </html>
