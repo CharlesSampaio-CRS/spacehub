@@ -7,7 +7,9 @@ const { autoUpdater } = require('electron-updater');
 require('dotenv').config();
 
 const config = require(path.join(__dirname, '../config'));
-const store = new Store();
+const store = new Store(); 
+
+console.log(store.store)
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
@@ -21,7 +23,41 @@ global.sharedObject = {
   }
 };
 
+
+ipcMain.handle('get-token', () => {
+  return store.get('token');
+});
+
+ipcMain.handle('get-uuid', () => {
+  return store.get('uuid');
+});
+
+function saveToken(token) {
+  if (token) {
+    const payload = parseJwt(token);
+    store.set('token', token); 
+    store.set('uuid',payload.uuid)
+  }
+}
+
+function parseJwt(token) {
+  try {
+    const base64Payload = token.split('.')[1]; 
+    const payload = atob(base64Payload);
+    return JSON.parse(payload); 
+  } catch (e) {
+    console.error('Failed to parse JWT', e);
+    return null;
+  }
+}
+
 function createMainWindow() {
+  // Verifique se a janela principal já foi criada
+  if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.focus();
+      return;
+  }
+
   closeAllWindowsExcept('main');
 
   mainWindow = new BrowserWindow({
@@ -39,18 +75,30 @@ function createMainWindow() {
     }
   });
 
+  // Carrega o arquivo HTML principal
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
-  //mainWindow.setMenu(null)
+
+  // Defina a função que lida com links externos
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url) || url.includes('accounts.google.com')) {
-      shell.openExternal(url);
+      shell.openExternal(url); // Abre a URL externa no navegador
       return { action: 'deny' };
     }
-    return { action: 'deny' };
+    return { action: 'deny' }; // Bloqueia a abertura de links internos
   });
 
-  mainWindow.on('closed', () => { mainWindow = null; });
+  // Adiciona o evento de quando a janela for fechada
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+
+  // Garantir que a janela foi completamente carregada antes de interagir com ela
+  mainWindow.once('did-finish-load', () => {
+    console.log('Janela principal carregada com sucesso!');
+    // Aqui você pode agora enviar o token ou fazer qualquer outra interação necessária
+    // mainWindow.webContents.send('set-token', token);
+  });
 }
 
 function createLoginWindow() {
@@ -66,7 +114,7 @@ function createLoginWindow() {
     }
   });
 
-  loginWindow.setMenu(null);
+  //loginWindow.setMenu(null);
   loginWindow.loadFile(path.join(__dirname, 'pages/login/login.html'));
   loginWindow.on('closed', () => { loginWindow = null; });
 }
@@ -200,7 +248,8 @@ ipcMain.on('start-google-login', () => {
       });
 
       const token = loginRes.data.token;
-      ipcMain.emit('login-success', null, token);
+      saveToken(token); // Salva o token de forma centralizada
+      if (loginWindow) loginWindow.webContents.send('google-login-success', { token });
     } catch (error) {
       console.error('Erro no login com o Google:', error);
       loginWindow?.webContents.send('google-login-failed', error.message);
@@ -213,7 +262,7 @@ ipcMain.on('start-google-login', () => {
 });
 
 ipcMain.on('login-success', (event, token) => {
-  store.set('token', token);
+  saveToken(token); // Salva o token de forma centralizada
   closeWindow(loginWindow);
   createMainWindow();
 
@@ -225,8 +274,6 @@ ipcMain.on('login-success', (event, token) => {
 ipcMain.on('show-register', () => createRegisterWindow());
 ipcMain.on('show-login', createLoginWindow);
 ipcMain.on('logout-success', handleLogout);
-
-ipcMain.handle('get-token', () => store.get('token'));
 ipcMain.handle('get-app-version', () => app.getVersion());
 
 ipcMain.on('clear-sessions', async (event) => {

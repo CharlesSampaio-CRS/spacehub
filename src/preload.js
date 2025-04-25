@@ -1,15 +1,29 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  invoke: (channel) => ipcRenderer.invoke(channel),
+  send: (channel, data) => ipcRenderer.send(channel, data),
   setZoomFactor: (factor) => ipcRenderer.send('set-zoom-factor', factor),
   logout: () => ipcRenderer.send('logout-success'),
   getToken: () => ipcRenderer.invoke('get-token'),
-  setToken: (token) => ipcRenderer.send('login-success', token),
+  setToken: (token) => {
+    window.localStorage.setItem('token', token);
+    console.log('Token salvo no preload:', token);
+  },
   checkForUpdates: () => ipcRenderer.send('check-for-updates'),
   onUpdateAvailable: (callback) => ipcRenderer.on('update-available', (_, msg) => callback(msg)),
   onUpdateNotAvailable: (callback) => ipcRenderer.on('update-not-available', (_, msg) => callback(msg)),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   openExternal: (url) => ipcRenderer.send('open-external', url)
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  ipcRenderer.on('token', (event, token) => {
+    if (token) {
+      localStorage.setItem('token', token);
+      console.log('Token salvo no localStorage:', token);
+    }
+  });
 });
 
 window.addEventListener('DOMContentLoaded', () => {

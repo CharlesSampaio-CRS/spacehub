@@ -154,6 +154,33 @@
       let currentZoom = 1.0;
       let currentWebview = null;
   
+      const loadWithToken = (token, uuid) => {
+        fetch(`https://spaceapp-digital-api.onrender.com/spaces/${uuid}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        })
+          .then(response => response.json())
+          .then(data => console.log('Data received:', data))
+          .catch(error => console.error('Error:', error));
+      };
+  
+      window.electronAPI.invoke('get-token').then(token => {
+        if (token) {
+          window.electronAPI.invoke('get-uuid').then(uuid => {
+            if (uuid) {
+              loadWithToken(token, uuid);
+            } else {
+              console.error('Failed to get uuid');
+            }
+          }).catch(err => console.error('Failed to get uuid:', err));
+        } else {
+          console.error('Failed to get token');
+        }
+      }).catch(err => console.error('Failed to get token:', err));
+  
       const services = {
         'home-button': 'webview-home',
         'whatsapp-button': 'webview-whatsapp',
@@ -216,6 +243,7 @@
         'webview-todoist': 'Todoist',
         'webview-zoom': 'Zoom'
       };
+  
       const webviewContainer = document.querySelector('.webview-wrapper');
   
       const createWebview = (webviewId) => {
@@ -372,7 +400,6 @@
         }
       };
   
-      // Inicializações
       setupButtonEvents();
       setupNotificationActions();
       setupMenus();
