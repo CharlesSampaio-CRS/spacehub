@@ -27,12 +27,20 @@
 
     <div class="input-group">
       <label for="email">E-mail</label>
-      <input type="text" id="email" placeholder="seu@email.com" />
+      <input type="text" id="email" placeholder="seu@email.com" autocomplete="email"/>
     </div>
 
     <div class="input-group">
       <label for="password">Senha</label>
-      <input type="password" id="password" placeholder="••••••••" />
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+
+    <div class="remember-group">
+      <label class="switch">
+        <input type="checkbox" id="rememberMe" />
+        <span class="slider round"></span>
+      </label>
+      <span>Lembrar login e senha</span>
     </div>
 
     <p id="errorMessage" style="color: #ef4444; display: none; margin-top: 8px;"></p>
@@ -57,44 +65,94 @@
     const passwordInput = document.getElementById('password');
     const loginButton = document.getElementById('loginButton');
     const errorMsg = document.getElementById('errorMessage');
+    const rememberMe = document.getElementById('rememberMe');
+    const googleLoginBtn = document.getElementById('googleLogin');
+    const registerLink = document.getElementById('registerLink');
   
+    // Atualiza o estado do botão de login com base nos campos
     function updateButtonState() {
       const emailFilled = emailInput.value.trim() !== '';
       const passwordFilled = passwordInput.value.trim() !== '';
       loginButton.disabled = !(emailFilled && passwordFilled);
     }
   
+    // Carregar dados do LocalStorage ao iniciar
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedEmail = localStorage.getItem('savedEmail');
+      const savedPassword = localStorage.getItem('savedPassword');
+      const remember = localStorage.getItem('rememberMe') === 'true';
+  
+      if (remember && savedEmail && savedPassword) {
+        emailInput.value = savedEmail;
+        passwordInput.value = savedPassword;
+        rememberMe.checked = true;
+        updateButtonState();
+      }
+    });
+  
+    // Eventos para inputs
     emailInput.addEventListener('input', updateButtonState);
     passwordInput.addEventListener('input', updateButtonState);
   
-    document.getElementById('googleLogin').addEventListener('click', () => {
-      require('electron').ipcRenderer.send('start-google-login');
-    });
-  
-    require('electron').ipcRenderer.on('google-login-success', (event, tokens) => {
-      const token = tokens.id_token || tokens.access_token;
-      localStorage.setItem('token', token);
-      require('electron').ipcRenderer.send('login-success', token);
-    });
-  
-    require('electron').ipcRenderer.on('google-login-failed', (event, message) => {
-      errorMsg.textContent = 'Falha ao fazer login com Google: ' + message;
-      errorMsg.style.display = 'block';
-    });
-  
-    document.getElementById('loginButton').addEventListener('click', () => {
+    // Ação ao clicar em "Entrar"
+    loginButton.addEventListener('click', () => {
       loginButton.disabled = true;
-      login();
+  
+      if (rememberMe.checked) {
+        localStorage.setItem('savedEmail', emailInput.value);
+        localStorage.setItem('savedPassword', passwordInput.value);
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        localStorage.removeItem('savedEmail');
+        localStorage.removeItem('savedPassword');
+        localStorage.setItem('rememberMe', 'false');
+      }
+  
+      login(); // Função de autenticação (assume que existe no escopo)
     });
   
-    document.getElementById('registerLink').addEventListener('click', (e) => {
+    // Ação para login com Google
+    googleLoginBtn?.addEventListener('click', () => {
+      try {
+        window.electronAPI?.startGoogleLogin?.(); // recomendado
+        require('electron').ipcRenderer.send('start-google-login'); // fallback
+      } catch (e) {
+        console.error('Erro ao iniciar login Google:', e);
+      }
+    });
+  
+    // Evento de sucesso no login com Google
+    try {
+      require('electron').ipcRenderer.on('google-login-success', (event, tokens) => {
+        const token = tokens.id_token || tokens.access_token;
+        localStorage.setItem('token', token);
+        require('electron').ipcRenderer.send('login-success', token);
+      });
+  
+      // Evento de falha no login com Google
+      require('electron').ipcRenderer.on('google-login-failed', (event, message) => {
+        errorMsg.textContent = 'Falha ao fazer login com Google: ' + message;
+        errorMsg.style.display = 'block';
+      });
+    } catch (e) {
+      console.warn('ipcRenderer não disponível:', e);
+    }
+  
+    // Ação para abrir tela de registro
+    registerLink?.addEventListener('click', (e) => {
       e.preventDefault();
-      window.electronAPI?.openRegister?.();
-      require('electron').ipcRenderer.send('show-register');
+      try {
+        window.electronAPI?.openRegister?.();
+        require('electron').ipcRenderer.send('show-register');
+      } catch (e) {
+        console.error('Erro ao abrir tela de registro:', e);
+      }
     });
   
+    // Verifica token salvo, se quiser usar
     const token = window.electronAPI?.getToken?.();
   </script>
+  
   
 </body>
 
