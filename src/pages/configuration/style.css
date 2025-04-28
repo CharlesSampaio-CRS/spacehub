@@ -57,6 +57,21 @@ body.dark-mode {
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
 }
+#update-version-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#update-version-button:hover {
+  background-color: #45a049;
+}
+
 
 .config-section {
   background: #fff;
@@ -125,6 +140,31 @@ body.dark-mode {
 
 .dark-mode .status-label {
   color: #a0a0a0;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  padding: 10px;
+}
+
+#appVersion {
+  font-size: 16px;
+}
+
+#update-version-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 0;
+  color: #333;
+}
+
+#update-version-button:hover {
+  color: #007bff; /* Cor do hover para o botão */
 }
 
 #userType, #userName, #userEmail, #userPlan {

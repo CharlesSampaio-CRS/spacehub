@@ -147,12 +147,19 @@
         webview.setAttribute('allowpopups', '');
         webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
         webview.setAttribute('alt', getTitleFromWebviewId(webviewId));
+        webview.setAttribute('preload', '../../preload.js');  
 
-        webview.addEventListener('dom-ready', () => webview.setZoomFactor(currentZoom));
+
+        webview.addEventListener('dom-ready', () => {
+          webview.setZoomFactor(currentZoom);
+          webview.openDevTools();  
+        });
+
         webview.addEventListener('new-window', e => {
           e.preventDefault();
           webview.loadURL(e.url);
         });
+        
         webview.addEventListener('will-navigate', e => {
           if (e.url !== webview.src) {
             e.preventDefault();

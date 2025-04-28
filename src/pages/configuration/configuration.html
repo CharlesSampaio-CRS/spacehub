@@ -14,8 +14,13 @@
   <div class="main-wrapper">
     <header class="page-header">
       <h1>Configurações</h1>
-      <div id="appVersion">Versão: 1.0.0</div>
+      <div id="appVersion">Versão: Carregando...</div>
+      <!-- Botão de Atualização com ícone de refresh -->
+      <button id="update-version-button" title="Atualizar versão">
+        <i class="fas fa-sync-alt"></i> <!-- Ícone de refresh -->
+      </button>
     </header>
+    
 
     <main id="content-container">
       <!-- Seção Perfil -->
@@ -150,175 +155,7 @@
     </main>
   </div>
 
-  <!-- Scripts -->
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      // Ativar/desativar modo escuro
-      const darkModeToggle = document.getElementById("dark-mode-toggle");
-      if (darkModeToggle) {
-        darkModeToggle.addEventListener("change", () => {
-          document.body.classList.toggle("dark-mode", darkModeToggle.checked);
-        });
-      }
-
-      // Preencher dados do usuário
-      const user = {
-        type: "Administrador",
-        name: "João Silva",
-        email: "joao.silva@email.com",
-        plan: "Premium"
-      };
-
-      document.getElementById("userType").textContent = user.type;
-      document.getElementById("userName").textContent = user.name;
-      document.getElementById("userEmail").textContent = user.email;
-      document.getElementById("userPlan").textContent = user.plan;
-
-      // Lista de aplicações
-      const applicationsData = [
-        {
-          "application": "WhatsApp",
-          "url": "https://web.whatsapp.com",
-          "active": true,
-          "icon": "https://img.icons8.com/fluency/48/whatsapp.png"
-        },
-        {
-          "application": "Instagram",
-          "url": "https://www.instagram.com/accounts/login/",
-          "active": true,
-          "icon": "https://img.icons8.com/fluency/48/instagram-new.png"
-        },
-        {
-          "application": "Telegram",
-          "url": "https://web.telegram.org",
-          "active": true,
-          "icon": "https://img.icons8.com/fluency/48/telegram-app.png"
-        },
-        {
-          "application": "Facebook",
-          "url": "https://www.messenger.com",
-          "active": true,
-          "icon": "https://img.icons8.com/fluency/48/facebook-messenger.png"
-        },
-        {
-          "application": "LinkedIn",
-          "url": "https://www.linkedin.com/messaging/",
-          "active": true,
-          "icon": "https://img.icons8.com/fluency/48/linkedin.png"
-        },
-        {
-          "application": "Slack",
-          "url": "https://slack.com/signin",
-          "active": true,
-          "icon": "https://img.icons8.com/color/48/slack.png"
-        },
-        {
-          "application": "Discord",
-          "url": "https://discord.com/app",
-          "active": true,
-          "icon": "https://img.icons8.com/fluency/48/discord-logo.png"
-        },
-        {
-          "application": "Skype",
-          "url": "https://web.skype.com",
-          "active": true,
-          "icon": "https://img.icons8.com/fluency/48/skype.png"
-        },
-        {
-          "application": "Teams",
-          "url": "https://teams.microsoft.com",
-          "active": true,
-          "icon": "https://img.icons8.com/fluency/48/microsoft-teams-2019.png"
-        },
-        {
-          "application": "WeChat",
-          "url": "https://web.wechat.com",
-          "active": true,
-          "icon": "https://img.icons8.com/fluency/48/weixing.png"
-        },
-        {
-          "application": "Snapchat",
-          "url": "https://web.snapchat.com",
-          "active": true,
-          "icon": "https://img.icons8.com/fluency/48/snapchat.png"
-        },
-        {
-          "application": "Google",
-          "url": "https://chat.google.com",
-          "active": true,
-          "icon": "https://img.icons8.com/color/48/google-chat.png"
-        },
-        {
-          "application": "Twitter",
-          "url": "https://twitter.com/messages",
-          "active": true,
-          "icon": "https://img.icons8.com/fluency/48/twitter.png"
-        },
-        {
-          "application": "Threads",
-          "url": "https://www.threads.net/",
-          "active": true,
-          "icon": "https://img.icons8.com/ios-filled/48/000000/threads.png"
-        },
-        {
-          "application": "Zoom",
-          "url": "https://zoom.us/pt/signin#/login",
-          "active": true,
-          "size": 48,
-          "icon": "https://img.icons8.com/fluency/48/zoom.png",
-          "type": "web",
-          "popularity": 15
-        }
-      ];
-      // Renderiza lista de aplicações
-      const renderApplicationsList = () => {
-        const listContainer = document.getElementById("applicationsList");
-        listContainer.innerHTML = "";
-
-        applicationsData.forEach(app => {
-          const appItem = document.createElement("div");
-          appItem.classList.add("application-item");
-
-          appItem.innerHTML = `
-            <div class="application-info">
-              <img src="${app.icon}" alt="${app.application}" width="32" height="32" />
-              <p><strong>${app.application}</strong></p>
-            </div>
-            <div class="application-toggle">
-              <label class="toggle-switch">
-                <input type="checkbox" ${app.active ? "checked" : ""} />
-                <span class="slider"></span>
-              </label>
-            </div>
-          `;
-
-          listContainer.appendChild(appItem);
-        });
-      };
-
-      renderApplicationsList();
-
-      // Controle de zoom
-      const zoomInput = document.getElementById("zoom-range");
-      const zoomValue = document.getElementById("zoom-value");
-
-      zoomInput.addEventListener("input", () => {
-        const scale = parseFloat(zoomInput.value);
-        zoomValue.textContent = scale.toFixed(1);
-
-        // Define transform com centralização
-        document.body.style.transform = `scale(${scale})`;
-        document.body.style.transformOrigin = "center center";
-        document.body.style.transition = "transform 0.2s ease";
-
-        // Ajusta rolagem para manter a visualização centralizada
-        const scrollX = (document.body.scrollWidth * scale - window.innerWidth) / 2;
-        const scrollY = (document.body.scrollHeight * scale - window.innerHeight) / 2;
-        window.scrollTo(scrollX, scrollY);
-      });
-
-    });
-  </script>
+  <script src="settings.js"></script>
 </body>
 
 </html>
