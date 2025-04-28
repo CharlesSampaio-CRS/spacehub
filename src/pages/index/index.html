@@ -86,7 +86,7 @@
                 <span>Todoist</span>
               </button>
 
-              <button id="configuration-button" class="dropdown-item" type="button">
+              <button id="settings-button" class="dropdown-item" type="button">
                 <img width="24" height="24" src="https://img.icons8.com/color/48/settings--v1.png"
                   alt="Configuração" /><span>Configuração</span>
               </button>
@@ -110,14 +110,23 @@
 
       const services = {
         'home-button': 'webview-home',
-        'configuration-button': 'webview-configuration',
+        'settings-button': 'webview-settings',
         'todoist-button': 'webview-todoist',
       };
 
       const serviceMap = {
         'webview-home': '../../pages/home/home.html',
         'webview-todoist': 'https://app.todoist.com/auth/login',
-        'webview-configuration': '../../pages/configuration/configuration.html',
+        'webview-settings': '../../pages/settings/settings.html',
+      };
+
+      const initiateUpdate = async () => {
+        try {
+          await window.electronAPI.checkForUpdates();
+        } catch (error) {
+          console.error('Erro ao verificar atualizações:', error);
+
+        }
       };
 
       const getTitleFromWebviewId = (webviewId) => {
@@ -147,19 +156,19 @@
         webview.setAttribute('allowpopups', '');
         webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
         webview.setAttribute('alt', getTitleFromWebviewId(webviewId));
-        webview.setAttribute('preload', '../../preload.js');  
+        webview.setAttribute('preload', '../../preload.js');
 
 
         webview.addEventListener('dom-ready', () => {
           webview.setZoomFactor(currentZoom);
-          webview.openDevTools();  
+          //webview.openDevTools();
         });
 
         webview.addEventListener('new-window', e => {
           e.preventDefault();
           webview.loadURL(e.url);
         });
-        
+
         webview.addEventListener('will-navigate', e => {
           if (e.url !== webview.src) {
             e.preventDefault();

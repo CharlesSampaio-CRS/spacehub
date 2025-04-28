@@ -78,13 +78,13 @@ const setupZoomControl = () => {
   });
 };
 
-const initiateUpdate = () => {
-  window.electronAPI.checkForUpdates().then(() => {
-    console.log('Verificando atualizações...');
-    // Aqui você pode mostrar um alerta de progresso ou algo visual para o usuário
-  }).catch(error => {
+const initiateUpdate = async () => {
+  try {
+    await window.electronAPI.checkForUpdates();
+  } catch (error) {
     console.error('Erro ao verificar atualizações:', error);
-  });
+
+  }
 };
 
 const displayAppVersion = () => {
