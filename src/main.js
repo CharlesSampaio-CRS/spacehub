@@ -28,15 +28,15 @@ ipcMain.handle('get-token', () => {
   return store.get('token');
 });
 
-ipcMain.handle('get-uuid', () => {
-  return store.get('uuid');
+ipcMain.handle('get-userUuid', () => {
+  return store.get('userUuid');
 });
 
 function saveToken(token) {
   if (token) {
     const payload = parseJwt(token);
     store.set('token', token); 
-    store.set('uuid',payload.uuid)
+    store.set('userUuid',payload.uuid)
   }
 }
 
@@ -163,7 +163,8 @@ function generateFakePassword(email) {
 }
 
 function handleLogout() {
-  store.delete('token');
+  // store.delete('token');
+  // store.delete('userUuid');
   closeWindow(mainWindow);
   createLoginWindow();
 }
@@ -329,5 +330,7 @@ autoUpdater.on('update-downloaded', () => {
 app.whenReady().then(createLoginWindow);
 
 app.on('window-all-closed', () => {
+  // store.delete('token');
+  // store.delete('userUuid');
   if (process.platform !== 'darwin') app.quit();
 });

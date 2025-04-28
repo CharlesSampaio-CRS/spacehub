@@ -86,10 +86,6 @@
     transition: var(--transition);
   }
   
-  .nav-button img {
-    filter: grayscale(100%) brightness(0.8);
-  }
-  
   .nav-button:hover {
     background: var(--hover-color);
     color: var(--primary-color);

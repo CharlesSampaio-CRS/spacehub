@@ -10,15 +10,7 @@ async function login() {
       email,
       password
     });
-
-    localStorage.setItem('token', data.token);
-
-    const payload = parseJwt(data.token);
-
-    if (payload.uuid != null) {
-      localStorage.setItem('userUuid', payload.uuid);
-    }
-    ipcRenderer.send('login-success', data.token,data.userUuid );
+    ipcRenderer.send('login-success', data.token);
   } catch (error) {
     console.error('Login error:', error);
     alert('Invalid email or password');
