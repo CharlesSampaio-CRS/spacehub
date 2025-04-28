@@ -6,11 +6,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setZoomFactor: (factor) => ipcRenderer.send('set-zoom-factor', factor),
   logout: () => ipcRenderer.send('logout-success'),
   getToken: () => ipcRenderer.invoke('get-token'),
+  restartApp: () => ipcRenderer.invoke('restartApp'),
   checkForUpdates: () => ipcRenderer.send('check-for-updates'),
-  onUpdateAvailable: (callback) => ipcRenderer.on('update-available', (_, msg) => callback(msg)),
   onUpdateNotAvailable: (callback) => ipcRenderer.on('update-not-available', (_, msg) => callback(msg)),
+  restartApp: () => ipcRenderer.invoke('restartApp'),
+  onUpdateProgress: (callback) => ipcRenderer.on('update-progress', (_, data) => callback(data)),
+  onUpdateAvailable: (callback) => ipcRenderer.on('update-available', (_, info) => callback(info)),
+  onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', (_, info) => callback(info)),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
-  openExternal: (url) => ipcRenderer.send('open-external', url)
+  openExternal: (url) => ipcRenderer.send('open-external', url),
+  restartForUpdate: () => ipcRenderer.send('restart-for-update')
 });
 
 

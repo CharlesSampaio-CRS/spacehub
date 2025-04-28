@@ -7,11 +7,15 @@ const { autoUpdater } = require('electron-updater');
 require('dotenv').config();
 
 const config = require(path.join(__dirname, '../config'));
-const store = new Store(); 
+const store = new Store();
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
+
 let mainWindow, loginWindow, registerWindow, authWindow;
+let isUpdating = false;
+let updateAvailableWindow = null;
+let updateReadyWindow = null;
 
 global.sharedObject = {
   env: {
@@ -27,16 +31,22 @@ ipcMain.handle('get-userUuid', () => store.get('userUuid'));
 function saveToken(token) {
   if (token) {
     const payload = parseJwt(token);
-    store.set('token', token); 
-    store.set('userUuid', payload.uuid);
+    if (payload) {
+      store.set('token', token);
+      if (payload.uuid) {
+        store.set('userUuid', payload.uuid);
+      } else {
+        console.warn('UUID not found in token.');
+      }
+    }
   }
 }
 
 function parseJwt(token) {
   try {
-    const base64Payload = token.split('.')[1]; 
-    const payload = atob(base64Payload);
-    return JSON.parse(payload); 
+    const base64Payload = token.split('.')[1];
+    const payload = Buffer.from(base64Payload, 'base64').toString('utf8');
+    return JSON.parse(payload);
   } catch (e) {
     console.error('Failed to parse JWT', e);
     return null;
@@ -67,7 +77,7 @@ function createMainWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
-  mainWindow.setMenu(null);
+  //mainWindow.setMenu(null);
   mainWindow.maximize();
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -81,7 +91,7 @@ function createMainWindow() {
   mainWindow.on('closed', () => { mainWindow = null; });
 
   mainWindow.once('did-finish-load', () => {
-    autoUpdater.checkForUpdates();
+    checkForUpdates();
   });
 }
 
@@ -215,8 +225,8 @@ ipcMain.on('start-google-login', () => {
       } catch (err) {
         if (err.response?.status !== 409) {
           const msg = err.response?.status === 500
-            ? 'Erro ao realizar login com o Google. Tente novamente.'
-            : 'Erro inesperado ao registrar com o Google.';
+            ? 'Error logging in with Google. Please try again.'
+            : 'Unexpected error registering with Google.';
           loginWindow.webContents.executeJavaScript(`alert("${msg}");`);
           closeWindow(loginWindow);
           createLoginWindow();
@@ -232,7 +242,7 @@ ipcMain.on('start-google-login', () => {
       saveToken(token);
       if (loginWindow) loginWindow.webContents.send('google-login-success', { token });
     } catch (error) {
-      console.error('Erro no login com o Google:', error);
+      console.error('Google login error:', error);
       loginWindow?.webContents.send('google-login-failed', error.message);
       closeWindow(loginWindow);
       createLoginWindow();
@@ -260,9 +270,9 @@ ipcMain.handle('get-app-version', () => app.getVersion());
 ipcMain.on('clear-sessions', async (event) => {
   try {
     await session.defaultSession.clearStorageData();
-    event.reply('sessions-cleared', 'Sessões limpas com sucesso');
+    event.reply('sessions-cleared', 'Sessions cleared successfully');
   } catch (error) {
-    event.reply('sessions-cleared', 'Erro: ' + error.message);
+    event.reply('sessions-cleared', 'Error: ' + error.message);
   }
 });
 
@@ -270,176 +280,183 @@ ipcMain.on('open-external', (event, url) => {
   if (/^https?:\/\//.test(url)) shell.openExternal(url);
 });
 
-ipcMain.on('check-for-updates', () => {
-  autoUpdater.checkForUpdates();
-
-  autoUpdater.on('update-available', () => {
-    mainWindow?.webContents.send('update-available', 'Uma nova versão está disponível!');
-  });
-
-  autoUpdater.on('update-not-available', () => {
-    mainWindow?.webContents.send('update-not-available', `O aplicativo já está na versão ${app.getVersion()}`);
-  });
-
-  autoUpdater.on('error', (err) => {
-    console.error('Erro ao verificar atualizações:', err);
-    mainWindow?.webContents.send('update-error', 'Erro ao verificar atualizações.');
-  });
-});
-
-
 function checkForUpdates() {
   autoUpdater.checkForUpdates();
 
   autoUpdater.on('update-available', () => {
-    mainWindow.webContents.send('update-available', 'Uma nova versão está disponível!');
-    showUpdateScreen();  
+    mainWindow?.webContents?.send('update-available', 'A new version is available!');
+    showUpdateAvailableWindow();
   });
 
   autoUpdater.on('update-not-available', () => {
-    mainWindow.webContents.send('update-not-available', `O aplicativo já está na versão ${app.getVersion()}`);
+    mainWindow?.webContents?.send('update-not-available', `App is already on latest version (${app.getVersion()})`);
   });
 
   autoUpdater.on('error', (err) => {
-    console.error('Erro ao verificar atualizações:', err);
-    mainWindow.webContents.send('update-error', 'Erro ao verificar atualizações.');
+    console.error('Update check error:', err);
+    mainWindow?.webContents?.send('update-error', 'Error checking for updates.');
   });
 }
 
-function showUpdateScreen() {
-  mainWindow.setIgnoreMouseEvents(true); // Ignora eventos de mouse para impedir interações
+function showUpdateAvailableWindow() {
+  if (updateAvailableWindow && !updateAvailableWindow.isDestroyed()) {
+    updateAvailableWindow.focus();
+    return;
+  }
 
-  const updateWindow = new BrowserWindow({
+  updateAvailableWindow = new BrowserWindow({
     width: 400,
-    height: 400,
-    frame: false, 
+    height: 250,
+    frame: false,
     alwaysOnTop: true,
     resizable: false,
     webPreferences: {
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      sandbox: true
     }
   });
 
-  updateWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(`
+  updateAvailableWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(`
     <!DOCTYPE html>
-    <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <title>Atualização Disponível</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-            background-color: #f4f4f9;
-            color: #333;
-          }
-          h1 {
-            color: #007bff;
-            font-size: 24px;
-          }
-          p {
-            margin-top: 20px;
-            font-size: 16px;
-          }
-          button {
-            margin-top: 30px;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-          }
-          button:hover {
-            background-color: #0056b3;
-          }
-        </style>
-      </head>
-      <body>
-        <h1>Nova versão disponível!</h1>
-        <p>Ela será baixada em segundo plano.</p>
-        <button onclick="window.close()">OK</button>
-      </body>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Update Available</title>
+      <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f9; color: #333; }
+        h1 { color: #007bff; font-size: 20px; margin-bottom: 20px; }
+        p { margin-bottom: 30px; font-size: 14px; }
+        button { padding: 8px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        button:hover { background-color: #0056b3; }
+      </style>
+    </head>
+    <body>
+      <h1>New Version Available!</h1>
+      <p>Downloading update in the background...</p>
+      <button id="okButton">OK</button>
+      <script>
+        document.getElementById('okButton').addEventListener('click', () => {
+          window.close();
+        });
+      </script>
+    </body>
     </html>
-  `));
+  `)}`);
 
-  updateWindow.on('closed', () => {
-    updateWindow.close();
+  updateAvailableWindow.on('closed', () => {
+    updateAvailableWindow = null;
   });
 }
 
-autoUpdater.on('update-downloaded', () => {
-  const updateWindow = new BrowserWindow({
-    width: 400,
-    height: 400,
-    frame: false,  
-    alwaysOnTop: true, 
+autoUpdater.on('update-downloaded', (info) => {
+  // Close update available window if open
+  if (updateAvailableWindow && !updateAvailableWindow.isDestroyed()) {
+    updateAvailableWindow.close();
+  }
+
+  // Don't open multiple update ready windows
+  if (updateReadyWindow && !updateReadyWindow.isDestroyed()) {
+    return;
+  }
+
+  updateReadyWindow = new BrowserWindow({
+    width: 450,
+    height: 300,
+    title: 'Update Ready',
+    frame: false,
     resizable: false,
+    alwaysOnTop: true,
     webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true
+      nodeIntegration: true,
+      contextIsolation: false
     }
   });
 
-  updateWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(`
+  updateReadyWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(`
     <!DOCTYPE html>
-    <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <title>Atualização Baixada</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-            background-color: #f4f4f9;
-            color: #333;
-          }
-          h1 {
-            color: #007bff;
-            font-size: 24px;
-          }
-          p {
-            margin-top: 20px;
-            font-size: 16px;
-          }
-          button {
-            margin-top: 30px;
-            padding: 10px 20px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-          }
-          button:hover {
-            background-color: #218838;
-          }
-        </style>
-      </head>
-      <body>
-        <h1>Nova versão baixada!</h1>
-        <p>O aplicativo será reiniciado para instalar a atualização.</p>
-        <button onclick="window.close(); window.electronAPI.restartApp()">Reiniciar agora</button>
-      </body>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Update Ready</title>
+      <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 30px; background-color: #f5f5f5; color: #333; }
+        h1 { color: #2c3e50; margin-bottom: 20px; }
+        p { margin-bottom: 30px; line-height: 1.5; }
+        .button-container { display: flex; justify-content: center; gap: 15px; }
+        button { padding: 10px 25px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; transition: background-color 0.3s; }
+        #restartBtn { background-color: #27ae60; color: white; }
+        #restartBtn:hover { background-color: #2ecc71; }
+        #laterBtn { background-color: #e74c3c; color: white; }
+        #laterBtn:hover { background-color: #c0392b; }
+      </style>
+    </head>
+    <body>
+      <h1>Update Ready to Install</h1>
+      <p>Version ${info.version} has been downloaded and is ready to install.</p>
+      <div class="button-container">
+        <button id="laterBtn">Later</button>
+        <button id="restartBtn">Restart Now</button>
+      </div>
+      <script>
+        const { ipcRenderer } = require('electron');
+        document.getElementById('restartBtn').addEventListener('click', () => {
+          ipcRenderer.send('restart-for-update');
+        });
+        document.getElementById('laterBtn').addEventListener('click', () => {
+          ipcRenderer.send('cancel-update');
+          window.close();
+        });
+      </script>
+    </body>
     </html>
-  `));
+  `)}`);
 
-  updateWindow.on('closed', () => {
-    updateWindow .close();
-  });
-
-  ipcMain.handle('restartApp', () => {
-    autoUpdater.quitAndInstall();
+  updateReadyWindow.on('closed', () => {
+    updateReadyWindow = null;
   });
 });
 
-app.whenReady().then(createLoginWindow);
+ipcMain.on('restart-for-update', () => {
+  if (isUpdating) return;
+  isUpdating = true;
 
+  // Close all windows properly
+  const closePromises = BrowserWindow.getAllWindows().map(win => {
+    if (!win.isDestroyed()) {
+      return new Promise(resolve => {
+        win.on('closed', resolve);
+        win.close();
+      });
+    }
+    return Promise.resolve();
+  });
+
+  Promise.all(closePromises).then(() => {
+    autoUpdater.quitAndInstall(true, true);
+  }).catch(err => {
+    console.error('Error during window closing:', err);
+    isUpdating = false;
+    createMainWindow();
+  });
+});
+
+app.whenReady().then(() => {
+  createLoginWindow();
+
+  // Configure auto-updater
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.autoRunAppAfterInstall = true;
+  
+  autoUpdater.logger = {
+    info: (message) => console.log('AutoUpdater:', message),
+    warn: (message) => console.warn('AutoUpdater:', message),
+    error: (message) => console.error('AutoUpdater:', message)
+  };
+
+  // Initial update check
+  autoUpdater.checkForUpdates();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

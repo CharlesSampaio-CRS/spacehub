@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-
 function parseJwt(token) {
   try {
     const base64Payload = token.split('.')[1]; 
