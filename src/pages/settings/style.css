@@ -255,6 +255,28 @@ body.dark-mode {
   border-radius: 50%;
 }
 
+.save-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.save-button {
+  padding: 12px 30px;
+  font-size: 16px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.save-button:hover {
+  background-color: #2980b9;
+}
+
+
 input:checked + .slider {
   background-color: var(--primary-color);
 }

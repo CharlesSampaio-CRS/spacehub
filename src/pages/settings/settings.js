@@ -23,7 +23,7 @@ const loadWithToken = (token, userUuid) => {
           </div>
           <div class="application-toggle">
             <label class="toggle-switch">
-              <input type="checkbox" ${app.active ? "checked" : ""} disabled />
+              <input type="checkbox" ${app.active ? "checked" : ""} id="toggle-${app.uuid}" />
               <span class="slider"></span>
             </label>
           </div>
@@ -31,10 +31,65 @@ const loadWithToken = (token, userUuid) => {
 
         listContainer.appendChild(appItem);
       });
+
+      // Adicionar evento de atualização para cada botão
+      document.querySelectorAll('.update-button').forEach(button => {
+        button.addEventListener('click', (event) => {
+          const appId = event.target.getAttribute('data-app-id');
+          const isActive = document.getElementById(`toggle-${appId}`).checked;
+          updateSpace(token, userUuid, appId, isActive);
+        });
+      });
     }
   })
   .catch(error => console.error('Error loading applications:', error));
 };
+
+const updateSpace = (token, userUuid) => {
+  const applicationToggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
+  const applications = [];
+
+  applicationToggles.forEach(toggle => {
+    const uuid = toggle.id.replace('toggle-', '');
+    const isActive = toggle.checked;
+  
+    applications.push({
+      uuid: uuid,
+      active: isActive
+    });
+  });
+
+  const payload = {
+    userUuid: userUuid,
+    applications: applications
+  };
+
+  fetch(`https://spaceapp-digital-api.onrender.com/spaces`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(response => response.json())
+  .then(data => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Sucesso!',
+        text: 'Aplicações atualizadas com sucesso!',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'OK'
+      }).then(() => {
+        window.electronAPI.send('reload-applications');
+      });
+    })
+  .catch(error => {
+    console.error('Erro ao salvar aplicações:', error);
+    alert('Erro ao salvar as configurações.');
+  });
+};
+
 
 const populateUserData = (token, userUuid) => {
   fetch(`https://spaceapp-digital-api.onrender.com/users/${userUuid}`, {
@@ -74,69 +129,6 @@ const setupZoomControl = () => {
   });
 };
 
-const toggleUpdateButtonState = (isUpdating, updateAvailable, showNoUpdateMessage = false, isDownloading = false) => {
-  const updateButton = document.getElementById("update-version-button");
-
-  if (isUpdating) {
-    updateButton.disabled = true;
-    updateButton.innerHTML = `<i class="fas fa-sync-alt fa-spin"></i> Atualizando...`;
-  } else if (isDownloading) {
-    updateButton.disabled = true;
-    updateButton.innerHTML = `<i class="fas fa-sync-alt fa-spin"></i> Baixando versão...`;
-  } else {
-    updateButton.disabled = false;
-    if (showNoUpdateMessage) {
-      updateButton.innerHTML = `<i class="fas fa-sync-alt"></i> Nenhuma atualização disponível`;
-      setTimeout(() => {
-        updateButton.innerHTML = `<i class="fas fa-sync-alt"></i> Atualizar versão`;
-      }, 3000); // Exibe a mensagem por 3 segundos
-    } else if (updateAvailable) {
-      updateButton.innerHTML = `<i class="fas fa-sync-alt"></i> Atualizar e Reiniciar`;
-      updateButton.addEventListener('click', initiateUpdate);
-    } else {
-      updateButton.innerHTML = `<i class="fas fa-sync-alt"></i> Atualizar versão`;
-    }
-  }
-};
-
-const initiateUpdate = async () => {
-  try {
-    toggleUpdateButtonState(true, false); // Desativa o botão enquanto está atualizando
-
-    const updateAvailable = await window.electronAPI.checkForUpdates();
-    
-    if (updateAvailable) {
-      console.log('Nova atualização encontrada!');
-      
-      // Inicia o download e exibe "Baixando versão..."
-      toggleUpdateButtonState(false, updateAvailable, false, true);
-      
-      // Baixa a atualização
-      await window.electronAPI.downloadUpdate();
-      
-      // Após o download, muda o estado para "Atualizando..."
-      toggleUpdateButtonState(true, false);
-      
-      // Instala a atualização
-      await window.electronAPI.installUpdate();
-      
-      console.log('Atualização instalada com sucesso!');
-      
-      // Reinicia a aplicação após a instalação
-      await window.electronAPI.restartApp();
-      
-      console.log('Aplicação reiniciada!');
-      toggleUpdateButtonState(false, false); // Finaliza o estado após o reinício
-    } else {
-      console.log('Nenhuma atualização disponível');
-      toggleUpdateButtonState(false, false, true); // Exibe "Nenhuma atualização disponível"
-    }
-  } catch (error) {
-    console.error('Erro ao verificar ou atualizar:', error);
-    toggleUpdateButtonState(false, false); // Em caso de erro
-  }
-};
-
 const displayAppVersion = () => {
   window.electronAPI.getAppVersion().then(version => {
     document.getElementById("appVersion").textContent = `Versão: ${version}`;
@@ -168,7 +160,19 @@ const initializeSettingsPage = () => {
   setupDarkModeToggle();
   displayAppVersion();
 
-  document.getElementById("update-version-button").addEventListener("click", initiateUpdate);
+  const saveButton = document.getElementById("saveButton");
+  saveButton.addEventListener("click", () => {
+    window.electronAPI.invoke('get-token').then(token => {
+      if (token) {
+        window.electronAPI.invoke('get-userUuid').then(userUuid => {
+          if (userUuid) {
+            updateSpace(token, userUuid);
+          }
+        }).catch(err => console.error('Erro ao obter userUuid:', err));
+      }
+    }).catch(err => console.error('Erro ao obter token:', err));
+  });
+  
 };
 
 initializeSettingsPage();

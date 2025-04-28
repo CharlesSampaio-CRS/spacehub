@@ -2,7 +2,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   invoke: (channel) => ipcRenderer.invoke(channel),
-  send: (channel, data) => ipcRenderer.send(channel, data),
   setZoomFactor: (factor) => ipcRenderer.send('set-zoom-factor', factor),
   logout: () => ipcRenderer.send('logout-success'),
   getToken: () => ipcRenderer.invoke('get-token'),
@@ -15,7 +14,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', (_, info) => callback(info)),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
-  restartForUpdate: () => ipcRenderer.send('restart-for-update')
+  restartForUpdate: () => ipcRenderer.send('restart-for-update'),
+  send: (channel, data) => ipcRenderer.send(channel, data),
+  on: (channel, callback) => ipcRenderer.on(channel, callback)
 });
 
 

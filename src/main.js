@@ -1,5 +1,5 @@
 const path = require('path');
-const { app, BrowserWindow, ipcMain, session, shell, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, session, shell , dialog} = require('electron');
 const Store = require('electron-store');
 const axios = require('axios');
 const qs = require('querystring');
@@ -77,7 +77,7 @@ function createMainWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
-  //mainWindow.setMenu(null);
+  mainWindow.setMenu(null);
   mainWindow.maximize();
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -91,7 +91,11 @@ function createMainWindow() {
   mainWindow.on('closed', () => { mainWindow = null; });
 
   mainWindow.once('did-finish-load', () => {
-    checkForUpdates();
+    checkForUpdates(); 
+  
+    setInterval(() => {
+      checkForUpdates();
+    }, 1800000); 
   });
 }
 
@@ -158,6 +162,8 @@ function handleLogout() {
   closeWindow(mainWindow);
   createLoginWindow();
 }
+
+
 
 ipcMain.on('start-google-login', () => {
   if (authWindow && !authWindow.isDestroyed()) {
@@ -267,6 +273,13 @@ ipcMain.on('show-login', createLoginWindow);
 ipcMain.on('logout-success', handleLogout);
 ipcMain.handle('get-app-version', () => app.getVersion());
 
+ipcMain.on('cancel-update', (event) => {
+  const window = BrowserWindow.getFocusedWindow(); // ou mantenha a referência correta da janela
+  if (window) {
+    window.close();
+  }
+});
+
 ipcMain.on('clear-sessions', async (event) => {
   try {
     await session.defaultSession.clearStorageData();
@@ -317,33 +330,6 @@ function showUpdateAvailableWindow() {
     }
   });
 
-  updateAvailableWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>Update Available</title>
-      <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f9; color: #333; }
-        h1 { color: #007bff; font-size: 20px; margin-bottom: 20px; }
-        p { margin-bottom: 30px; font-size: 14px; }
-        button { padding: 8px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-        button:hover { background-color: #0056b3; }
-      </style>
-    </head>
-    <body>
-      <h1>New Version Available!</h1>
-      <p>Downloading update in the background...</p>
-      <button id="okButton">OK</button>
-      <script>
-        document.getElementById('okButton').addEventListener('click', () => {
-          window.close();
-        });
-      </script>
-    </body>
-    </html>
-  `)}`);
-
   updateAvailableWindow.on('closed', () => {
     updateAvailableWindow = null;
   });
@@ -362,7 +348,7 @@ autoUpdater.on('update-downloaded', (info) => {
 
   updateReadyWindow = new BrowserWindow({
     width: 450,
-    height: 300,
+    height: 450,
     title: 'Update Ready',
     frame: false,
     resizable: false,
@@ -378,7 +364,7 @@ autoUpdater.on('update-downloaded', (info) => {
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>Update Ready</title>
+      <title>Atualização Pronta</title>
       <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 30px; background-color: #f5f5f5; color: #333; }
         h1 { color: #2c3e50; margin-bottom: 20px; }
@@ -387,30 +373,24 @@ autoUpdater.on('update-downloaded', (info) => {
         button { padding: 10px 25px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; transition: background-color 0.3s; }
         #restartBtn { background-color: #27ae60; color: white; }
         #restartBtn:hover { background-color: #2ecc71; }
-        #laterBtn { background-color: #e74c3c; color: white; }
-        #laterBtn:hover { background-color: #c0392b; }
       </style>
     </head>
     <body>
-      <h1>Update Ready to Install</h1>
-      <p>Version ${info.version} has been downloaded and is ready to install.</p>
+      <h1>Atualização Pronta para Instalar</h1>
+      <p>A versão ${info.version} foi baixada e está pronta para ser instalada.</p>
       <div class="button-container">
-        <button id="laterBtn">Later</button>
-        <button id="restartBtn">Restart Now</button>
+        <button id="restartBtn">Reiniciar Agora</button>
       </div>
       <script>
         const { ipcRenderer } = require('electron');
         document.getElementById('restartBtn').addEventListener('click', () => {
           ipcRenderer.send('restart-for-update');
         });
-        document.getElementById('laterBtn').addEventListener('click', () => {
-          ipcRenderer.send('cancel-update');
-          window.close();
-        });
       </script>
     </body>
     </html>
   `)}`);
+
 
   updateReadyWindow.on('closed', () => {
     updateReadyWindow = null;
@@ -444,7 +424,6 @@ ipcMain.on('restart-for-update', () => {
 app.whenReady().then(() => {
   createLoginWindow();
 
-  // Configure auto-updater
   autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.autoRunAppAfterInstall = true;
   

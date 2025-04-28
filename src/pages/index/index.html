@@ -161,7 +161,7 @@
 
         webview.addEventListener('dom-ready', () => {
           webview.setZoomFactor(currentZoom);
-          //webview.openDevTools();
+          webview.openDevTools();
         });
 
         webview.addEventListener('new-window', e => {
@@ -348,6 +348,18 @@
       setupSidebarScroll();
       setupLogout();
       showWebview('webview-home', 'home-button');
+
+      window.electronAPI.on('reload-applications', () => {
+      const navSection = document.getElementById('nav-section');
+      if (navSection) {
+        navSection.innerHTML = '';
+      }
+      if (token && userUuid) {
+        loadWithToken(token, userUuid);
+      } else {
+        console.error('Token ou userUuid não encontrados para recarregar aplicações.');
+      }
+    });
     });
   </script>
 
