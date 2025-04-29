@@ -75,19 +75,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const navSection = document.getElementById('nav-section');
   
     if (navSection) {
-      // Limpar a lista existente de botões
       navSection.innerHTML = ''; 
-  
-      // Garantir que o botão 'home' sempre seja adicionado de volta
       const homeButton = document.createElement('button');
       homeButton.id = 'home-button';
       homeButton.className = 'nav-button';
       homeButton.title = 'Página Inicial';
-      homeButton.innerHTML = `<img width="48" height="48" src="https://img.icons8.com/color/48/planet.png" alt="Página Inicial"/>`;
+      homeButton.innerHTML = `<img width="48" height="48" src="../../assets/spaceapp.png" alt="Página Inicial"/>`;
   
       homeButton.addEventListener('click', () => showWebview('webview-home', 'home-button'));
   
-      navSection.appendChild(homeButton); // Adicionar o botão de home
+      navSection.appendChild(homeButton);
     }
     fetch(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
       method: 'GET',

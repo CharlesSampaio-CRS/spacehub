@@ -1,5 +1,5 @@
 const path = require('path');
-const { app, BrowserWindow, ipcMain, session, shell , dialog} = require('electron');
+const { app, BrowserWindow, ipcMain, session, shell } = require('electron');
 const Store = require('electron-store');
 const axios = require('axios');
 const qs = require('querystring');
@@ -64,7 +64,7 @@ function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    icon: path.join(__dirname, './assets/spaceapp.png'),
+    icon: path.join(__dirname, 'assets', 'spaceapp.png'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -105,7 +105,7 @@ function createLoginWindow() {
   loginWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    icon: path.join(__dirname, './assets/spaceapp.png'),
+    icon: path.join(__dirname, 'assets', 'spaceapp.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -124,7 +124,7 @@ function createRegisterWindow(userData) {
     width: 1200,
     height: 800,
     resizable: false,
-    icon: path.join(__dirname, './assets/spaceapp.png'),
+    icon: path.join(__dirname, 'assets', 'spaceapp.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
