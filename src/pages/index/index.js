@@ -37,6 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
       webview.setZoomFactor(currentZoom);
     });
 
+    webview.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      window.electronAPI.send('webview-clicked', webview.id);
+    });
+
     webview.addEventListener('new-window', e => {
       e.preventDefault();
       webview.loadURL(e.url);
@@ -63,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById(buttonId)?.classList.add('active');
     updateActiveViewTitle(webview);
+    currentWebview = webview; 
   };
 
   const updateActiveViewTitle = (webview) => {
@@ -73,19 +79,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const loadWithToken = (token, userUuid) => {
     const navSection = document.getElementById('nav-section');
-  
     if (navSection) {
-      navSection.innerHTML = ''; 
+      navSection.innerHTML = '';
       const homeButton = document.createElement('button');
       homeButton.id = 'home-button';
       homeButton.className = 'nav-button';
       homeButton.title = 'Página Inicial';
       homeButton.innerHTML = `<img width="48" height="48" src="../../assets/spaceapp.png" alt="Página Inicial"/>`;
-  
       homeButton.addEventListener('click', () => showWebview('webview-home', 'home-button'));
-  
       navSection.appendChild(homeButton);
     }
+
     fetch(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
       method: 'GET',
       headers: {
@@ -93,30 +97,30 @@ document.addEventListener('DOMContentLoaded', () => {
         'Authorization': `Bearer ${token}`
       }
     })
-      .then(response => response.json())
-      .then(data => {
-        if (Array.isArray(data.applications)) {
-          data.applications.forEach(app => {
-            if (app.active) {
-              const appId = `webview-${app.application.toLowerCase()}`;
-              const buttonId = `${app.application.toLowerCase()}-button`;
+    .then(response => response.json())
+    .then(data => {
+      if (Array.isArray(data.applications)) {
+        data.applications.forEach(app => {
+          if (app.active) {
+            const appId = `webview-${app.application.toLowerCase()}`;
+            const buttonId = `${app.application.toLowerCase()}-button`;
 
-              serviceMap[appId] = app.url;
-              services[buttonId] = appId;
+            serviceMap[appId] = app.url;
+            services[buttonId] = appId;
 
-              const button = document.createElement('button');
-              button.id = buttonId;
-              button.className = 'nav-button';
-              button.innerHTML = `<img src="${app.icon}" alt="${app.application}"/>`;
+            const button = document.createElement('button');
+            button.id = buttonId;
+            button.className = 'nav-button';
+            button.innerHTML = `<img src="${app.icon}" alt="${app.application}"/>`;
 
-              button.addEventListener('click', () => showWebview(appId, buttonId));
+            button.addEventListener('click', () => showWebview(appId, buttonId));
 
-              document.getElementById('nav-section')?.appendChild(button);
-            }
-          });
-        }
-      })
-      .catch(error => console.error('Error loading applications:', error));
+            navSection?.appendChild(button);
+          }
+        });
+      }
+    })
+    .catch(error => console.error('Error loading applications:', error));
   };
 
   const refreshApplications = () => {
@@ -159,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('webview').forEach(w => w.classList.remove('active'));
         webview.classList.add('active');
         updateActiveViewTitle(webview);
+        currentWebview = webview;
         item.remove();
         updateBadge();
       });
@@ -189,27 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  const setupContextMenu = () => {
-    const contextMenu = document.getElementById('context-menu');
-
-    document.addEventListener('contextmenu', (e) => {
-      const webview = e.target.closest('webview');
-      if (webview) {
-        e.preventDefault();
-        currentWebview = webview;
-        contextMenu.style.left = `${e.pageX}px`;
-        contextMenu.style.top = `${e.pageY}px`;
-        contextMenu.style.display = 'block';
-      }
-    });
-
-    document.getElementById('reload-option')?.addEventListener('click', () => {
-      currentWebview?.reload();
-      contextMenu.style.display = 'none';
-    });
-
-    document.addEventListener('click', () => contextMenu.style.display = 'none');
-  };
 
   const setupSidebarScroll = () => {
     document.getElementById('sidebar')?.addEventListener('wheel', (e) => {
@@ -225,17 +209,15 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   window.electronAPI.on('reload-applications', () => {
-    console.log('✅ Aplicações sendo recarregadas via IPC!');
-    refreshApplications(); // ✅ Agora funciona
-  })
+    refreshApplications();
+  });
 
   // Inicialização
   setupButtonEvents();
   setupNotificationActions();
   setupMenus();
-  setupContextMenu();
   setupSidebarScroll();
   setupLogout();
-  refreshApplications(); // carrega os apps do usuário
-  showWebview('webview-home', 'home-button'); // mostra o app inicial
+  refreshApplications();
+  showWebview('webview-home', 'home-button');
 });

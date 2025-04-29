@@ -62,14 +62,14 @@
         "dmg",
         "zip"
       ],
-      "icon": "assets/spaceapp.icns",
+      "icon": "src/assets/spaceapp.icns",
       "category": "public.app-category.utilities"
     },
     "win": {
       "target": [
         "nsis"
       ],
-      "icon": "assets/spaceapp.ico"
+      "icon": "src/assets/spaceapp.ico"
     },
     "linux": {
       "target": [

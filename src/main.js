@@ -1,5 +1,5 @@
 const path = require('path');
-const { app, BrowserWindow, ipcMain, session, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, session, shell } = require('electron');
 const Store = require('electron-store');
 const axios = require('axios');
 const qs = require('querystring');
@@ -77,7 +77,7 @@ function createMainWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
-  mainWindow.setMenu(null);
+  //mainWindow.setMenu(null);
   mainWindow.maximize();
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -96,7 +96,7 @@ function createMainWindow() {
     setInterval(() => {
       checkForUpdates();
     }, 1800000); 
-  });
+  });  
 }
 
 function createLoginWindow() {
