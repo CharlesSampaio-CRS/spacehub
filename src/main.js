@@ -163,7 +163,11 @@ function handleLogout() {
   createLoginWindow();
 }
 
-
+ipcMain.on('reload-applications', () => {
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.send('reload-applications');
+  }
+});
 
 ipcMain.on('start-google-login', () => {
   if (authWindow && !authWindow.isDestroyed()) {

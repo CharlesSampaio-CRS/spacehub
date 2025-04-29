@@ -1,114 +1,137 @@
-const loadWithToken = (token, userUuid) => {
-  fetch(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
+const getAuthData = async () => {
+  try {
+    const token = await window.electronAPI.invoke('get-token');
+    const userUuid = await window.electronAPI.invoke('get-userUuid');
+    return { token, userUuid };
+  } catch (err) {
+    console.error("Erro ao obter token ou userUuid:", err);
+    return null;
+  }
+};
+
+const loadApplications = async () => {
+  const auth = await getAuthData();
+  if (!auth) return;
+
+  fetch(`https://spaceapp-digital-api.onrender.com/spaces/${auth.userUuid}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${auth.token}`
     }
   })
-  .then(response => response.json())
-  .then(data => {
-    if (Array.isArray(data.applications)) {
+    .then(response => response.json())
+    .then(data => {
+      if (!Array.isArray(data.applications)) return;
+
       const listContainer = document.getElementById("applicationsList");
       listContainer.innerHTML = "";
 
-      data.applications.forEach(app => {
-        const appItem = document.createElement("div");
-        appItem.classList.add("application-item");
+      data.applications
+        .sort((a, b) => b.active - a.active)
+        .forEach(app => {
+          const appItem = document.createElement("div");
+          appItem.classList.add("application-item");
 
-        appItem.innerHTML = `
-          <div class="application-info">
-            <img src="${app.icon}" alt="${app.application}" width="32" height="32" />
-            <p><strong>${app.application}</strong></p>
-          </div>
-          <div class="application-toggle">
-            <label class="toggle-switch">
-              <input type="checkbox" ${app.active ? "checked" : ""} id="toggle-${app.uuid}" />
-              <span class="slider"></span>
-            </label>
-          </div>
-        `;
+          appItem.innerHTML = `
+            <div class="application-info">
+              <img src="${app.icon}" alt="${app.application}" width="32" height="32" />
+              <p><strong>${app.application}</strong></p>
+            </div>
+            <div class="application-toggle">
+              <label class="toggle-switch">
+                <input type="checkbox" ${app.active ? "checked" : ""} id="toggle-${app.uuid}" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          `;
 
-        listContainer.appendChild(appItem);
-      });
-
-      // Adicionar evento de atualização para cada botão
-      document.querySelectorAll('.update-button').forEach(button => {
-        button.addEventListener('click', (event) => {
-          const appId = event.target.getAttribute('data-app-id');
-          const isActive = document.getElementById(`toggle-${appId}`).checked;
-          updateSpace(token, userUuid, appId, isActive);
+          listContainer.appendChild(appItem);
         });
-      });
-    }
-  })
-  .catch(error => console.error('Error loading applications:', error));
-};
-
-const updateSpace = (token, userUuid) => {
-  const applicationToggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
-  const applications = [];
-
-  applicationToggles.forEach(toggle => {
-    const uuid = toggle.id.replace('toggle-', '');
-    const isActive = toggle.checked;
-  
-    applications.push({
-      uuid: uuid,
-      active: isActive
-    });
-  });
-
-  const payload = {
-    userUuid: userUuid,
-    applications: applications
-  };
-
-  fetch(`https://spaceapp-digital-api.onrender.com/spaces`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(payload)
-  })
-  .then(response => response.json())
-  .then(data => {
-      Swal.fire({
-        icon: 'success',
-        title: 'Sucesso!',
-        text: 'Aplicações atualizadas com sucesso!',
-        confirmButtonColor: '#3085d6',
-        confirmButtonText: 'OK'
-      }).then(() => {
-        window.electronAPI.send('reload-applications');
-      });
     })
-  .catch(error => {
-    console.error('Erro ao salvar aplicações:', error);
-    alert('Erro ao salvar as configurações.');
-  });
+    .catch(error => console.error('Erro ao carregar aplicações:', error));
 };
 
+const updateApplications = async () => {
+  try {
+    const auth = await getAuthData();
+    if (!auth) return;
 
-const populateUserData = (token, userUuid) => {
-  fetch(`https://spaceapp-digital-api.onrender.com/users/${userUuid}`, {
+    const toggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
+    const applications = Array.from(toggles).map(toggle => ({
+      uuid: toggle.id.replace('toggle-', ''),
+      active: toggle.checked
+    }));
+
+    const payload = {
+      userUuid: auth.userUuid,
+      applications
+    };
+
+    // Desabilitar o botão de salvar
+    const saveButton = document.getElementById("saveButton");
+    if (saveButton) {
+      saveButton.disabled = true;
+    }
+
+    // Enviar requisição PUT para salvar as configurações
+    const res = await fetch('https://spaceapp-digital-api.onrender.com/spaces', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${auth.token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      throw new Error('Erro ao salvar as configurações');
+    }
+
+    // Enviar comando para recarregar as aplicações via IPC
+    await window.electronAPI.send('reload-applications');
+
+    // Exibir alerta de sucesso
+    Swal.fire({
+      icon: 'success',
+      title: 'Sucesso!',
+      text: 'Aplicações atualizadas com sucesso!',
+      confirmButtonColor: '#3085d6',
+      confirmButtonText: 'OK'
+    });
+  } catch (error) {
+    console.error('Erro ao salvar configurações:', error);
+    alert('Erro ao salvar as configurações.');
+  } finally {
+    // Habilitar o botão de salvar novamente, independentemente de erro ou sucesso
+    const saveButton = document.getElementById("saveButton");
+    if (saveButton) {
+      saveButton.disabled = false;
+    }
+  }
+};
+
+const loadUserInfo = async () => {
+  const auth = await getAuthData();
+  if (!auth) return;
+
+  fetch(`https://spaceapp-digital-api.onrender.com/users/${auth.userUuid}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${auth.token}`
     }
   })
-  .then(response => response.json())
-  .then(data => {
-    if (data && data.name && data.email && data.plan) {
-      document.getElementById("userType").textContent = data.type || "Desconhecido";
-      document.getElementById("userName").textContent = data.name;
-      document.getElementById("userEmail").textContent = data.email;
-      document.getElementById("userPlan").textContent = data.plan;
-    }
-  })
-  .catch(error => console.error('Error loading user data:', error));
+    .then(res => res.json())
+    .then(data => {
+      if (data?.name && data?.email && data?.plan) {
+        document.getElementById("userType").textContent = data.type || "Desconhecido";
+        document.getElementById("userName").textContent = data.name;
+        document.getElementById("userEmail").textContent = data.email;
+        document.getElementById("userPlan").textContent = data.plan;
+      }
+    })
+    .catch(error => console.error('Erro ao carregar dados do usuário:', error));
 };
 
 const setupZoomControl = () => {
@@ -129,50 +152,34 @@ const setupZoomControl = () => {
   });
 };
 
-const displayAppVersion = () => {
-  window.electronAPI.getAppVersion().then(version => {
-    document.getElementById("appVersion").textContent = `Versão: ${version}`;
-  }).catch(error => console.error('Erro ao obter a versão da aplicação:', error));
+const setupDarkModeToggle = () => {
+  const toggle = document.getElementById("dark-mode-toggle");
+  if (!toggle) return;
+
+  toggle.addEventListener("change", () => {
+    document.body.classList.toggle("dark-mode", toggle.checked);
+  });
 };
 
-const setupDarkModeToggle = () => {
-  const darkModeToggle = document.getElementById("dark-mode-toggle");
-  if (darkModeToggle) {
-    darkModeToggle.addEventListener("change", () => {
-      document.body.classList.toggle("dark-mode", darkModeToggle.checked);
-    });
-  }
+const displayAppVersion = () => {
+  window.electronAPI.getAppVersion()
+    .then(version => {
+      document.getElementById("appVersion").textContent = `Versão: ${version}`;
+    })
+    .catch(err => console.error('Erro ao obter versão da aplicação:', err));
 };
 
 const initializeSettingsPage = () => {
-  window.electronAPI.invoke('get-token').then(token => {
-    if (token) {
-      window.electronAPI.invoke('get-userUuid').then(userUuid => {
-        if (userUuid) {
-          loadWithToken(token, userUuid);
-          populateUserData(token, userUuid);
-        }
-      }).catch(err => console.error('Erro ao obter userUuid:', err));
-    }
-  }).catch(err => console.error('Erro ao obter token:', err));
-
+  loadApplications();
+  loadUserInfo();
   setupZoomControl();
   setupDarkModeToggle();
   displayAppVersion();
 
   const saveButton = document.getElementById("saveButton");
-  saveButton.addEventListener("click", () => {
-    window.electronAPI.invoke('get-token').then(token => {
-      if (token) {
-        window.electronAPI.invoke('get-userUuid').then(userUuid => {
-          if (userUuid) {
-            updateSpace(token, userUuid);
-          }
-        }).catch(err => console.error('Erro ao obter userUuid:', err));
-      }
-    }).catch(err => console.error('Erro ao obter token:', err));
-  });
-  
+  if (saveButton) {
+    saveButton.addEventListener("click", updateApplications);
+  }
 };
 
 initializeSettingsPage();

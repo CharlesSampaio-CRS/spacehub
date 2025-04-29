@@ -45,11 +45,66 @@ async function login() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('loginButton').addEventListener('click', login);
+// Atualiza o estado do botão de login com base nos campos
+function updateButtonState() {
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const loginButton = document.getElementById('loginButton');
+  
+  const emailFilled = emailInput.value.trim() !== '';
+  const passwordFilled = passwordInput.value.trim() !== '';
+  
+  loginButton.disabled = !(emailFilled && passwordFilled);
+}
 
-  document.getElementById('googleLogin').addEventListener('click', () => {
+// Carregar dados do LocalStorage ao iniciar
+window.addEventListener('DOMContentLoaded', () => {
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const rememberMe = document.getElementById('rememberMe');
+
+  const savedEmail = localStorage.getItem('savedEmail');
+  const savedPassword = localStorage.getItem('savedPassword');
+  const remember = localStorage.getItem('rememberMe') === 'true';
+
+  if (remember && savedEmail && savedPassword) {
+    emailInput.value = savedEmail;
+    passwordInput.value = savedPassword;
+    rememberMe.checked = true;
+    updateButtonState();
+  }
+
+  // Eventos para inputs
+  emailInput.addEventListener('input', updateButtonState);
+  passwordInput.addEventListener('input', updateButtonState);
+
+  // Evento ao clicar em "Entrar"
+  document.getElementById('loginButton').addEventListener('click', () => {
+    const rememberMe = document.getElementById('rememberMe');
+
+    if (rememberMe.checked) {
+      localStorage.setItem('savedEmail', emailInput.value);
+      localStorage.setItem('savedPassword', passwordInput.value);
+      localStorage.setItem('rememberMe', 'true');
+    } else {
+      localStorage.removeItem('savedEmail');
+      localStorage.removeItem('savedPassword');
+      localStorage.setItem('rememberMe', 'false');
+    }
+
+    login();
+  });
+
+  // Ação para login com Google
+  document.getElementById('googleLogin')?.addEventListener('click', () => {
     ipcRenderer.send('start-google-login');
+  });
+
+  // Eventos de resposta de login com Google
+  ipcRenderer.on('google-login-success', (event, tokens) => {
+    const token = tokens.id_token || tokens.access_token;
+    localStorage.setItem('token', token);
+    ipcRenderer.send('login-success', token);
   });
 
   ipcRenderer.on('google-login-failed', async (event, message) => {
@@ -61,5 +116,15 @@ document.addEventListener('DOMContentLoaded', () => {
       confirmButtonText: 'OK'
     });
   });
-});
 
+  // Evento para abrir tela de registro
+  document.getElementById('registerLink')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    try {
+      window.electronAPI?.openRegister?.();
+      ipcRenderer.send('show-register');
+    } catch (e) {
+      console.error('Erro ao abrir tela de registro:', e);
+    }
+  });
+});
