@@ -75,7 +75,7 @@
       "target": [
         "deb"
       ],
-      "icon": "assets/spaceapp",
+      "icon": "assets/spaceapp.png",
       "category": "Utility",
       "maintainer": "ccharlesroberto@gmail.com"
     }
