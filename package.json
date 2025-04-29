@@ -1,6 +1,6 @@
 {
   "name": "spaceapp",
-  "version": "1.0.175",
+  "version": "1.0.176",
   "description": "Electron App with Modern UI",
   "author": "Charles Sampaio",
   "main": "src/main.js",
@@ -75,7 +75,7 @@
       "target": [
         "deb"
       ],
-      "icon": "./assets/spaceapp.png",
+      "icon": "src/assets/spaceapp.png",
       "category": "Utility",
       "maintainer": "ccharlesroberto@gmail.com"
     }
