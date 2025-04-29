@@ -60,6 +60,9 @@
     padding: 0 10px;
     overflow-y: auto;
   }
+  .nav-button.opened {
+    border-bottom: 2px solid #ADD8E6; 
+   }
   
   .nav-button {
     display: flex;

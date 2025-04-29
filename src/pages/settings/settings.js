@@ -87,23 +87,11 @@ const updateApplications = async () => {
     if (!res.ok) {
       throw new Error('Erro ao salvar as configurações');
     }
-
-    // Enviar comando para recarregar as aplicações via IPC
     await window.electronAPI.send('reload-applications');
-
-    // Exibir alerta de sucesso
-    Swal.fire({
-      icon: 'success',
-      title: 'Sucesso!',
-      text: 'Aplicações atualizadas com sucesso!',
-      confirmButtonColor: '#3085d6',
-      confirmButtonText: 'OK'
-    });
   } catch (error) {
     console.error('Erro ao salvar configurações:', error);
     alert('Erro ao salvar as configurações.');
   } finally {
-    // Habilitar o botão de salvar novamente, independentemente de erro ou sucesso
     const saveButton = document.getElementById("saveButton");
     if (saveButton) {
       saveButton.disabled = false;

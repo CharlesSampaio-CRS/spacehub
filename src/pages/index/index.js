@@ -23,7 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const webviewContainer = document.querySelector('.webview-wrapper');
 
   const createWebview = (webviewId) => {
+    const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
+      if (button) {
+        button.classList.add('opened');
+      }
     const webview = document.createElement('webview');
+    
     webview.id = webviewId;
     webview.className = 'webview w-100 h-100 active';
     webview.src = serviceMap[webviewId] || 'about:blank';
@@ -67,6 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
     else webview.classList.add('active');
 
     document.getElementById(buttonId)?.classList.add('active');
+
+    const button = document.getElementById(buttonId);
+    if (button && button.id !== 'home-button') {
+      button.classList.add('active', 'opened');
+    }
+  
     updateActiveViewTitle(webview);
     currentWebview = webview; 
   };

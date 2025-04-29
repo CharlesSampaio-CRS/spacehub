@@ -77,7 +77,7 @@ function createMainWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
-  //mainWindow.setMenu(null);
+  mainWindow.setMenu(null);
   mainWindow.maximize();
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
