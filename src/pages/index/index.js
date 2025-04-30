@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
       homeButton.id = 'home-button';
       homeButton.className = 'nav-button';
       homeButton.title = 'Página Inicial';
-      homeButton.innerHTML = `<img width="48" height="48" src="../../assets/spaceapp.png" alt="Página Inicial"/>`;
+      homeButton.innerHTML = `<img width="48" height="48" src="../../assets/spacehub.png" alt="Página Inicial"/>`;
       homeButton.addEventListener('click', () => showWebview('webview-home', 'home-button'));
       navSection.appendChild(homeButton);
     }
