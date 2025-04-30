@@ -1,6 +1,6 @@
 {
   "name": "spacehub",
-  "version": "1.0.189",
+  "version": "1.0.190",
   "description": "Electron App with Modern UI",
   "author": "Charles Sampaio",
   "main": "src/main.js",
