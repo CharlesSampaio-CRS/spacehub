@@ -1,6 +1,6 @@
 {
-  "name": "spaceapp",
-  "version": "1.0.188",
+  "name": "spacehub",
+  "version": "1.0.189",
   "description": "Electron App with Modern UI",
   "author": "Charles Sampaio",
   "main": "src/main.js",
@@ -28,16 +28,16 @@
     "electron-updater": "^6.6.2",
     "googleapis": "^148.0.0",
     "node-fetch": "^2.7.0",
-    "sweetalert2": "^11.19.1"
+    "sweetalert2": "^11.6.13"
   },
   "build": {
-    "appId": "com.spaceapp",
-    "productName": "SpaceApp",
+    "appId": "com.spacehub",
+    "productName": "SpaceHub",
     "publish": [
       {
         "provider": "github",
         "owner": "CharlesSampaio-CRS",
-        "repo": "spaceapp",
+        "repo": "spacehub",
         "releaseType": "release",
         "vPrefixedTagName": true,
         "publishAutoUpdate": true
@@ -62,20 +62,20 @@
         "dmg",
         "zip"
       ],
-      "icon": "src/assets/spaceapp.icns",
+      "icon": "src/assets/spacehub.icns",
       "category": "public.app-category.utilities"
     },
     "win": {
       "target": [
         "nsis"
       ],
-      "icon": "src/assets/spaceapp.ico"
+      "icon": "src/assets/spacehub.ico"
     },
     "linux": {
       "target": [
         "deb"
       ],
-      "icon": "src/assets/spaceapp.png",
+      "icon": "src/assets/spacehub.png",
       "category": "Utility",
       "maintainer": "ccharlesroberto@gmail.com"
     }
