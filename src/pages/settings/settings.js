@@ -97,6 +97,7 @@ const updateApplications = async () => {
       saveButton.disabled = false;
     }
   }
+  loadApplications();
 };
 
 const loadUserInfo = async () => {
