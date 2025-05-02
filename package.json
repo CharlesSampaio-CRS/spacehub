@@ -1,6 +1,6 @@
 {
   "name": "spaceapp",
-  "version": "1.0.193",
+  "version": "1.0.194",
   "description": "Electron App with Modern UI",
   "author": "Charles Sampaio",
   "main": "src/main.js",
@@ -78,7 +78,16 @@
       ],
       "icon": "src/assets/spacehub.png",
       "category": "Utility",
-      "maintainer": "ccharlesroberto@gmail.com"
+      "maintainer": "ccharlesroberto@gmail.com",
+      "desktop": {
+        "Name": "SpaceHub",
+        "Comment": "Electron App with Modern UI",
+        "Categories": "Utility;",
+        "Exec": "AppRun",
+        "Terminal": false,
+        "Type": "Application",
+        "Icon": "src/assets/spacehub.png"
+      }
     }
   }
 }
