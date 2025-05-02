@@ -65,6 +65,7 @@ function createMainWindow() {
     width: 1200,
     height: 800,
     icon: path.join(__dirname, 'assets', 'spacehub.png'),
+    title: '',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -72,7 +73,8 @@ function createMainWindow() {
       partition: 'persist:mainSession',
       webviewTag: true,
       sandbox: false,
-      nativeWindowOpen: true
+      nativeWindowOpen: true,
+      webSecurity: false,
     }
   });
 
@@ -105,6 +107,7 @@ function createLoginWindow() {
   loginWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    title: '',
     icon: path.join(__dirname, 'assets', 'spacehub.png'),
     webPreferences: {
       nodeIntegration: true,
@@ -123,6 +126,7 @@ function createRegisterWindow(userData) {
   registerWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    title: '',
     resizable: false,
     icon: path.join(__dirname, 'assets', 'spacehub.png'),
     webPreferences: {

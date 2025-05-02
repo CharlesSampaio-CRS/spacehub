@@ -24,41 +24,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const createWebview = (webviewId) => {
     const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
-      if (button) {
-        button.classList.add('opened');
-      }
+    if (button) {
+      button.classList.add('opened');
+    }
+  
     const webview = document.createElement('webview');
     
     webview.id = webviewId;
     webview.className = 'webview w-100 h-100 active';
-    webview.src = serviceMap[webviewId] || 'about:blank';
-    webview.setAttribute('partition', 'persist:mainSession');
+    webview.src = serviceMap[webviewId] || 'https://slack.com'; 
+    webview.setAttribute('partition', 'persist:mainSession'); 
     webview.setAttribute('allowpopups', '');
     webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
     webview.setAttribute('alt', getTitleFromWebviewId(webviewId));
     webview.setAttribute('preload', '../../preload.js');
-
+  
     webview.addEventListener('dom-ready', () => {
       webview.setZoomFactor(currentZoom);
-    });
-
-    webview.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      window.electronAPI.send('webview-clicked', webview.id);
-    });
-
+    });  
     webview.addEventListener('new-window', e => {
       e.preventDefault();
       webview.loadURL(e.url);
     });
-
+  
     webview.addEventListener('will-navigate', e => {
       if (e.url !== webview.src) {
         e.preventDefault();
         webview.loadURL(e.url);
       }
     });
-
+  
     webviewContainer.appendChild(webview);
     return webview;
   };
@@ -95,8 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const homeButton = document.createElement('button');
       homeButton.id = 'home-button';
       homeButton.className = 'nav-button';
-      homeButton.title = 'Página Inicial';
-      homeButton.innerHTML = `<img width="48" height="48" src="../../assets/spacehub.png" alt="Página Inicial"/>`;
+      homeButton.title = 'Space Hub';
+      homeButton.innerHTML = `<img width="48" height="48" src="../../assets/spacehub.png" alt="Home"/>`;
       homeButton.addEventListener('click', () => showWebview('webview-home', 'home-button'));
       navSection.appendChild(homeButton);
     }
