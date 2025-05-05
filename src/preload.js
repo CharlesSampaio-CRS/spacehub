@@ -16,7 +16,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openExternal: (url) => ipcRenderer.send('open-external', url),
   restartForUpdate: () => ipcRenderer.send('restart-for-update'),
   send: (channel, data) => ipcRenderer.send(channel, data),
-  on: (channel, callback) => ipcRenderer.on(channel, callback)
+  on: (channel, callback) => ipcRenderer.on(channel, callback),
+  handleGoogleLogin: (idToken) => ipcRenderer.invoke('handleGoogleLogin', idToken)
 });
 
 
