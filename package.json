@@ -78,16 +78,7 @@
       ],
       "icon": "src/assets/spacehub.png",
       "category": "Utility",
-      "maintainer": "ccharlesroberto@gmail.com",
-      "desktop": {
-        "Name": "SpaceHub",
-        "Comment": "Electron App with Modern UI",
-        "Categories": "Utility;",
-        "Exec": "AppRun",
-        "Terminal": false,
-        "Type": "Application",
-        "Icon": "src/assets/spacehub.png"
-      }
+      "maintainer": "ccharlesroberto@gmail.com"
     }
   }
 }
