@@ -1,6 +1,6 @@
 {
   "name": "spaceapp",
-  "version": "1.0.196",
+  "version": "1.0.197",
   "description": "Electron App with Modern UI",
   "author": "Charles Sampaio",
   "main": "src/main.js",
@@ -69,6 +69,7 @@
       "target": [
         "nsis"
       ],
+      "artifactName": "SpaceHub-${version}-Setup.${ext}",
       "icon": "src/assets/spacehub.ico"
     },
     "linux": {
@@ -76,6 +77,7 @@
         "AppImage",
         "deb"
       ],
+      "artifactName": "SpaceHub-${version}.${ext}",
       "icon": "src/assets/spacehub.png",
       "category": "Utility",
       "maintainer": "ccharlesroberto@gmail.com"
