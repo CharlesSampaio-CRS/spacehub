@@ -27,33 +27,32 @@ document.addEventListener('DOMContentLoaded', () => {
     if (button) {
       button.classList.add('opened');
     }
-  
+
     const webview = document.createElement('webview');
-    
+
     webview.id = webviewId;
     webview.className = 'webview w-100 h-100 active';
-    webview.src = serviceMap[webviewId] || 'https://slack.com'; 
-    webview.setAttribute('partition', 'persist:mainSession'); 
+    webview.src = serviceMap[webviewId] || 'https://slack.com';
+    webview.setAttribute('partition', 'persist:mainSession');
     webview.setAttribute('allowpopups', '');
     webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
     webview.setAttribute('alt', getTitleFromWebviewId(webviewId));
     webview.setAttribute('preload', '../../preload.js');
-  
+
     webview.addEventListener('dom-ready', () => {
       webview.setZoomFactor(currentZoom);
-    });  
+    });
     webview.addEventListener('new-window', e => {
       e.preventDefault();
       webview.loadURL(e.url);
     });
-  
     webview.addEventListener('will-navigate', e => {
       if (e.url !== webview.src) {
         e.preventDefault();
         webview.loadURL(e.url);
       }
     });
-  
+
     webviewContainer.appendChild(webview);
     return webview;
   };
@@ -72,9 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (button && button.id !== 'home-button') {
       button.classList.add('active', 'opened');
     }
-  
+
     updateActiveViewTitle(webview);
-    currentWebview = webview; 
+    currentWebview = webview;
   };
 
   const updateActiveViewTitle = (webview) => {
@@ -103,30 +102,29 @@ document.addEventListener('DOMContentLoaded', () => {
         'Authorization': `Bearer ${token}`
       }
     })
-    .then(response => response.json())
-    .then(data => {
-      if (Array.isArray(data.applications)) {
-        data.applications.forEach(app => {
-          if (app.active) {
-            const appId = `webview-${app.application.toLowerCase()}`;
-            const buttonId = `${app.application.toLowerCase()}-button`;
+      .then(response => response.json())
+      .then(data => {
+        if (Array.isArray(data.applications)) {
+          data.applications.forEach(app => {
+            if (app.active) {
+              const appId = `webview-${app.application.toLowerCase()}`;
+              const buttonId = `${app.application.toLowerCase()}-button`;
 
-            serviceMap[appId] = app.url;
-            services[buttonId] = appId;
+              serviceMap[appId] = app.url;
+              services[buttonId] = appId;
 
-            const button = document.createElement('button');
-            button.id = buttonId;
-            button.className = 'nav-button';
-            button.innerHTML = `<img src="${app.icon}" alt="${app.application}"/>`;
+              const button = document.createElement('button');
+              button.id = buttonId;
+              button.className = 'nav-button';
+              button.innerHTML = `<img src="${app.icon}" alt="${app.application}"/>`;
 
-            button.addEventListener('click', () => showWebview(appId, buttonId));
-
-            navSection?.appendChild(button);
-          }
-        });
-      }
-    })
-    .catch(error => console.error('Error loading applications:', error));
+              button.addEventListener('click', () => showWebview(appId, buttonId));
+              navSection?.appendChild(button);
+            }
+          });
+        }
+      })
+      .catch(error => console.error('Error loading applications:', error));
   };
 
   const refreshApplications = () => {
@@ -200,7 +198,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-
   const setupSidebarScroll = () => {
     document.getElementById('sidebar')?.addEventListener('wheel', (e) => {
       e.preventDefault();
@@ -210,13 +207,149 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const setupLogout = () => {
     document.getElementById('logout-button')?.addEventListener('click', () => {
-      window.electronAPI.logout();
+      showConfirmationDialog('Deseja realmente sair do Space Hub?', () => {
+        window.electronAPI.logout();
+      });
     });
   };
 
-  window.electronAPI.on('reload-applications', () => {
-    refreshApplications();
+// Context Menu e comunicação com main process
+const setupContextMenu = () => {
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    sidebar.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      // Se clicar no botão home, mostrar menu de contexto do home
+      if (e.target.closest('#home-button')) {
+        window.electronAPI.invoke('show-context-menu', 'webview-home');
+        return;
+      }
+      // Para outros elementos, usar a webview atual
+      const currentViewId = currentWebview?.id || '';
+      window.electronAPI.invoke('show-context-menu', currentViewId);
+    });
+  }
+
+  // Receber comandos do menu de contexto
+  window.electronAPI.on('context-menu-command', (event, command, targetId) => {
+    switch (command) {
+      case 'reload-applications':
+        // Recarregar apenas as webviews que estão abertas
+        document.querySelectorAll('webview').forEach(w => {
+          if (w.reload) {
+            w.reload();
+          }
+        });
+        break;
+      case 'close-all-webviews':
+        showConfirmationDialog('Deseja realmente fechar todas as janelas?', () => {
+          document.querySelectorAll('webview').forEach(w => {
+            if (w.id !== 'webview-home') {
+              w.remove();
+            }
+          });
+          document.querySelectorAll('.nav-button.opened').forEach(b => {
+            if (b.id !== 'home-button') {
+              b.classList.remove('opened');
+            }
+          });
+          if (currentWebview && currentWebview.id !== 'webview-home') {
+            currentWebview = null;
+            document.getElementById('active-view-name').textContent = '';
+          }
+          // Voltar para a webview home
+          showWebview('webview-home', 'home-button');
+        });
+        break;
+      case 'reload-current-webview':
+        const targetReload = document.getElementById(targetId);
+        if (targetReload?.reload) targetReload.reload();
+        break;
+      case 'close-current-webview':
+        const targetClose = document.getElementById(targetId);
+        if (targetClose) {
+          // Desmarcar o botão como aberto e ativo antes de remover a webview
+          const button = document.querySelector(`.nav-button[data-id="${targetId}"]`);
+          if (button) {
+            button.classList.remove('opened', 'active');
+          }
+
+          // Remover a webview
+          targetClose.remove();
+          
+          // Encontrar outra webview aberta ou voltar para home
+          const openWebviews = Array.from(document.querySelectorAll('webview')).filter(w => w.id !== targetId);
+          if (openWebviews.length > 0) {
+            // Encontrar a primeira webview aberta que não seja a que está sendo fechada
+            const nextWebview = openWebviews[0];
+            const nextButtonId = nextWebview.id.replace('webview-', '') + '-button';
+            
+            // Atualizar o estado dos botões no menu
+            document.querySelectorAll('.nav-button').forEach(btn => {
+              btn.classList.remove('active');
+            });
+            
+            // Ativar o próximo botão
+            const nextButton = document.getElementById(nextButtonId);
+            if (nextButton) {
+              nextButton.classList.add('active');
+            }
+            
+            showWebview(nextWebview.id, nextButtonId);
+          } else {
+            // Se não houver outras webviews abertas, voltar para home
+            // Atualizar o estado dos botões no menu
+            document.querySelectorAll('.nav-button').forEach(btn => {
+              btn.classList.remove('active');
+            });
+            
+            // Ativar o botão home
+            const homeButton = document.getElementById('home-button');
+            if (homeButton) {
+              homeButton.classList.add('active');
+            }
+            
+            showWebview('webview-home', 'home-button');
+          }
+        }
+        break;
+    }
   });
+};
+
+const showConfirmationDialog = (message, onConfirm) => {
+  const dialog = document.createElement('div');
+  dialog.className = 'confirmation-dialog';
+  dialog.innerHTML = `
+    <div class="confirmation-content">
+      <h3>Confirmação</h3>
+      <p>${message}</p>
+      <div class="confirmation-buttons">
+        <button class="confirm-btn">Confirmar</button>
+        <button class="cancel-btn">Cancelar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(dialog);
+
+  const confirmBtn = dialog.querySelector('.confirm-btn');
+  const cancelBtn = dialog.querySelector('.cancel-btn');
+
+  confirmBtn.addEventListener('click', () => {
+    document.body.removeChild(dialog);
+    onConfirm();
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    document.body.removeChild(dialog);
+  });
+};
+
+// Evento separado para recarregar aplicações (emitido pelo processo principal)
+window.electronAPI.on('reload-applications', () => {
+  refreshApplications();
+});
 
   // Inicialização
   setupButtonEvents();
@@ -224,6 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupMenus();
   setupSidebarScroll();
   setupLogout();
+  setupContextMenu();
   refreshApplications();
   showWebview('webview-home', 'home-button');
 });

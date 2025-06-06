@@ -1,7 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  invoke: (channel) => ipcRenderer.invoke(channel),
+  invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
   setZoomFactor: (factor) => ipcRenderer.send('set-zoom-factor', factor),
   logout: () => ipcRenderer.send('logout-success'),
   getToken: () => ipcRenderer.invoke('get-token'),
@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   restartForUpdate: () => ipcRenderer.send('restart-for-update'),
   send: (channel, data) => ipcRenderer.send(channel, data),
   on: (channel, callback) => ipcRenderer.on(channel, callback),
+  handle: (channel, callback) => ipcRenderer.handle(channel, callback),
   handleGoogleLogin: (idToken) => ipcRenderer.invoke('handleGoogleLogin', idToken)
 });
 

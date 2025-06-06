@@ -28,6 +28,60 @@ global.sharedObject = {
 ipcMain.handle('get-token', () => store.get('token'));
 ipcMain.handle('get-userUuid', () => store.get('userUuid'));
 
+ipcMain.handle('show-context-menu', async (event, currentViewId) => {
+  if (!currentViewId) {
+    return;
+  }
+
+  let template = [];
+
+  if (currentViewId === 'webview-home') {
+    template = [
+      {
+        label: 'Atualizar',
+        click: () => {
+          event.sender.send('context-menu-command', 'reload-applications');
+        },
+        icon: path.join(__dirname, 'assets', 'reload.png'),
+      },
+      { type: 'separator' },
+      {
+        label: 'Fechar',
+        click: () => {
+          event.sender.send('context-menu-command', 'close-all-webviews');
+        },
+        icon: path.join(__dirname, 'assets', 'close.png')
+      }
+    ];
+  } else {
+    template = [
+      {
+        label: 'Atualizar',
+        click: () => {
+          event.sender.send('context-menu-command', 'reload-current-webview', currentViewId);
+        },
+        icon: path.join(__dirname, 'assets', 'reload.png')
+      },
+      { type: 'separator' },
+      {
+        label: 'Fechar',
+        click: () => {
+          event.sender.send('context-menu-command', 'close-current-webview', currentViewId);
+        },
+        icon: path.join(__dirname, 'assets', 'close.png')
+      }
+    ];
+  }
+
+  const menu = Menu.buildFromTemplate(template);
+  menu.popup({
+    window: event.sender.getOwnerBrowserWindow(),
+    x: event.x,
+    y: event.y,
+    positioningItem: 0
+  });
+});
+
 function saveToken(token) {
   if (token) {
     const payload = parseJwt(token);
@@ -79,7 +133,7 @@ function createMainWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
-  mainWindow.setMenu(null);
+  //mainWindow.setMenu(null);
   mainWindow.maximize();
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
