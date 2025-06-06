@@ -495,3 +495,48 @@ webview.active {
 .cancel-btn:hover {
   background-color: var(--hover-color-hover);
 }
+
+/* ===== Menu de Contexto ===== */
+.context-menu {
+  position: fixed;
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  min-width: 200px;
+  z-index: 1000;
+  border: var(--component-border);
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: var(--transition);
+  font-size: 14px;
+  gap: 8px;
+  user-select: none;
+}
+
+.context-menu-item:hover {
+  background-color: var(--hover-color);
+  color: var(--primary-color);
+}
+
+.context-menu-item svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+.context-menu-separator {
+  height: 1px;
+  background-color: var(--component-border);
+  margin: 4px 0;
+}
+
+/* Adicionar Font Awesome */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
