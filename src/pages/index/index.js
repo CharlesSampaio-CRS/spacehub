@@ -332,6 +332,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // Adicionar evento de contexto para o botão do Todoist
+    document.getElementById('todoist-button')?.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const todoistWebview = document.getElementById('webview-todoist');
+      if (todoistWebview) {
+        showContextMenu(e.clientX, e.clientY, 'webview-todoist');
+      }
+    });
+
     // Receber comandos do menu de contexto
     window.electronAPI.on('context-menu-command', (event, command, targetId) => {
       switch (command) {
