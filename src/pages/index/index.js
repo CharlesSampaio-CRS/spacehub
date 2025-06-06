@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     webview.id = webviewId;
     webview.className = 'webview w-100 h-100 active';
-    webview.src = serviceMap[webviewId] || 'https://slack.com';
+    webview.src = serviceMap[webviewId] || '../../pages/home/home.html';
     webview.setAttribute('partition', 'persist:mainSession');
     webview.setAttribute('allowpopups', '');
     webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
@@ -379,40 +379,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // Remover a webview
             targetClose.remove();
             
-            // Encontrar outra webview aberta ou voltar para home
-            const openWebviews = Array.from(document.querySelectorAll('webview')).filter(w => w.id !== targetId);
-            if (openWebviews.length > 0) {
-              // Encontrar a primeira webview aberta que não seja a que está sendo fechada
-              const nextWebview = openWebviews[0];
-              const nextButtonId = nextWebview.id.replace('webview-', '') + '-button';
-              
-              // Atualizar o estado dos botões no menu
-              document.querySelectorAll('.nav-button').forEach(btn => {
-                btn.classList.remove('active');
-              });
-              
-              // Ativar o próximo botão
-              const nextButton = document.getElementById(nextButtonId);
-              if (nextButton) {
-                nextButton.classList.add('active');
-              }
-              
-              showWebview(nextWebview.id, nextButtonId);
-            } else {
-              // Se não houver outras webviews abertas, voltar para home
-              // Atualizar o estado dos botões no menu
-              document.querySelectorAll('.nav-button').forEach(btn => {
-                btn.classList.remove('active');
-              });
-              
-              // Ativar o botão home
-              const homeButton = document.getElementById('home-button');
-              if (homeButton) {
-                homeButton.classList.add('active');
-              }
-              
-              showWebview('webview-home', 'home-button');
+            // Voltar para a home
+            document.querySelectorAll('.nav-button').forEach(btn => {
+              btn.classList.remove('active');
+            });
+            
+            // Ativar o botão home
+            const homeButton = document.getElementById('home-button');
+            if (homeButton) {
+              homeButton.classList.add('active');
             }
+            
+            showWebview('webview-home', 'home-button');
           }
           break;
       }
