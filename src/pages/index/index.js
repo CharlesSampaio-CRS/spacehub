@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const hasOpenWebviews = () => {
     const webviews = document.querySelectorAll('webview');
     console.log(webviews);
-    return Array.from(webviews).some(webview => webview.id !== 'webview-home');
+    return Array.from(webviews).some(webview => webview.id !== 'webview-home' && webview.id !== 'webview-settings');
   };
 
   const getMenuTemplate = (currentViewId) => {

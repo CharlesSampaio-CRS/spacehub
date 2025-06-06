@@ -13,14 +13,14 @@
 <body>
   <div class="main-wrapper">
     <header class="page-header">
-      <h1>Configurações</h1>
-      <div id="appVersion">V. Carregando...</div>
+      <h1><i class="fas fa-cog"></i> Configurações</h1>
+      <div id="appVersion" class="version-badge">V. Carregando...</div>
     </header>
 
     <main id="content-container">
       <!-- Seção Perfil -->
       <section id="profile-section" class="config-section">
-        <h2>Perfil</h2>
+        <h2><i class="fas fa-user"></i> Perfil</h2>
         <div class="applications-list">
           <!-- Cartões de Perfil -->
           <div class="application-card">
@@ -28,7 +28,7 @@
               <img width="48" height="48" src="https://img.icons8.com/fluency/48/contract-job.png" alt="Perfil" />
               <div>
                 <div class="status-label">Perfil</div>
-                <div id="userType"></div>
+                <div id="userType" class="user-info"></div>
               </div>
             </div>
           </div>
@@ -38,7 +38,7 @@
               <img width="48" height="48" src="https://img.icons8.com/color/48/men-age-group-4.png" alt="Nome" />
               <div>
                 <div class="status-label">Nome</div>
-                <div id="userName"></div>
+                <div id="userName" class="user-info"></div>
               </div>
             </div>
           </div>
@@ -48,7 +48,7 @@
               <img width="48" height="48" src="https://img.icons8.com/emoji/48/e-mail.png" alt="Email" />
               <div>
                 <div class="status-label">Email</div>
-                <div id="userEmail"></div>
+                <div id="userEmail" class="user-info"></div>
               </div>
             </div>
           </div>
@@ -58,7 +58,7 @@
               <img width="48" height="48" src="https://img.icons8.com/color/48/diamond.png" alt="Plano" />
               <div>
                 <div class="status-label">Plano</div>
-                <div id="userPlan"></div>
+                <div id="userPlan" class="user-info"></div>
               </div>
             </div>
           </div>
@@ -67,11 +67,11 @@
 
       <!-- Preferências -->
       <section id="preferences-section" class="config-section">
-        <h2>Preferências</h2>
+        <h2><i class="fas fa-sliders-h"></i> Preferências</h2>
         <div class="preferences-wrapper">
           <aside id="settings-panel">
             <div class="setting-item">
-              <span class="setting-label">Notificações</span>
+              <span class="setting-label"><i class="fas fa-bell"></i> Notificações</span>
               <label class="toggle-switch">
                 <input type="checkbox" checked />
                 <span class="slider"></span>
@@ -79,7 +79,7 @@
             </div>
 
             <div class="setting-item">
-              <span class="setting-label">Modo Escuro</span>
+              <span class="setting-label"><i class="fas fa-moon"></i> Modo Escuro</span>
               <label class="toggle-switch">
                 <input type="checkbox" id="dark-mode-toggle" />
                 <span class="slider"></span>
@@ -87,7 +87,7 @@
             </div>
 
             <div class="setting-item">
-              <span class="setting-label">Auto Login</span>
+              <span class="setting-label"><i class="fas fa-sign-in-alt"></i> Auto Login</span>
               <label class="toggle-switch">
                 <input type="checkbox" checked />
                 <span class="slider"></span>
@@ -95,7 +95,7 @@
             </div>
 
             <div class="setting-item">
-              <span class="setting-label">Compactar Layout</span>
+              <span class="setting-label"><i class="fas fa-compress-arrows-alt"></i> Compactar Layout</span>
               <label class="toggle-switch">
                 <input type="checkbox" />
                 <span class="slider"></span>
@@ -103,7 +103,7 @@
             </div>
 
             <div class="setting-item">
-              <span class="setting-label">Abrir em Tela Cheia</span>
+              <span class="setting-label"><i class="fas fa-expand"></i> Abrir em Tela Cheia</span>
               <label class="toggle-switch">
                 <input type="checkbox" />
                 <span class="slider"></span>
@@ -112,7 +112,7 @@
           </aside>
 
           <div class="language-selector">
-            <h3>Idioma</h3>
+            <h3><i class="fas fa-language"></i> Idioma</h3>
 
             <label class="language-option">
               <input type="radio" name="language" value="pt-BR" checked />
@@ -135,7 +135,7 @@
           </div>
 
           <div class="form-group">
-            <label for="zoom-range">Zoom:</label>
+            <label for="zoom-range"><i class="fas fa-search-plus"></i> Zoom:</label>
             <input type="range" id="zoom-range" min="0.5" max="2" step="0.1" value="1" />
             <span id="zoom-value">1.0</span>
           </div>
@@ -144,14 +144,16 @@
 
       <!-- Aplicações -->
       <section id="applications-section" class="config-section">
-        <h2>Aplicações</h2>
+        <h2><i class="fas fa-th-large"></i> Aplicações</h2>
         <div class="application-grid" id="applicationsList">
           <!-- Aqui os cards de aplicações serão renderizados via JS -->
         </div>
 
         <!-- Botão de Salvar abaixo das aplicações, centralizado -->
-        <div class="save-button-container" style="margin-top: 2rem; text-align: center;">
-          <button id="saveButton" class="save-button">Salvar</button>
+        <div class="save-button-container">
+          <button id="saveButton" class="save-button">
+            <i class="fas fa-save"></i> Salvar
+          </button>
         </div>
       </section>
 

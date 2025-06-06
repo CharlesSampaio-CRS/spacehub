@@ -8,6 +8,10 @@
   --success-color: #28a745;
   --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s ease;
+  --card-bg: #fff;
+  --card-bg-dark: #252541;
+  --hover-bg: #f0f0f0;
+  --hover-bg-dark: #3a3a68;
 }
 
 * {
@@ -21,6 +25,7 @@ body {
   background-color: #f7f9fc;
   color: var(--text-color);
   line-height: 1.6;
+  min-height: 100vh;
 }
 
 body.dark-mode {
@@ -46,6 +51,7 @@ body.dark-mode {
 .page-header h1 {
   font-size: 28px;
   color: var(--primary-color);
+  font-weight: 600;
 }
 
 .dark-mode .page-header h1 {
@@ -55,44 +61,30 @@ body.dark-mode {
 #content-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  gap: 25px;
 }
-#update-version-button {
-  margin-top: 20px;
-  padding: 10px 20px;
-  font-size: 16px;
-  background-color: #eff4ef;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-#update-version-button:hover {
-  background-color: #f6faf6;
-}
-
 
 .config-section {
-  background: #fff;
-  border-radius: 10px;
+  background: var(--card-bg);
+  border-radius: 12px;
   box-shadow: var(--card-shadow);
-  padding: 20px;
-  margin-bottom: 20px;
+  padding: 25px;
+  margin-bottom: 25px;
   transition: var(--transition);
 }
 
 .dark-mode .config-section {
-  background: #252541;
+  background: var(--card-bg-dark);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .config-section h2 {
-  font-size: 20px;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
+  font-size: 22px;
+  margin-bottom: 25px;
+  padding-bottom: 12px;
   border-bottom: 2px solid var(--primary-color);
   color: var(--primary-color);
+  font-weight: 600;
 }
 
 .dark-mode .config-section h2 {
@@ -102,73 +94,59 @@ body.dark-mode {
 
 .applications-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
 }
 
 .application-card {
-  background: #f9f9f9;
-  border-radius: 8px;
-  padding: 15px;
+  background: var(--secondary-color);
+  border-radius: 10px;
+  padding: 20px;
   transition: var(--transition);
+  border: 1px solid var(--border-color);
 }
 
 .dark-mode .application-card {
-  background: #303056;
+  background: var(--card-bg-dark);
+  border-color: #3a3a68;
 }
 
 .application-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .dark-mode .application-card:hover {
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
 .application-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
+}
+
+.application-info img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .status-label {
   font-size: 14px;
   color: var(--text-light);
   margin-bottom: 5px;
+  font-weight: 500;
 }
 
 .dark-mode .status-label {
   color: #a0a0a0;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-  padding: 10px;
-}
-
-#appVersion {
-  font-size: 16px;
-}
-
-#update-version-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  padding: 0;
-  color: #333;
-}
-
-#update-version-button:hover {
-  color: #007bff; /* Cor do hover para o botão */
-}
-
 #userType, #userName, #userEmail, #userPlan {
   font-weight: 600;
+  font-size: 16px;
 }
 
 /* Applications Section */
@@ -176,53 +154,44 @@ body.dark-mode {
   grid-column: span 2;
 }
 
-
-#update-version-button.spinning i {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-
 .application-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 15px;
-  background: #f9f9f9;
-  border-radius: 8px;
-  margin-bottom: 10px;
+  padding: 15px 20px;
+  background: var(--secondary-color);
+  border-radius: 10px;
+  margin-bottom: 15px;
   transition: var(--transition);
+  border: 1px solid var(--border-color);
 }
 
 .dark-mode .application-item {
-  background: #303056;
+  background: var(--card-bg-dark);
+  border-color: #3a3a68;
 }
 
 .application-item:hover {
-  background: #f0f0f0;
+  background: var(--hover-bg);
   transform: translateX(5px);
 }
 
 .dark-mode .application-item:hover {
-  background: #3a3a68;
+  background: var(--hover-bg-dark);
 }
 
 .application-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
 }
 
 /* Toggle Switch */
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 50px;
-  height: 24px;
+  width: 54px;
+  height: 28px;
 }
 
 .toggle-switch input {
@@ -246,36 +215,14 @@ body.dark-mode {
 .slider:before {
   position: absolute;
   content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
   background-color: white;
   transition: .4s;
   border-radius: 50%;
 }
-
-.save-button-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.save-button {
-  padding: 12px 30px;
-  font-size: 16px;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.save-button:hover {
-  background-color: #2980b9;
-}
-
 
 input:checked + .slider {
   background-color: var(--primary-color);
@@ -293,7 +240,7 @@ input:checked + .slider:before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
+  padding: 15px 0;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -306,27 +253,30 @@ input:checked + .slider:before {
 }
 
 .setting-label {
+  font-size: 16px;
   font-weight: 500;
 }
 
-/* Preferences Section */
 .preferences-wrapper {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 30px;
 }
 
 .language-selector {
-  padding: 15px;
-  background: #f9f9f9;
-  border-radius: 8px;
+  background: var(--secondary-color);
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
 }
 
 .dark-mode .language-selector {
-  background: #303056;
+  background: var(--card-bg-dark);
+  border-color: #3a3a68;
 }
 
 .language-selector h3 {
+  font-size: 18px;
   margin-bottom: 15px;
   color: var(--primary-color);
 }
@@ -339,31 +289,70 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 8px;
   cursor: pointer;
-  border-radius: 5px;
-  transition: background-color 0.2s;
+  transition: var(--transition);
 }
 
 .language-option:hover {
-  background-color: #eaeaea;
+  background: var(--hover-bg);
 }
 
 .dark-mode .language-option:hover {
-  background-color: #3a3a68;
+  background: var(--hover-bg-dark);
 }
 
 .language-option input {
-  margin-right: 5px;
+  margin-right: 10px;
 }
 
+.language-option img {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+}
+
+.save-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.save-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.save-button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 108, 247, 0.3);
+}
+
+.save-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsividade */
 @media (max-width: 768px) {
   #content-container {
     grid-template-columns: 1fr;
   }
 
   #applications-section {
-    grid-column: span 1;
+    grid-column: 1;
   }
 
   .applications-list {
@@ -373,4 +362,47 @@ input:checked + .slider:before {
   .preferences-wrapper {
     grid-template-columns: 1fr;
   }
+
+  .page-header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .config-section {
+    padding: 15px;
+  }
+
+  .application-card {
+    padding: 15px;
+  }
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.config-section {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Melhorias de acessibilidade */
+button:focus,
+input:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Melhorias de performance */
+* {
+  will-change: transform;
+  backface-visibility: hidden;
 }
