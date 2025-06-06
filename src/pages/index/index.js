@@ -446,6 +446,18 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshApplications();
   });
 
+  const setupDarkMode = () => {
+    // Verificar se o modo escuro está ativado no localStorage
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    document.body.classList.toggle('dark-mode', isDarkMode);
+
+    // Adicionar listener para mudanças no modo escuro
+    window.electronAPI.on('dark-mode-changed', (event, isDark) => {
+      document.body.classList.toggle('dark-mode', isDark);
+      localStorage.setItem('darkMode', isDark);
+    });
+  };
+
   // Inicialização
   setupButtonEvents();
   setupNotificationActions();
@@ -453,6 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSidebarScroll();
   setupLogout();
   setupContextMenu();
+  setupDarkMode();
   refreshApplications();
   showWebview('webview-home', 'home-button');
 });

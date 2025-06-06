@@ -465,3 +465,9 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
+
+ipcMain.on('dark-mode-changed', (event, isDark) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('dark-mode-changed', isDark);
+  }
+});

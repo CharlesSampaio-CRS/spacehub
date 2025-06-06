@@ -145,8 +145,16 @@ const setupDarkModeToggle = () => {
   const toggle = document.getElementById("dark-mode-toggle");
   if (!toggle) return;
 
+  // Verificar o estado atual do modo escuro
+  const isDarkMode = localStorage.getItem('darkMode') === 'true';
+  toggle.checked = isDarkMode;
+  document.body.classList.toggle("dark-mode", isDarkMode);
+
   toggle.addEventListener("change", () => {
-    document.body.classList.toggle("dark-mode", toggle.checked);
+    const isDark = toggle.checked;
+    document.body.classList.toggle("dark-mode", isDark);
+    localStorage.setItem('darkMode', isDark);
+    window.electronAPI.send('dark-mode-changed', isDark);
   });
 };
 

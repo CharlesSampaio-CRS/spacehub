@@ -9,9 +9,9 @@
   --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s ease;
   --card-bg: #fff;
-  --card-bg-dark: #252541;
+  --card-bg-dark: #363645;
   --hover-bg: #f0f0f0;
-  --hover-bg-dark: #3a3a68;
+  --hover-bg-dark: #40404f;
 }
 
 * {
@@ -29,8 +29,8 @@ body {
 }
 
 body.dark-mode {
-  background-color: #1a1a2e;
-  color: #e6e6e6;
+  background-color: #2d2d3a;
+  color: #f0f0f0;
 }
 
 .main-wrapper {

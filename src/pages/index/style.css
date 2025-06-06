@@ -15,6 +15,19 @@
   --component-border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+/* Variáveis do modo escuro */
+body.dark-mode {
+  --background: #2d2d3a;
+  --sidebar-bg: #363645;
+  --card-bg: #363645;
+  --text-primary: #f0f0f0;
+  --text-secondary: #b8b8b8;
+  --hover-color: rgba(99, 102, 241, 0.15);
+  --active-color: rgba(99, 102, 241, 0.25);
+  --component-bg: #363645;
+  --component-border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 body,
 html {
   margin: 0;
@@ -543,3 +556,122 @@ webview.active {
 
 /* Adicionar Font Awesome */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
+/* Ajustes específicos para o modo escuro */
+body.dark-mode .nav-button {
+  color: var(--text-secondary);
+}
+
+body.dark-mode .nav-button:hover {
+  background: var(--hover-color);
+  color: var(--primary-color);
+}
+
+body.dark-mode .nav-button.active {
+  background: var(--active-color);
+  color: var(--primary-color);
+}
+
+body.dark-mode .header-title {
+  color: var(--text-primary);
+}
+
+body.dark-mode .notification-bell {
+  color: var(--text-secondary);
+}
+
+body.dark-mode .notification-bell:hover {
+  color: var(--primary-color);
+}
+
+body.dark-mode .dropdown-menu {
+  background-color: var(--card-bg);
+  border: var(--component-border);
+}
+
+body.dark-mode .dropdown-item {
+  color: var(--text-primary);
+}
+
+body.dark-mode .dropdown-item:hover {
+  background-color: var(--hover-color);
+  color: var(--primary-color);
+}
+
+body.dark-mode .notification-menu {
+  background-color: var(--card-bg);
+  border: var(--component-border);
+}
+
+body.dark-mode .notification-item {
+  border-bottom-color: var(--component-border);
+}
+
+body.dark-mode .notification-item:hover {
+  background-color: var(--hover-color);
+}
+
+body.dark-mode .notification-message {
+  color: var(--text-primary);
+}
+
+body.dark-mode .notification-time {
+  color: var(--text-secondary);
+}
+
+body.dark-mode .notification-empty {
+  color: var(--text-secondary);
+}
+
+body.dark-mode .context-menu {
+  background-color: var(--card-bg);
+  border: var(--component-border);
+}
+
+body.dark-mode .context-menu-item {
+  color: var(--text-primary);
+}
+
+body.dark-mode .context-menu-item:hover {
+  background-color: var(--hover-color);
+  color: var(--primary-color);
+}
+
+body.dark-mode .context-menu-separator {
+  background-color: var(--component-border);
+}
+
+body.dark-mode .confirmation-content {
+  background-color: var(--card-bg);
+  border: var(--component-border);
+}
+
+body.dark-mode .confirmation-content h3 {
+  color: var(--text-primary);
+}
+
+body.dark-mode .confirmation-content p {
+  color: var(--text-secondary);
+}
+
+body.dark-mode .cancel-btn {
+  background-color: var(--hover-color);
+  color: var(--text-primary);
+}
+
+body.dark-mode .cancel-btn:hover {
+  background-color: var(--active-color);
+}
+
+/* Ajuste da scrollbar para o modo escuro */
+body.dark-mode ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
