@@ -213,56 +213,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  const showContextMenu = (x, y, currentViewId) => {
-    // Remover menu existente se houver
-    const existingMenu = document.querySelector('.context-menu');
-    if (existingMenu) {
-      existingMenu.remove();
-    }
+  const hasOpenWebviews = () => {
+    const webviews = document.querySelectorAll('webview');
+    console.log(webviews);
+    return Array.from(webviews).some(webview => webview.id !== 'webview-home');
+  };
 
-    const menu = document.createElement('div');
-    menu.className = 'context-menu';
-    
-    // Ajustar posição para garantir que o menu fique dentro da janela
-    const rect = document.body.getBoundingClientRect();
-    const menuWidth = 200; // Largura mínima do menu
-    const menuHeight = 100; // Altura aproximada do menu
-    
-    let posX = x;
-    let posY = y;
-    
-    // Ajustar posição horizontal se necessário
-    if (x + menuWidth > rect.width) {
-      posX = rect.width - menuWidth - 10;
-    }
-    
-    // Ajustar posição vertical se necessário
-    if (y + menuHeight > rect.height) {
-      posY = rect.height - menuHeight - 10;
-    }
-    
-    menu.style.left = `${posX}px`;
-    menu.style.top = `${posY}px`;
-
-    if (currentViewId === 'webview-home') {
-      menu.innerHTML = `
+  const getMenuTemplate = (currentViewId) => {
+    const menuItems = {
+      home: `
         <div class="context-menu-item" data-command="reload-applications">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M23 4v6h-6M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span>Atualizar</span>
+          <span>Atualizar Todos</span>
         </div>
         <div class="context-menu-separator"></div>
         <div class="context-menu-item" data-command="close-all-webviews">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span>Fechar</span>
+          <span>Fechar Todos</span>
         </div>
-      `;
-    } else {
-      menu.innerHTML = `
+      `,
+      other: `
         <div class="context-menu-item" data-command="reload-current-webview">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M23 4v6h-6M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -277,12 +252,25 @@ document.addEventListener('DOMContentLoaded', () => {
           </svg>
           <span>Fechar</span>
         </div>
-      `;
-    }
+      `
+    };
 
-    document.body.appendChild(menu);
+    return currentViewId === 'webview-home' ? menuItems.home : menuItems.other;
+  };
 
-    // Adicionar eventos aos itens do menu
+  const setupMenuPosition = (menu, x, y) => {
+    const rect = document.body.getBoundingClientRect();
+    const menuWidth = 200;
+    const menuHeight = 100;
+    
+    let posX = Math.min(x, rect.width - menuWidth - 10);
+    let posY = Math.min(y, rect.height - menuHeight - 10);
+    
+    menu.style.left = `${posX}px`;
+    menu.style.top = `${posY}px`;
+  };
+
+  const setupMenuEvents = (menu, currentViewId) => {
     menu.querySelectorAll('.context-menu-item').forEach(item => {
       item.addEventListener('click', () => {
         const command = item.getAttribute('data-command');
@@ -291,7 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Fechar menu ao clicar fora
     const closeMenu = (e) => {
       if (!menu.contains(e.target)) {
         menu.remove();
@@ -299,10 +286,28 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    // Pequeno delay para evitar que o menu feche imediatamente
     setTimeout(() => {
       document.addEventListener('click', closeMenu);
     }, 100);
+  };
+
+  const showContextMenu = (x, y, currentViewId) => {
+    if (!hasOpenWebviews()) {
+      return;
+    }
+
+    const existingMenu = document.querySelector('.context-menu');
+    if (existingMenu) {
+      existingMenu.remove();
+    }
+
+    const menu = document.createElement('div');
+    menu.className = 'context-menu';
+    menu.innerHTML = getMenuTemplate(currentViewId);
+    
+    setupMenuPosition(menu, x, y);
+    document.body.appendChild(menu);
+    setupMenuEvents(menu, currentViewId);
   };
 
   // Context Menu e comunicação com main process
