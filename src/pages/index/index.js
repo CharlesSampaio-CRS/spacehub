@@ -38,14 +38,33 @@ document.addEventListener('DOMContentLoaded', () => {
     webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
     webview.setAttribute('alt', getTitleFromWebviewId(webviewId));
     webview.setAttribute('preload', '../../preload.js');
+    webview.setAttribute('webpreferences', 'allowRunningInsecureContent=yes, experimentalFeatures=yes, webSecurity=no, plugins=yes, webgl=yes');
 
     webview.addEventListener('dom-ready', () => {
       webview.setZoomFactor(currentZoom);
+      
+      // Configurações específicas para o Telegram
+      if (webviewId === 'webview-telegram') {
+        webview.executeJavaScript(`
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia = async (constraints) => {
+              try {
+                return await navigator.mediaDevices.getUserMedia(constraints);
+              } catch (error) {
+                console.error('Erro ao acessar a câmera:', error);
+                throw error;
+              }
+            };
+          }
+        `);
+      }
     });
+
     webview.addEventListener('new-window', e => {
       e.preventDefault();
       webview.loadURL(e.url);
     });
+
     webview.addEventListener('will-navigate', e => {
       if (e.url !== webview.src) {
         e.preventDefault();

@@ -92,6 +92,10 @@ function createMainWindow() {
       sandbox: false,
       nativeWindowOpen: true,
       webSecurity: false,
+      allowRunningInsecureContent: true,
+      experimentalFeatures: true,
+      plugins: true,
+      webgl: true
     }
   });
 
