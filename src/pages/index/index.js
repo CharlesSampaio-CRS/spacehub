@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   let currentZoom = 1.0;
   let currentWebview = null;
+  let webviewCache = new Map();
 
   const services = {
     'home-button': 'webview-home',
@@ -23,6 +24,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const webviewContainer = document.querySelector('.webview-wrapper');
 
   const createWebview = (webviewId) => {
+    // Verificar cache
+    if (webviewCache.has(webviewId)) {
+      const cachedWebview = webviewCache.get(webviewId);
+      if (cachedWebview && !cachedWebview.isDestroyed()) {
+        return cachedWebview;
+      }
+      webviewCache.delete(webviewId);
+    }
+
     const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
     if (button) {
       button.classList.add('opened');
@@ -38,7 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
     webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
     webview.setAttribute('alt', getTitleFromWebviewId(webviewId));
     webview.setAttribute('preload', '../../preload.js');
-    webview.setAttribute('webpreferences', 'allowRunningInsecureContent=yes, experimentalFeatures=yes, webSecurity=no, plugins=yes, webgl=yes, nodeIntegrationInSubFrames=yes');
+    webview.setAttribute('webpreferences', 'allowRunningInsecureContent=yes, experimentalFeatures=yes, webSecurity=no, plugins=yes, webgl=yes, nodeIntegrationInSubFrames=yes, backgroundThrottling=no');
+
+    // Otimizações de performance
+    webview.setAttribute('autosize', 'on');
+    webview.setAttribute('disablewebsecurity', '');
+    webview.setAttribute('allowpopups', '');
+    webview.setAttribute('webpreferences', 'backgroundThrottling=no');
 
     webview.addEventListener('dom-ready', () => {
       webview.setZoomFactor(currentZoom);
@@ -64,29 +80,49 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    webview.addEventListener('new-window', e => {
-      e.preventDefault();
+    // Otimização de eventos
+    const debouncedLoadURL = debounce((url) => {
       try {
-        webview.loadURL(e.url);
+        webview.loadURL(url);
       } catch (err) {
         console.error('Erro ao carregar URL:', err);
       }
+    }, 100);
+
+    webview.addEventListener('new-window', e => {
+      e.preventDefault();
+      debouncedLoadURL(e.url);
     });
 
     webview.addEventListener('will-navigate', e => {
       if (e.url !== webview.src) {
         e.preventDefault();
-        try {
-          webview.loadURL(e.url);
-        } catch (err) {
-          console.error('Erro ao navegar:', err);
-        }
+        debouncedLoadURL(e.url);
       }
     });
 
+    // Limpar recursos quando a webview for destruída
+    webview.addEventListener('destroyed', () => {
+      webviewCache.delete(webviewId);
+    });
+
     webviewContainer.appendChild(webview);
+    webviewCache.set(webviewId, webview);
     return webview;
   };
+
+  // Função de debounce para otimizar chamadas
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
 
   const showWebview = (webviewId, buttonId) => {
     document.querySelectorAll('webview').forEach(w => w.classList.remove('active'));
@@ -488,6 +524,16 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('darkMode', isDark);
     });
   };
+
+  // Limpar cache periodicamente
+  setInterval(() => {
+    webviewCache.forEach((webview, id) => {
+      if (webview && !webview.isDestroyed() && !webview.classList.contains('active')) {
+        webview.remove();
+        webviewCache.delete(id);
+      }
+    });
+  }, 300000); // A cada 5 minutos
 
   // Inicialização
   setupButtonEvents();

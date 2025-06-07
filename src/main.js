@@ -97,12 +97,26 @@ function createMainWindow() {
       plugins: true,
       webgl: true,
       enableRemoteModule: false,
-      nodeIntegrationInSubFrames: true
+      nodeIntegrationInSubFrames: true,
+      backgroundThrottling: false,
+      enableBlinkFeatures: 'OutOfBlinkCors',
+      spellcheck: false,
+      enableWebSQL: false,
+      offscreen: false,
+      enableHardwareAcceleration: true
     }
   });
 
+  mainWindow.webContents.setFrameRate(60);
+  mainWindow.webContents.setBackgroundThrottling(false);
+  
+  setInterval(() => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.session.clearCache();
+    }
+  }, 3600000);
+
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
-  //mainWindow.setMenu(null);
   mainWindow.maximize();
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -117,7 +131,6 @@ function createMainWindow() {
 
   mainWindow.once('did-finish-load', () => {
     checkForUpdates(); 
-  
     setInterval(() => {
       checkForUpdates();
     }, 1800000); 
