@@ -1,0 +1,11 @@
+.webview {
+  display: none;
+  border: none;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+}
+
+.webview.active {
+  display: block;
+} 

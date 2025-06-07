@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   let currentZoom = 1.0;
   let currentWebview = null;
   let webviewCache = new Map();
@@ -24,123 +24,111 @@ document.addEventListener('DOMContentLoaded', () => {
   const webviewContainer = document.querySelector('.webview-wrapper');
 
   const createWebview = (webviewId) => {
-    // Verificar cache
-    if (webviewCache.has(webviewId)) {
-      const cachedWebview = webviewCache.get(webviewId);
-      if (cachedWebview && !cachedWebview.isDestroyed()) {
-        return cachedWebview;
+    try {
+      // Remover webview antiga se existir
+      const oldWebview = document.getElementById(webviewId);
+      if (oldWebview) {
+        oldWebview.remove();
       }
-      webviewCache.delete(webviewId);
-    }
 
-    const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
-    if (button) {
-      button.classList.add('opened');
-    }
+      const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
+      if (button) {
+        button.classList.add('opened');
+      }
 
-    const webview = document.createElement('webview');
+      const webview = document.createElement('webview');
+      webview.id = webviewId;
+      webview.className = 'webview w-100 h-100 active';
+      webview.src = serviceMap[webviewId] || '../../pages/home/home.html';
 
-    webview.id = webviewId;
-    webview.className = 'webview w-100 h-100 active';
-    webview.src = serviceMap[webviewId] || '../../pages/home/home.html';
-    webview.setAttribute('partition', 'persist:mainSession');
-    webview.setAttribute('allowpopups', '');
-    webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
-    webview.setAttribute('alt', getTitleFromWebviewId(webviewId));
-    webview.setAttribute('preload', '../../preload.js');
-    webview.setAttribute('webpreferences', 'allowRunningInsecureContent=yes, experimentalFeatures=yes, webSecurity=no, plugins=yes, webgl=yes, nodeIntegrationInSubFrames=yes, backgroundThrottling=no');
+      // Obter sessão do usuário atual
+      const user = JSON.parse(localStorage.getItem('user'));
+      const sessionId = user ? `persist:user_${user.id}` : 'persist:mainSession';
+      webview.setAttribute('partition', sessionId);
 
-    // Otimizações de performance
-    webview.setAttribute('autosize', 'on');
-    webview.setAttribute('disablewebsecurity', '');
-    webview.setAttribute('allowpopups', '');
-    webview.setAttribute('webpreferences', 'backgroundThrottling=no');
+      webview.setAttribute('allowpopups', '');
+      webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
+      webview.setAttribute('alt', getTitleFromWebviewId(webviewId));
+      webview.setAttribute('preload', '../../preload.js');
+      webview.setAttribute('webpreferences', 'allowRunningInsecureContent=yes, experimentalFeatures=yes, webSecurity=no, plugins=yes, webgl=yes, nodeIntegrationInSubFrames=yes, backgroundThrottling=no');
 
-    webview.addEventListener('dom-ready', () => {
-      webview.setZoomFactor(currentZoom);
-      
-      // Configurações específicas para o Telegram
-      if (webviewId === 'webview-telegram') {
-        try {
-          webview.executeJavaScript(`
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-              navigator.mediaDevices.getUserMedia = async (constraints) => {
-                try {
-                  return await navigator.mediaDevices.getUserMedia(constraints);
-                } catch (error) {
-                  console.error('Erro ao acessar a câmera:', error);
-                  throw error;
-                }
-              };
-            }
-          `).catch(err => console.error('Erro ao executar script:', err));
-        } catch (err) {
-          console.error('Erro ao configurar webview do Telegram:', err);
+      webview.addEventListener('dom-ready', () => {
+        webview.setZoomFactor(currentZoom);
+        
+        // Configurações específicas para o Telegram
+        if (webviewId === 'webview-telegram') {
+          try {
+            webview.executeJavaScript(`
+              if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia = async (constraints) => {
+                  try {
+                    return await navigator.mediaDevices.getUserMedia(constraints);
+                  } catch (error) {
+                    console.error('Erro ao acessar a câmera:', error);
+                    throw error;
+                  }
+                };
+              }
+            `).catch(err => console.error('Erro ao executar script:', err));
+          } catch (err) {
+            console.error('Erro ao configurar webview do Telegram:', err);
+          }
         }
-      }
-    });
+      });
 
-    // Otimização de eventos
-    const debouncedLoadURL = debounce((url) => {
-      try {
-        webview.loadURL(url);
-      } catch (err) {
-        console.error('Erro ao carregar URL:', err);
-      }
-    }, 100);
-
-    webview.addEventListener('new-window', e => {
-      e.preventDefault();
-      debouncedLoadURL(e.url);
-    });
-
-    webview.addEventListener('will-navigate', e => {
-      if (e.url !== webview.src) {
+      webview.addEventListener('new-window', e => {
         e.preventDefault();
-        debouncedLoadURL(e.url);
-      }
-    });
+        webview.loadURL(e.url);
+      });
 
-    // Limpar recursos quando a webview for destruída
-    webview.addEventListener('destroyed', () => {
-      webviewCache.delete(webviewId);
-    });
+      webview.addEventListener('will-navigate', e => {
+        if (e.url !== webview.src) {
+          e.preventDefault();
+          webview.loadURL(e.url);
+        }
+      });
 
-    webviewContainer.appendChild(webview);
-    webviewCache.set(webviewId, webview);
-    return webview;
+      webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
+        console.error(`Erro ao carregar ${webviewId}:`, errorCode, errorDescription);
+        if (errorCode === -3) {
+          setTimeout(() => webview.reload(), 2000);
+        }
+      });
+
+      webviewContainer.appendChild(webview);
+      return webview;
+    } catch (error) {
+      console.error(`Erro ao criar webview ${webviewId}:`, error);
+      return null;
+    }
   };
 
-  // Função de debounce para otimizar chamadas
-  function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
-  }
-
   const showWebview = (webviewId, buttonId) => {
-    document.querySelectorAll('webview').forEach(w => w.classList.remove('active'));
-    document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+    try {
+      // Remover classe active de todas as webviews
+      document.querySelectorAll('.webview').forEach(w => w.classList.remove('active'));
+      document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active', 'opened'));
 
-    let webview = document.getElementById(webviewId);
-    if (!webview) webview = createWebview(webviewId);
-    else webview.classList.add('active');
+      // Adicionar classes ao botão
+      const button = document.getElementById(buttonId);
+      if (button) {
+        button.classList.add('active', 'opened');
+      }
 
-    document.getElementById(buttonId)?.classList.add('active');
+      // Criar ou obter webview
+      let webview = document.getElementById(webviewId);
+      if (!webview) {
+        webview = createWebview(webviewId);
+      }
 
-    const button = document.getElementById(buttonId);
-    if (button && button.id !== 'home-button') {
-      button.classList.add('active', 'opened');
+      if (webview) {
+        webview.classList.add('active');
+        updateActiveViewTitle(webview);
+        currentWebview = webview;
+      }
+    } catch (error) {
+      console.error('Erro ao mostrar webview:', error);
     }
-
-    updateActiveViewTitle(webview);
-    currentWebview = webview;
   };
 
   const updateActiveViewTitle = (webview) => {
@@ -274,8 +262,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const setupLogout = () => {
     document.getElementById('logout-button')?.addEventListener('click', () => {
-      showConfirmationDialog('Deseja realmente sair do Space Hub?', () => {
-        window.electronAPI.logout();
+      showConfirmationDialog('Deseja realmente sair do Space Hub?', async () => {
+        try {
+          await clearUserSession();
+          window.electronAPI.logout();
+        } catch (error) {
+          console.error('Erro ao fazer logout:', error);
+        }
       });
     });
   };
@@ -535,6 +528,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }, 300000); // A cada 5 minutos
 
+  // Adicionar função para gerenciar sessão do usuário
+  const setupUserSession = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user) {
+        // Criar sessão específica para o usuário
+        await window.electronAPI.createUserSession(user.id);
+        
+        // Limpar webviews existentes
+        webviewCache.forEach((webview) => {
+          if (!webview.isDestroyed()) {
+            webview.remove();
+          }
+        });
+        webviewCache.clear();
+
+        // Recarregar webview atual com nova sessão
+        const currentWebview = document.querySelector('.webview.active');
+        if (currentWebview) {
+          const webviewId = currentWebview.id;
+          showWebview(webviewId, `button-${webviewId}`);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao configurar sessão do usuário:', error);
+    }
+  };
+
+  // Adicionar função para limpar sessão do usuário
+  const clearUserSession = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user) {
+        await window.electronAPI.clearUserSession(user.id);
+      }
+    } catch (error) {
+      console.error('Erro ao limpar sessão do usuário:', error);
+    }
+  };
+
   // Inicialização
   setupButtonEvents();
   setupNotificationActions();
@@ -543,6 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupLogout();
   setupContextMenu();
   setupDarkMode();
+  await setupUserSession();
   refreshApplications();
   showWebview('webview-home', 'home-button');
 });

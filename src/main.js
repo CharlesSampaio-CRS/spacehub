@@ -490,3 +490,126 @@ ipcMain.on('dark-mode-changed', (event, isDark) => {
     mainWindow.webContents.send('dark-mode-changed', isDark);
   }
 });
+
+// Gerenciamento de sessões
+const userSessions = new Map();
+
+const createUserSession = (userId) => {
+  if (userSessions.has(userId)) {
+    return userSessions.get(userId);
+  }
+
+  const session = session.fromPartition(`persist:user_${userId}`);
+  
+  // Configurar permissões da sessão
+  session.setPermissionRequestHandler((webContents, permission, callback) => {
+    const allowedPermissions = ['media', 'geolocation', 'notifications', 'fullscreen'];
+    if (allowedPermissions.includes(permission)) {
+      callback(true);
+    } else {
+      callback(false);
+    }
+  });
+
+  // Configurar limites de cache
+  session.setCacheSize(100 * 1024 * 1024); // 100MB
+
+  // Configurar limpeza automática
+  session.setSpellCheckerDictionaryDownloadEnabled(false);
+  session.setSpellCheckerEnabled(false);
+
+  userSessions.set(userId, session);
+  return session;
+};
+
+const clearUserSession = async (userId) => {
+  const session = userSessions.get(userId);
+  if (session) {
+    try {
+      await session.clearCache();
+      await session.clearStorageData({
+        storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
+      });
+      userSessions.delete(userId);
+      console.log(`Sessão do usuário ${userId} limpa com sucesso`);
+    } catch (error) {
+      console.error(`Erro ao limpar sessão do usuário ${userId}:`, error);
+    }
+  }
+};
+
+// Handlers IPC para gerenciamento de sessão
+ipcMain.handle('create-user-session', (event, userId) => {
+  return createUserSession(userId);
+});
+
+ipcMain.handle('clear-user-session', (event, userId) => {
+  return clearUserSession(userId);
+});
+
+ipcMain.handle('get-user-session', (event, userId) => {
+  return userSessions.get(userId);
+});
+
+// Modificar o handler de login do Google
+ipcMain.handle('handleGoogleLogin', async (event, idToken) => {
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: idToken,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+    const payload = ticket.getPayload();
+    const userId = payload.sub;
+    
+    // Criar sessão para o usuário
+    const userSession = createUserSession(userId);
+    
+    // Salvar dados do usuário
+    const userData = {
+      id: userId,
+      email: payload.email,
+      name: payload.name,
+      picture: payload.picture,
+      sessionId: `user_${userId}`
+    };
+    
+    return { success: true, user: userData };
+  } catch (error) {
+    console.error('Erro no login do Google:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Modificar o handler de logout
+ipcMain.handle('logout', async (event, userId) => {
+  try {
+    if (userId) {
+      await clearUserSession(userId);
+    }
+    
+    // Limpar todas as sessões
+    for (const [id, session] of userSessions.entries()) {
+      try {
+        await session.clearCache();
+        await session.clearStorageData({
+          storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
+        });
+      } catch (error) {
+        console.error(`Erro ao limpar sessão ${id}:`, error);
+      }
+    }
+    userSessions.clear();
+
+    // Limpar sessão principal
+    const mainSession = session.fromPartition('persist:mainSession');
+    await mainSession.clearCache();
+    await mainSession.clearStorageData({
+      storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Erro no logout:', error);
+    return { success: false, error: error.message };
+  }
+});
