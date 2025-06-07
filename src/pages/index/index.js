@@ -107,12 +107,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       // Remover classe active de todas as webviews
       document.querySelectorAll('.webview').forEach(w => w.classList.remove('active'));
-      document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active', 'opened'));
+      document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
 
       // Adicionar classes ao botão
       const button = document.getElementById(buttonId);
       if (button) {
-        button.classList.add('active', 'opened');
+        button.classList.add('opened');
+        button.setAttribute('data-id', webviewId);
       }
 
       // Criar ou obter webview
@@ -423,6 +424,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.querySelectorAll('webview').forEach(w => {
               if (w.id !== 'webview-home') {
                 w.remove();
+                // Remover classes do botão correspondente
+                const button = document.querySelector(`.nav-button[data-id="${w.id}"]`);
+                if (button) {
+                  button.classList.remove('active', 'opened');
+                }
               }
             });
             document.querySelectorAll('.nav-button.opened').forEach(b => {
