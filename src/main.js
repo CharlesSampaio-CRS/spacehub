@@ -95,7 +95,9 @@ function createMainWindow() {
       allowRunningInsecureContent: true,
       experimentalFeatures: true,
       plugins: true,
-      webgl: true
+      webgl: true,
+      enableRemoteModule: false,
+      nodeIntegrationInSubFrames: true
     }
   });
 
