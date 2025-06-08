@@ -180,7 +180,7 @@
         'Plano': 'Plan',
         'Preferências': 'Preferences',
         'Notificações': 'Notifications',
-        'Modo Escuro': 'Themes',
+        'Modo Escuro': 'Theme',
         'Auto Login': 'Auto Login',
         'Compactar Layout': 'Compact Layout',
         'Abrir em Tela Cheia': 'Fullscreen',
@@ -219,6 +219,9 @@
       // Atualizar o ícone inicial
       const languageIcon = document.getElementById('language-icon');
       languageIcon.textContent = currentLanguage === 'pt-BR' ? '🇧🇷' : '🇺🇸';
+
+      // Aplicar traduções iniciais
+      translatePage(currentLanguage);
 
       // Evento de mudança do idioma
       languageToggle.addEventListener('change', () => {
