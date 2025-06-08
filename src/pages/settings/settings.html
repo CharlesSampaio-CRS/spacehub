@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Configurações</title>
+  <title data-translate="Configurações">Configurações</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <link rel="stylesheet" href="./style.css">
@@ -15,14 +15,14 @@
     <main id="content-container">
       <!-- Seção Perfil -->
       <section id="profile-section" class="config-section">
-        <h2>Perfil</h2>
+        <h2 data-translate="Perfil">Perfil</h2>
         <div class="applications-list">
           <!-- Cartões de Perfil -->
           <div class="application-card">
             <div class="application-info">
               <img width="48" height="48" src="https://img.icons8.com/fluency/48/contract-job.png" alt="Perfil" />
               <div>
-                <div class="status-label">Perfil</div>
+                <div class="status-label" data-translate="Perfil">Perfil</div>
                 <div id="userType" class="user-info"></div>
               </div>
             </div>
@@ -32,7 +32,7 @@
             <div class="application-info">
               <img width="48" height="48" src="https://img.icons8.com/color/48/men-age-group-4.png" alt="Nome" />
               <div>
-                <div class="status-label">Nome</div>
+                <div class="status-label" data-translate="Nome">Nome</div>
                 <div id="userName" class="user-info"></div>
               </div>
             </div>
@@ -42,7 +42,7 @@
             <div class="application-info">
               <img width="48" height="48" src="https://img.icons8.com/emoji/48/e-mail.png" alt="Email" />
               <div>
-                <div class="status-label">Email</div>
+                <div class="status-label" data-translate="Email">Email</div>
                 <div id="userEmail" class="user-info"></div>
               </div>
             </div>
@@ -52,7 +52,7 @@
             <div class="application-info">
               <img width="48" height="48" src="https://img.icons8.com/color/48/diamond.png" alt="Plano" />
               <div>
-                <div class="status-label">Plano</div>
+                <div class="status-label" data-translate="Plano">Plano</div>
                 <div id="userPlan" class="user-info"></div>
               </div>
             </div>
@@ -62,13 +62,13 @@
 
       <!-- Preferências -->
       <section id="preferences-section" class="config-section">
-        <h2></i> Preferências</h2>
+        <h2 data-translate="Preferências">Preferências</h2>
         <div class="preferences-wrapper">
           <aside id="settings-panel">
             <div class="setting-item">
               <span class="setting-label">
                 <span id="notification-icon" class="mode-icon">🔔</span>
-                Notificações
+                <span data-translate="Notificações">Notificações</span>
               </span>
               <label class="toggle-switch">
                 <input type="checkbox" id="notification-toggle" checked />
@@ -79,7 +79,7 @@
             <div class="setting-item">
               <span class="setting-label">
                 <span id="dark-mode-icon" class="mode-icon">☀️</span>
-                Modo Escuro
+                <span data-translate="Modo Escuro">Modo Escuro</span>
               </span>
               <label class="toggle-switch">
                 <input type="checkbox" id="dark-mode-toggle" />
@@ -90,7 +90,7 @@
             <div class="setting-item">
               <span class="setting-label">
                 <span id="auto-login-icon" class="mode-icon">🔐</span>
-                Auto Login
+                <span data-translate="Auto Login">Auto Login</span>
               </span>
               <label class="toggle-switch">
                 <input type="checkbox" id="auto-login-toggle" checked />
@@ -101,7 +101,7 @@
             <div class="setting-item">
               <span class="setting-label">
                 <span id="compact-layout-icon" class="mode-icon">📱</span>
-                Compactar Layout
+                <span data-translate="Compactar Layout">Compactar Layout</span>
               </span>
               <label class="toggle-switch">
                 <input type="checkbox" id="compact-layout-toggle" />
@@ -112,7 +112,7 @@
             <div class="setting-item">
               <span class="setting-label">
                 <span id="fullscreen-icon" class="mode-icon">🖥️</span>
-                Abrir em Tela Cheia
+                <span data-translate="Abrir em Tela Cheia">Abrir em Tela Cheia</span>
               </span>
               <label class="toggle-switch">
                 <input type="checkbox" id="fullscreen-toggle" />
@@ -123,7 +123,7 @@
             <div class="setting-item">
               <span class="setting-label">
                 <span id="language-icon" class="mode-icon">🌐</span>
-                Idioma (PT/EN)
+                <span data-translate="Idioma">Idioma</span>
               </span>
               <label class="toggle-switch">
                 <input type="checkbox" id="language-toggle" />
@@ -136,7 +136,7 @@
 
       <!-- Aplicações -->
       <section id="applications-section" class="config-section">
-        <h2> Aplicações</h2>
+        <h2 data-translate="Aplicações">Aplicações</h2>
         <div class="application-grid" id="applicationsList">
           <!-- Aqui os cards de aplicações serão renderizados via JS -->
         </div>
@@ -144,7 +144,7 @@
         <!-- Botão de Salvar abaixo das aplicações, centralizado -->
         <div class="save-button-container">
           <button id="saveButton" class="save-button">
-            <i class="fas fa-save"></i> Salvar
+            <i class="fas fa-save"></i> <span data-translate="Salvar">Salvar</span>
           </button>
         </div>
       </section>
@@ -155,6 +155,53 @@
   <script src="settings.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
+    // Objeto com as traduções
+    const translations = {
+      'pt-BR': {
+        'Perfil': 'Perfil',
+        'Nome': 'Nome',
+        'Email': 'Email',
+        'Plano': 'Plano',
+        'Preferências': 'Preferências',
+        'Notificações': 'Notificações',
+        'Modo Escuro': 'Modo Escuro',
+        'Auto Login': 'Auto Login',
+        'Compactar Layout': 'Compactar Layout',
+        'Abrir em Tela Cheia': 'Abrir em Tela Cheia',
+        'Idioma': 'Idioma',
+        'Aplicações': 'Aplicações',
+        'Salvar': 'Salvar',
+        'Configurações': 'Configurações'
+      },
+      'en-US': {
+        'Perfil': 'Profile',
+        'Nome': 'Name',
+        'Email': 'Email',
+        'Plano': 'Plan',
+        'Preferências': 'Preferences',
+        'Notificações': 'Notifications',
+        'Modo Escuro': 'Dark Mode',
+        'Auto Login': 'Auto Login',
+        'Compactar Layout': 'Compact Layout',
+        'Abrir em Tela Cheia': 'Fullscreen',
+        'Idioma': 'Language',
+        'Aplicações': 'Applications',
+        'Salvar': 'Save',
+        'Configurações': 'Settings'
+      }
+    };
+
+    // Função para traduzir os elementos
+    function translatePage(language) {
+      const elements = document.querySelectorAll('[data-translate]');
+      elements.forEach(element => {
+        const key = element.getAttribute('data-translate');
+        if (translations[language] && translations[language][key]) {
+          element.textContent = translations[language][key];
+        }
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       // Configuração do modo escuro
       const isDarkMode = localStorage.getItem('darkMode') === 'true';
@@ -173,6 +220,9 @@
       const languageIcon = document.getElementById('language-icon');
       languageIcon.textContent = currentLanguage === 'pt-BR' ? '🇧🇷' : '🇺🇸';
 
+      // Aplicar traduções iniciais
+      translatePage(currentLanguage);
+
       // Evento de mudança do idioma
       languageToggle.addEventListener('change', () => {
         const newLanguage = languageToggle.checked ? 'en-US' : 'pt-BR';
@@ -186,8 +236,8 @@
         // Atualizar o ícone
         languageIcon.textContent = newLanguage === 'pt-BR' ? '🇧🇷' : '🇺🇸';
         
-        // Recarregar a página para aplicar as mudanças
-        window.location.reload();
+        // Aplicar as traduções
+        translatePage(newLanguage);
       });
 
       // Evento de mudança do modo escuro
