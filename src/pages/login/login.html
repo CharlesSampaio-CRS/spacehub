@@ -55,12 +55,27 @@
       </button>
     </div>
 
+    <div class="theme-toggle">
+      <span id="dark-mode-icon" class="mode-icon">☀️</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="dark-mode-toggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+
     <p class="footer-text" style="margin-top: 20px;">
       Não tem uma conta? <a href="#" id="registerLink">Cadastre-se</a>
     </p>
   </div>
 
-  <script src="./login.js"></script> 
+  <script>
+    // Aplicar dark mode imediatamente ao carregar a página
+    document.addEventListener('DOMContentLoaded', () => {
+      const isDarkMode = localStorage.getItem('darkMode') === 'true';
+      document.documentElement.classList.toggle('dark-mode', isDarkMode);
+      document.body.classList.toggle('dark-mode', isDarkMode);
+    });
+  </script>
 </body>
 
 </html>

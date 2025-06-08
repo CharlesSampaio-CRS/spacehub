@@ -146,22 +146,35 @@ const setupDarkModeToggle = () => {
   const toggleIcon = document.getElementById("dark-mode-icon");
   if (!toggle || !toggleIcon) return;
 
-  // Verificar o estado atual do modo escuro
-  const isDarkMode = localStorage.getItem('darkMode') === 'true';
-  toggle.checked = isDarkMode;
-  document.body.classList.toggle("dark-mode", isDarkMode);
-  
-  // Definir o ícone inicial
-  toggleIcon.innerHTML = isDarkMode ? '🌙' : '☀️';
+  // Verificar o estado atual do modo escuro no store do Electron
+  window.electronAPI.invoke('get-dark-mode').then(isDarkMode => {
+    toggle.checked = isDarkMode;
+    document.documentElement.classList.toggle("dark-mode", isDarkMode);
+    document.body.classList.toggle("dark-mode", isDarkMode);
+    localStorage.setItem('darkMode', isDarkMode);
+    
+    // Definir o ícone inicial
+    toggleIcon.innerHTML = isDarkMode ? '🌙' : '☀️';
+  });
+
+  // Adicionar listener para mudanças no modo escuro
+  window.electronAPI.onDarkModeChanged((isDark) => {
+    document.documentElement.classList.toggle("dark-mode", isDark);
+    document.body.classList.toggle("dark-mode", isDark);
+    toggle.checked = isDark;
+    toggleIcon.innerHTML = isDark ? '🌙' : '☀️';
+    localStorage.setItem('darkMode', isDark);
+  });
 
   toggle.addEventListener("change", () => {
     const isDark = toggle.checked;
+    document.documentElement.classList.toggle("dark-mode", isDark);
     document.body.classList.toggle("dark-mode", isDark);
     localStorage.setItem('darkMode', isDark);
-    window.electronAPI.send('dark-mode-changed', isDark);
+    window.electronAPI.sendDarkModeChanged(isDark);
     
     // Atualizar o ícone
-    toggleIcon.innerHTML = isDark ? '🌙' : '☀️';
+    toggleIcon.innerHTML = isDark ? '��' : '☀️';
   });
 };
 

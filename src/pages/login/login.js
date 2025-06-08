@@ -1,47 +1,39 @@
-const { ipcRenderer } = require("electron");
-const axios = require("axios");
-const Swal = require("sweetalert2");
+// const { ipcRenderer } = require("electron");
+// const axios = require("axios");
+// const Swal = require("sweetalert2");
 
 async function login() {
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value.trim();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const rememberMe = document.getElementById('rememberMe').checked;
 
   if (!email || !password) {
-    await Swal.fire({
-      icon: 'warning',
-      title: 'Campos obrigatórios',
-      text: 'Por favor, preencha e-mail e senha.',
-      confirmButtonColor: '#f59e0b',
-      confirmButtonText: 'OK'
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Por favor, preencha todos os campos.'
     });
     return;
   }
 
   try {
-    const { data } = await axios.post('https://spaceapp-digital-api.onrender.com/login', {
-      email,
-      password
-    });
-    ipcRenderer.send('login-success', data.token);
-  } catch (error) {
-    console.error('Login error:', error);
-    if (error.response && error.response.status === 401) {
-      await Swal.fire({
-        icon: 'error',
-        title: 'Erro de Login',
-        text: 'E-mail ou senha inválidos.',
-        confirmButtonColor: '#d33',
-        confirmButtonText: 'OK'
-      });
+    const data = await window.electronAPI.login({ email, password });
+
+    if (rememberMe) {
+      localStorage.setItem('rememberedEmail', email);
+      localStorage.setItem('rememberedPassword', password);
     } else {
-      await Swal.fire({
-        icon: 'error',
-        title: 'Erro',
-        text: 'Falha ao tentar logar. Verifique sua conexão e tente novamente.',
-        confirmButtonColor: '#d33',
-        confirmButtonText: 'OK'
-      });
+      localStorage.removeItem('rememberedEmail');
+      localStorage.removeItem('rememberedPassword');
     }
+
+    window.electronAPI.send('login-success', data.token);
+  } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: error.response?.data?.message || 'Falha ao tentar logar. Verifique sua conexão e tente novamente.'
+    });
   }
 }
 
@@ -56,6 +48,43 @@ function updateButtonState() {
   
   loginButton.disabled = !(emailFilled && passwordFilled);
 }
+
+const setupDarkMode = () => {
+  const toggle = document.getElementById("dark-mode-toggle");
+  const toggleIcon = document.getElementById("dark-mode-icon");
+  if (!toggle || !toggleIcon) return;
+
+  // Verificar o estado atual do modo escuro no store do Electron
+  window.electronAPI.getDarkMode().then(isDarkMode => {
+    toggle.checked = isDarkMode;
+    document.documentElement.classList.toggle("dark-mode", isDarkMode);
+    document.body.classList.toggle("dark-mode", isDarkMode);
+    localStorage.setItem('darkMode', isDarkMode);
+    
+    // Definir o ícone inicial
+    toggleIcon.innerHTML = isDarkMode ? '🌙' : '☀️';
+  });
+
+  // Adicionar listener para mudanças no modo escuro
+  window.electronAPI.onDarkModeChanged((isDark) => {
+    document.documentElement.classList.toggle("dark-mode", isDark);
+    document.body.classList.toggle("dark-mode", isDark);
+    toggle.checked = isDark;
+    toggleIcon.innerHTML = isDark ? '🌙' : '☀️';
+    localStorage.setItem('darkMode', isDark);
+  });
+
+  toggle.addEventListener("change", () => {
+    const isDark = toggle.checked;
+    document.documentElement.classList.toggle("dark-mode", isDark);
+    document.body.classList.toggle("dark-mode", isDark);
+    localStorage.setItem('darkMode', isDark);
+    window.electronAPI.sendDarkModeChanged(isDark);
+    
+    // Atualizar o ícone
+    toggleIcon.innerHTML = isDark ? '🌙' : '☀️';
+  });
+};
 
 // Carregar dados do LocalStorage ao iniciar
 window.addEventListener('DOMContentLoaded', () => {
@@ -97,17 +126,17 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Ação para login com Google
   document.getElementById('googleLogin')?.addEventListener('click', () => {
-    ipcRenderer.send('start-google-login');
+    window.electronAPI.send('start-google-login');
   });
 
   // Eventos de resposta de login com Google
-  ipcRenderer.on('google-login-success', (event, tokens) => {
+  window.electronAPI.on('google-login-success', (event, tokens) => {
     const token = tokens.id_token || tokens.access_token;
     localStorage.setItem('token', token);
-    ipcRenderer.send('login-success', token);
+    window.electronAPI.send('login-success', token);
   });
 
-  ipcRenderer.on('google-login-failed', async (event, message) => {
+  window.electronAPI.on('google-login-failed', async (event, message) => {
     await Swal.fire({
       icon: 'error',
       title: 'Falha no Google Login',
@@ -121,10 +150,11 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('registerLink')?.addEventListener('click', (e) => {
     e.preventDefault();
     try {
-      window.electronAPI?.openRegister?.();
-      ipcRenderer.send('show-register');
+      window.electronAPI.send('show-register');
     } catch (e) {
       console.error('Erro ao abrir tela de registro:', e);
     }
   });
+
+  setupDarkMode();
 });

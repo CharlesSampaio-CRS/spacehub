@@ -127,6 +127,7 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
+  mainWindow.setMenu(null);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url) || url.includes('accounts.google.com')) {
@@ -139,6 +140,9 @@ function createMainWindow() {
   mainWindow.on('closed', () => { mainWindow = null; });
 
   mainWindow.once('did-finish-load', () => {
+    const isDarkMode = store.get('darkMode') === true;
+    mainWindow.webContents.send('dark-mode-changed', isDarkMode);
+    
     checkForUpdates(); 
     setInterval(() => {
       checkForUpdates();
@@ -155,8 +159,10 @@ function createLoginWindow() {
     title: '',
     icon: path.join(__dirname, 'assets', 'spacehub.png'),
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+      partition: 'persist:mainSession'
     }
   });
 
@@ -175,8 +181,10 @@ function createRegisterWindow(userData) {
     resizable: false,
     icon: path.join(__dirname, 'assets', 'spacehub.png'),
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+      partition: 'persist:mainSession'
     }
   });
 
@@ -322,7 +330,10 @@ ipcMain.on('login-success', (event, token) => {
 });
 
 ipcMain.on('show-register', () => createRegisterWindow());
-ipcMain.on('show-login', createLoginWindow);
+ipcMain.on('show-login', () => {
+  closeWindow(registerWindow);
+  createLoginWindow();
+});
 ipcMain.on('logout-success', () => {
   store.delete('token');
   store.delete('userUuid');
@@ -500,8 +511,16 @@ app.on('window-all-closed', () => {
 });
 
 ipcMain.on('dark-mode-changed', (event, isDark) => {
+  store.set('darkMode', isDark);
+  // Propagar para todas as janelas
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('dark-mode-changed', isDark);
+  }
+  if (loginWindow && !loginWindow.isDestroyed()) {
+    loginWindow.webContents.send('dark-mode-changed', isDark);
+  }
+  if (registerWindow && !registerWindow.isDestroyed()) {
+    registerWindow.webContents.send('dark-mode-changed', isDark);
   }
 });
 
@@ -545,7 +564,6 @@ const clearUserSession = async (userId) => {
         storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
       });
       userSessions.delete(userId);
-      console.log(`Sessão do usuário ${userId} limpa com sucesso`);
     } catch (error) {
       console.error(`Erro ao limpar sessão do usuário ${userId}:`, error);
     }
@@ -626,4 +644,40 @@ ipcMain.handle('logout', async (event, userId) => {
     console.error('Erro no logout:', error);
     return { success: false, error: error.message };
   }
+});
+
+// Adicionar handler de login
+ipcMain.handle('login', async (event, { email, password }) => {
+  try {
+    const { data } = await axios.post('https://spaceapp-digital-api.onrender.com/login', {
+      email,
+      password
+    });
+    return data;
+  } catch (error) {
+    console.error('Login error in main process:', error);
+    throw error;
+  }
+});
+
+// Adicionar handler de registro
+ipcMain.handle('register', async (event, { name, email, password }) => {
+  try {
+    const { data } = await axios.post('https://spaceapp-digital-api.onrender.com/register', {
+      name,
+      email,
+      password
+    });
+    return { status: 201, data };
+  } catch (error) {
+    console.error('Register error in main process:', error);
+    if (error.response) {
+      throw error.response;
+    }
+    throw error;
+  }
+});
+
+ipcMain.handle('get-dark-mode', () => {
+  return store.get('darkMode') === true;
 });

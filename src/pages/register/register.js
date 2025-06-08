@@ -1,7 +1,21 @@
-const { ipcRenderer } = require('electron');
-const axios = require('axios');
-const Swal = require('sweetalert2');
+const setupDarkMode = () => {
+  // Verificar o estado atual do modo escuro no store do Electron
+  window.electronAPI.getDarkMode().then(isDarkMode => {
+    document.documentElement.classList.toggle("dark-mode", isDarkMode);
+    document.body.classList.toggle("dark-mode", isDarkMode);
+    localStorage.setItem('darkMode', isDarkMode);
+  });
 
+  // Adicionar listener para mudanças no modo escuro
+  window.electronAPI.onDarkModeChanged((isDark) => {
+    document.documentElement.classList.toggle("dark-mode", isDark);
+    document.body.classList.toggle("dark-mode", isDark);
+    localStorage.setItem('darkMode', isDark);
+  });
+};
+
+// Aplicar dark mode imediatamente
+setupDarkMode();
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('registerForm');
@@ -41,51 +55,50 @@ document.addEventListener('DOMContentLoaded', () => {
           confirmButtonColor: '#3085d6',
           confirmButtonText: 'OK'
         });
-        ipcRenderer.send('show-login');
+        window.electronAPI.send('show-login');
       } else {
+        throw new Error('Erro inesperado na resposta do servidor');
+      }
+    } catch (error) {
+      console.error('Erro no registro:', error);
+      console.error('Detalhes do erro:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response
+      });
+
+      const statusCode = error.response?.status;
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message;
+
+      if (statusCode === 400) {
         await Swal.fire({
           icon: 'error',
-          title: 'Erro inesperado',
-          text: `Resposta inesperada: ${response.status}`,
+          title: 'Erro de Validação',
+          text: errorMessage || 'Dados inválidos. Por favor, verifique os campos.',
           confirmButtonColor: '#d33',
           confirmButtonText: 'OK'
         });
-      }
-    } catch (error) {
-      if (error.response) {
-        const status = error.response.status;
-
-        if (status === 400) {
-          await Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Dados inválidos. Por favor, verifique os campos.',
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'OK'
-          });
-        } else if (status === 409) {
-          await Swal.fire({
-            icon: 'warning',
-            title: 'Atenção',
-            text: 'Usuário já existe!',
-            confirmButtonColor: '#f59e0b',
-            confirmButtonText: 'OK'
-          });
-        } else {
-          await Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: `Falha no registro. Código ${status}: ${error.response.data.message || 'Erro desconhecido'}`,
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'OK'
-          });
-        }
-      } else {
-        console.error('Error without response:', error);
+      } else if (statusCode === 409) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Usuário já existe',
+          text: 'Este usuário já está cadastrado em nossa plataforma.',
+          confirmButtonColor: '#f59e0b',
+          confirmButtonText: 'OK'
+        });
+      } else if (statusCode === 500) {
         await Swal.fire({
           icon: 'error',
-          title: 'Erro de Rede',
-          text: 'Erro de rede ou servidor. Tente novamente mais tarde.',
+          title: 'Erro no Servidor',
+          text: errorMessage || 'Erro interno do servidor. Tente novamente mais tarde.',
+          confirmButtonColor: '#d33',
+          confirmButtonText: 'OK'
+        });
+      } else {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: errorMessage || 'Ocorreu um erro ao tentar criar sua conta. Tente novamente.',
           confirmButtonColor: '#d33',
           confirmButtonText: 'OK'
         });
@@ -112,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('loginLink').addEventListener('click', (e) => {
     e.preventDefault();
-    ipcRenderer.send('show-login');
+    window.electronAPI.send('show-login');
   });
 });
 

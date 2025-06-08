@@ -20,7 +20,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   handle: (channel, callback) => ipcRenderer.handle(channel, callback),
   handleGoogleLogin: (idToken) => ipcRenderer.invoke('handleGoogleLogin', idToken),
   getUserInfo: () => ipcRenderer.invoke('get-user-info'),
-  updateUserInfo: (userInfo) => ipcRenderer.invoke('update-user-info', userInfo)
+  updateUserInfo: (userInfo) => ipcRenderer.invoke('update-user-info', userInfo),
+  onDarkModeChanged: (callback) => ipcRenderer.on('dark-mode-changed', (_, isDark) => callback(isDark)),
+  sendDarkModeChanged: (isDark) => ipcRenderer.send('dark-mode-changed', isDark),
+  getDarkMode: () => ipcRenderer.invoke('get-dark-mode'),
+  login: (credentials) => ipcRenderer.invoke('login', credentials),
+  register: (data) => ipcRenderer.invoke('register', data)
 });
 
 window.addEventListener('DOMContentLoaded', () => {

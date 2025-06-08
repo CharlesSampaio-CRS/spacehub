@@ -73,7 +73,14 @@
     </div>
   </div>
   <script src="index.js"></script>
-
+  <script>
+    // Aplicar dark mode imediatamente ao carregar a página
+    document.addEventListener('DOMContentLoaded', () => {
+      const isDarkMode = localStorage.getItem('darkMode') === 'true';
+      document.documentElement.classList.toggle('dark-mode', isDarkMode);
+      document.body.classList.toggle('dark-mode', isDarkMode);
+    });
+  </script>
 </body>
 
 </html>

@@ -276,7 +276,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const hasOpenWebviews = () => {
     const webviews = document.querySelectorAll('webview');
-    console.log(webviews);
     return Array.from(webviews).some(webview => webview.id !== 'webview-home' && webview.id !== 'webview-settings');
   };
 
@@ -515,10 +514,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const setupDarkMode = () => {
     // Verificar se o modo escuro está ativado no localStorage
     const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    document.documentElement.classList.toggle('dark-mode', isDarkMode);
     document.body.classList.toggle('dark-mode', isDarkMode);
 
     // Adicionar listener para mudanças no modo escuro
-    window.electronAPI.on('dark-mode-changed', (event, isDark) => {
+    window.electronAPI.onDarkModeChanged((isDark) => {
+      document.documentElement.classList.toggle('dark-mode', isDark);
       document.body.classList.toggle('dark-mode', isDark);
       localStorage.setItem('darkMode', isDark);
     });

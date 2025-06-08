@@ -16,6 +16,7 @@
 }
 
 /* Variáveis do modo escuro */
+html.dark-mode,
 body.dark-mode {
   --background: #363636;
   --sidebar-bg: #404040;
@@ -28,8 +29,8 @@ body.dark-mode {
   --component-border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-body,
-html {
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -38,6 +39,7 @@ html {
   background-color: var(--background);
   color: var(--text-primary);
   overflow: hidden;
+  transition: var(--transition);
 }
 
 .hidden {
