@@ -143,18 +143,87 @@ const setupZoomControl = () => {
 
 const setupDarkModeToggle = () => {
   const toggle = document.getElementById("dark-mode-toggle");
-  if (!toggle) return;
+  const toggleIcon = document.getElementById("dark-mode-icon");
+  if (!toggle || !toggleIcon) return;
 
   // Verificar o estado atual do modo escuro
   const isDarkMode = localStorage.getItem('darkMode') === 'true';
   toggle.checked = isDarkMode;
   document.body.classList.toggle("dark-mode", isDarkMode);
+  
+  // Definir o ícone inicial
+  toggleIcon.innerHTML = isDarkMode ? '🌙' : '☀️';
 
   toggle.addEventListener("change", () => {
     const isDark = toggle.checked;
     document.body.classList.toggle("dark-mode", isDark);
     localStorage.setItem('darkMode', isDark);
     window.electronAPI.send('dark-mode-changed', isDark);
+    
+    // Atualizar o ícone
+    toggleIcon.innerHTML = isDark ? '🌙' : '☀️';
+  });
+};
+
+const setupNotificationToggle = () => {
+  const toggle = document.getElementById("notification-toggle");
+  const toggleIcon = document.getElementById("notification-icon");
+  if (!toggle || !toggleIcon) return;
+
+  // Verificar o estado atual das notificações
+  const isEnabled = toggle.checked;
+  toggleIcon.innerHTML = isEnabled ? '🔔' : '🔕';
+
+  toggle.addEventListener("change", () => {
+    const isEnabled = toggle.checked;
+    toggleIcon.innerHTML = isEnabled ? '🔔' : '🔕';
+    // Aqui você pode adicionar a lógica para salvar a preferência das notificações
+    localStorage.setItem('notifications', isEnabled);
+  });
+};
+
+const setupAutoLoginToggle = () => {
+  const toggle = document.getElementById("auto-login-toggle");
+  const toggleIcon = document.getElementById("auto-login-icon");
+  if (!toggle || !toggleIcon) return;
+
+  const isEnabled = toggle.checked;
+  toggleIcon.innerHTML = isEnabled ? '🔐' : '🔓';
+
+  toggle.addEventListener("change", () => {
+    const isEnabled = toggle.checked;
+    toggleIcon.innerHTML = isEnabled ? '🔐' : '🔓';
+    localStorage.setItem('autoLogin', isEnabled);
+  });
+};
+
+const setupCompactLayoutToggle = () => {
+  const toggle = document.getElementById("compact-layout-toggle");
+  const toggleIcon = document.getElementById("compact-layout-icon");
+  if (!toggle || !toggleIcon) return;
+
+  const isEnabled = toggle.checked;
+  toggleIcon.innerHTML = isEnabled ? '📱' : '💻';
+
+  toggle.addEventListener("change", () => {
+    const isEnabled = toggle.checked;
+    toggleIcon.innerHTML = isEnabled ? '📱' : '💻';
+    localStorage.setItem('compactLayout', isEnabled);
+  });
+};
+
+const setupFullscreenToggle = () => {
+  const toggle = document.getElementById("fullscreen-toggle");
+  const toggleIcon = document.getElementById("fullscreen-icon");
+  if (!toggle || !toggleIcon) return;
+
+  const isEnabled = toggle.checked;
+  toggleIcon.innerHTML = isEnabled ? '🖥️' : '📺';
+
+  toggle.addEventListener("change", () => {
+    const isEnabled = toggle.checked;
+    toggleIcon.innerHTML = isEnabled ? '🖥️' : '📺';
+    localStorage.setItem('fullscreen', isEnabled);
   });
 };
 
@@ -171,6 +240,10 @@ const initializeSettingsPage = () => {
   loadUserInfo();
   setupZoomControl();
   setupDarkModeToggle();
+  setupNotificationToggle();
+  setupAutoLoginToggle();
+  setupCompactLayoutToggle();
+  setupFullscreenToggle();
   displayAppVersion();
 
   const saveButton = document.getElementById("saveButton");

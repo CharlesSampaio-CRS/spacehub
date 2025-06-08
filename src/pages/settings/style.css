@@ -253,8 +253,21 @@ input:checked + .slider:before {
 }
 
 .setting-label {
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-weight: 500;
+}
+
+.mode-icon {
+  font-size: 1.2em;
+  min-width: 24px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.setting-item:hover .mode-icon {
+  transform: scale(1.1);
 }
 
 .preferences-wrapper {
