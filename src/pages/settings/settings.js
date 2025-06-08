@@ -123,24 +123,6 @@ const loadUserInfo = async () => {
     .catch(error => console.error('Erro ao carregar dados do usuário:', error));
 };
 
-const setupZoomControl = () => {
-  const zoomInput = document.getElementById("zoom-range");
-  const zoomValue = document.getElementById("zoom-value");
-
-  zoomInput.addEventListener("input", () => {
-    const scale = parseFloat(zoomInput.value);
-    zoomValue.textContent = scale.toFixed(1);
-
-    document.body.style.transform = `scale(${scale})`;
-    document.body.style.transformOrigin = "center center";
-    document.body.style.transition = "transform 0.2s ease";
-
-    const scrollX = (document.body.scrollWidth * scale - window.innerWidth) / 2;
-    const scrollY = (document.body.scrollHeight * scale - window.innerHeight) / 2;
-    window.scrollTo(scrollX, scrollY);
-  });
-};
-
 const setupDarkModeToggle = () => {
   const toggle = document.getElementById("dark-mode-toggle");
   const toggleIcon = document.getElementById("dark-mode-icon");
@@ -240,74 +222,15 @@ const setupFullscreenToggle = () => {
   });
 };
 
-const displayAppVersion = () => {
-  const updateButton = document.getElementById("updateButton");
-  const versionSpan = document.getElementById("appVersion");
-  
-  window.electronAPI.getAppVersion()
-    .then(version => {
-      versionSpan.textContent = `V. ${version}`;
-    })
-    .catch(err => {
-      console.error('Erro ao obter versão da aplicação:', err);
-      versionSpan.textContent = 'V. Desconhecida';
-    });
-
-  updateButton.addEventListener("click", async () => {
-    try {
-      updateButton.classList.add('updating');
-      updateButton.disabled = true;
-
-      // Simular verificação de atualização
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Usar SweetAlert2 para mostrar mensagem
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true
-      });
-
-      Toast.fire({
-        icon: 'info',
-        title: 'Verificando atualizações...'
-      });
-
-      // Aqui você pode implementar a lógica real de verificação de atualização
-      // Por enquanto, apenas mostraremos uma mensagem informativa
-      setTimeout(() => {
-        Toast.fire({
-          icon: 'success',
-          title: 'Você está na versão mais recente!'
-        });
-      }, 2000);
-
-    } catch (error) {
-      console.error('Erro ao verificar atualizações:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro ao verificar atualizações',
-        text: 'Tente novamente mais tarde.'
-      });
-    } finally {
-      updateButton.classList.remove('updating');
-      updateButton.disabled = false;
-    }
-  });
-};
 
 const initializeSettingsPage = () => {
   loadApplications();
   loadUserInfo();
-  setupZoomControl();
   setupDarkModeToggle();
   setupNotificationToggle();
   setupAutoLoginToggle();
   setupCompactLayoutToggle();
   setupFullscreenToggle();
-  displayAppVersion();
 
   const saveButton = document.getElementById("saveButton");
   if (saveButton) {

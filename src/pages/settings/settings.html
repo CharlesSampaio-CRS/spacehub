@@ -12,18 +12,10 @@
 
 <body>
   <div class="main-wrapper">
-    <header class="page-header">
-      <h1><i class="fas fa-cog"></i> Configurações</h1>
-      <button id="updateButton" class="update-button">
-        <span id="appVersion">V. Carregando...</span>
-        <i class="fas fa-sync-alt"></i>
-      </button>
-    </header>
-
     <main id="content-container">
       <!-- Seção Perfil -->
       <section id="profile-section" class="config-section">
-        <h2><i class="fas fa-user"></i> Perfil</h2>
+        <h2>Perfil</h2>
         <div class="applications-list">
           <!-- Cartões de Perfil -->
           <div class="application-card">
@@ -70,7 +62,7 @@
 
       <!-- Preferências -->
       <section id="preferences-section" class="config-section">
-        <h2><i class="fas fa-sliders-h"></i> Preferências</h2>
+        <h2></i> Preferências</h2>
         <div class="preferences-wrapper">
           <aside id="settings-panel">
             <div class="setting-item">
@@ -127,42 +119,24 @@
                 <span class="slider"></span>
               </label>
             </div>
+
+            <div class="setting-item">
+              <span class="setting-label">
+                <span id="language-icon" class="mode-icon">🌐</span>
+                Idioma (PT/EN)
+              </span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="language-toggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
           </aside>
-
-          <div class="language-selector">
-            <h3><i class="fas fa-language"></i> Idioma</h3>
-
-            <label class="language-option">
-              <input type="radio" name="language" value="pt-BR" checked />
-              <img src="https://img.icons8.com/external-justicon-flat-justicon/28/external-brazil-flag-countrys-flags-justicon-flat-justicon.png"
-                alt="Português" />
-              <span>Português</span>
-            </label>
-
-            <label class="language-option">
-              <input type="radio" name="language" value="en-US" />
-              <img src="https://img.icons8.com/color/28/usa.png" alt="English" />
-              <span>English</span>
-            </label>
-
-            <label class="language-option">
-              <input type="radio" name="language" value="es-ES" />
-              <img src="https://img.icons8.com/color/28/spain-2.png" alt="Español" />
-              <span>Español</span>
-            </label>
-          </div>
-
-          <div class="form-group">
-            <label for="zoom-range"><i class="fas fa-search-plus"></i> Zoom:</label>
-            <input type="range" id="zoom-range" min="0.5" max="2" step="0.1" value="1" />
-            <span id="zoom-value">1.0</span>
-          </div>
         </div>
       </section>
 
       <!-- Aplicações -->
       <section id="applications-section" class="config-section">
-        <h2><i class="fas fa-th-large"></i> Aplicações</h2>
+        <h2> Aplicações</h2>
         <div class="application-grid" id="applicationsList">
           <!-- Aqui os cards de aplicações serão renderizados via JS -->
         </div>
@@ -181,11 +155,51 @@
   <script src="settings.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
-    // Aplicar dark mode imediatamente ao carregar a página
     document.addEventListener('DOMContentLoaded', () => {
+      // Configuração do modo escuro
       const isDarkMode = localStorage.getItem('darkMode') === 'true';
       document.documentElement.classList.toggle('dark-mode', isDarkMode);
       document.body.classList.toggle('dark-mode', isDarkMode);
+
+      // Configuração do idioma
+      const languageToggle = document.getElementById('language-toggle');
+      const currentLanguage = localStorage.getItem('language') || 'pt-BR';
+      
+      // Aplicar o idioma salvo
+      languageToggle.checked = currentLanguage === 'en-US';
+      document.documentElement.lang = currentLanguage;
+      
+      // Atualizar o ícone inicial
+      const languageIcon = document.getElementById('language-icon');
+      languageIcon.textContent = currentLanguage === 'pt-BR' ? '🇧🇷' : '🇺🇸';
+
+      // Evento de mudança do idioma
+      languageToggle.addEventListener('change', () => {
+        const newLanguage = languageToggle.checked ? 'en-US' : 'pt-BR';
+        
+        // Salvar no localStorage
+        localStorage.setItem('language', newLanguage);
+        
+        // Atualizar o atributo lang do HTML
+        document.documentElement.lang = newLanguage;
+        
+        // Atualizar o ícone
+        languageIcon.textContent = newLanguage === 'pt-BR' ? '🇧🇷' : '🇺🇸';
+        
+        // Recarregar a página para aplicar as mudanças
+        window.location.reload();
+      });
+
+      // Evento de mudança do modo escuro
+      const darkModeToggle = document.getElementById('dark-mode-toggle');
+      darkModeToggle.checked = isDarkMode;
+
+      darkModeToggle.addEventListener('change', () => {
+        const isDark = darkModeToggle.checked;
+        localStorage.setItem('darkMode', isDark);
+        document.documentElement.classList.toggle('dark-mode', isDark);
+        document.body.classList.toggle('dark-mode', isDark);
+      });
     });
   </script>
 </body>
