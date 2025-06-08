@@ -5,10 +5,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setZoomFactor: (factor) => ipcRenderer.send('set-zoom-factor', factor),
   logout: () => ipcRenderer.send('logout-success'),
   getToken: () => ipcRenderer.invoke('get-token'),
+  getUserUuid: () => ipcRenderer.invoke('get-userUuid'),
   restartApp: () => ipcRenderer.invoke('restartApp'),
   checkForUpdates: () => ipcRenderer.send('check-for-updates'),
   onUpdateNotAvailable: (callback) => ipcRenderer.on('update-not-available', (_, msg) => callback(msg)),
-  restartApp: () => ipcRenderer.invoke('restartApp'),
   onUpdateProgress: (callback) => ipcRenderer.on('update-progress', (_, data) => callback(data)),
   onUpdateAvailable: (callback) => ipcRenderer.on('update-available', (_, info) => callback(info)),
   onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', (_, info) => callback(info)),
@@ -18,9 +18,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   send: (channel, data) => ipcRenderer.send(channel, data),
   on: (channel, callback) => ipcRenderer.on(channel, callback),
   handle: (channel, callback) => ipcRenderer.handle(channel, callback),
-  handleGoogleLogin: (idToken) => ipcRenderer.invoke('handleGoogleLogin', idToken)
+  handleGoogleLogin: (idToken) => ipcRenderer.invoke('handleGoogleLogin', idToken),
+  getUserInfo: () => ipcRenderer.invoke('get-user-info'),
+  updateUserInfo: (userInfo) => ipcRenderer.invoke('update-user-info', userInfo)
 });
-
 
 window.addEventListener('DOMContentLoaded', () => {
   window.open = (url) => window.electronAPI.openExternal(url);

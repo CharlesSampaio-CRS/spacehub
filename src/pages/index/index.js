@@ -574,15 +574,72 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
+  const setupProfileMenu = () => {
+    const profileButton = document.getElementById('profile-button');
+    const profileMenu = document.getElementById('profile-menu');
+    const profileSettings = document.getElementById('profile-settings');
+    const profileLogout = document.getElementById('profile-logout');
+
+    // Carregar informações do usuário
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      document.getElementById('profile-name').textContent = user.name || 'Usuário';
+      document.getElementById('profile-menu-name').textContent = user.name || 'Usuário';
+      document.getElementById('profile-menu-email').textContent = user.email || 'usuario@email.com';
+      
+      // Atualizar avatares se houver
+      if (user.avatar) {
+        document.getElementById('profile-avatar').src = user.avatar;
+        document.getElementById('profile-menu-avatar').src = user.avatar;
+      }
+    }
+
+    // Toggle do menu
+    profileButton?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileMenu.classList.toggle('show');
+    });
+
+    // Fechar menu ao clicar fora
+    document.addEventListener('click', (e) => {
+      if (!profileMenu?.contains(e.target) && !profileButton?.contains(e.target)) {
+        profileMenu?.classList.remove('show');
+      }
+    });
+
+    // Configurar ações dos botões
+    profileSettings?.addEventListener('click', () => {
+      showWebview('webview-settings', 'settings-button');
+      profileMenu.classList.remove('show');
+    });
+
+    profileLogout?.addEventListener('click', () => {
+      profileMenu.classList.remove('show');
+      showConfirmationDialog('Deseja realmente sair?', async () => {
+        try {
+          await clearUserSession();
+          window.electronAPI.send('logout-success');
+        } catch (error) {
+          console.error('Erro ao fazer logout:', error);
+        }
+      });
+    });
+  };
+
   // Inicialização
-  setupButtonEvents();
-  setupNotificationActions();
-  setupMenus();
-  setupSidebarScroll();
-  setupLogout();
-  setupContextMenu();
-  setupDarkMode();
-  await setupUserSession();
-  refreshApplications();
-  showWebview('webview-home', 'home-button');
+  const init = async () => {
+    try {
+      await setupUserSession();
+      setupProfileMenu();
+      setupButtonEvents();
+      setupDarkMode();
+      setupContextMenu();
+      setupSidebarScroll();
+      refreshApplications();
+    } catch (error) {
+      console.error('Erro na inicialização:', error);
+    }
+  };
+
+  init();
 });

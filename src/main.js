@@ -27,6 +27,15 @@ global.sharedObject = {
 
 ipcMain.handle('get-token', () => store.get('token'));
 ipcMain.handle('get-userUuid', () => store.get('userUuid'));
+ipcMain.handle('get-user-info', () => {
+  const user = store.get('user');
+  return user || null;
+});
+
+ipcMain.handle('update-user-info', (event, userInfo) => {
+  store.set('user', userInfo);
+  return true;
+});
 
 ipcMain.handle('context-menu-command', async (event, command, targetId) => {
   switch (command) {
@@ -314,7 +323,12 @@ ipcMain.on('login-success', (event, token) => {
 
 ipcMain.on('show-register', () => createRegisterWindow());
 ipcMain.on('show-login', createLoginWindow);
-ipcMain.on('logout-success', handleLogout);
+ipcMain.on('logout-success', () => {
+  store.delete('token');
+  store.delete('userUuid');
+  store.delete('user');
+  handleLogout();
+});
 ipcMain.handle('get-app-version', () => app.getVersion());
 
 ipcMain.on('cancel-update', (event) => {

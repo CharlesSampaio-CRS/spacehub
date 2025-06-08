@@ -141,6 +141,7 @@ html {
   align-items: center;
   justify-content: flex-end;
   flex-shrink: 0;
+  z-index: 10;
 }
 
 .header-title {
@@ -159,16 +160,7 @@ html {
 
 /* ===== Rodapé fixo ===== */
 #footer {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  background-color: var(--card-bg);
-  text-align: center;
-  padding: -1px;
-  font-size: 14px;
-  border-top: var(--component-border);
-  color: var(--text-secondary);
-  z-index: 100;
+  display: none; /* Removendo o footer que estava causando problemas */
 }
 
 /* ===== Sidebar esquerda ===== */
@@ -204,204 +196,19 @@ html {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  padding-bottom: 12px; /* reserva para rodapé */
   background-color: var(--background);
 }
 
-/* ===== Notificações ===== */
-.notification-container {
-  position: relative;
-}
-
-.notification-bell {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  color: var(--text-secondary);
-  padding: 8px;
-  border-radius: 50%;
-  transition: var(--transition);
-  position: relative;
-}
-
-.notification-bell:hover {
-  background-color: var(--hover-color);
-  color: var(--primary-color);
-}
-
-.notification-badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background-color: #ef4444;
-  color: white;
-  font-size: 10px;
-  font-weight: bold;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.notification-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 10px;
-  background-color: var(--card-bg);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 8px 0;
-  min-width: 300px;
-  z-index: 100;
-  display: none;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.notification-menu.show {
-  display: block;
-}
-
-.notification-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 16px;
-  border-bottom: var(--component-border);
-}
-
-.notification-title {
-  font-weight: 600;
-}
-
-.notification-clear {
-  color: var(--primary-color);
-  background: none;
-  border: none;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.notification-item {
-  padding: 12px 16px;
-  display: flex;
-  gap: 12px;
-  border-bottom: var(--component-border);
-  transition: var(--transition);
-  border-radius: 4px;
-  margin: 4px 8px;
-}
-
-.notification-item:hover {
-  background-color: var(--hover-color);
-}
-
-.notification-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: var(--component-bg);
-  color: var(--primary-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.notification-content {
-  flex: 1;
-}
-
-.notification-message {
-  font-size: 14px;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-
-.notification-time {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.notification-empty {
-  text-align: center;
-  padding: 20px;
-  font-size: 14px;
-  color: #777;
-}
-
-/* ===== Menu dropdown ===== */
-.menu-container {
-  position: relative;
-}
-
-.menu-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  color: var(--text-secondary);
-  padding: 8px;
-  border-radius: 50%;
-  transition: var(--transition);
-}
-
-.menu-button:hover {
-  background-color: var(--hover-color);
-  color: var(--primary-color);
-}
-
-.dropdown-menu {
-  position: absolute;
-  right: 0;
-  top: 60px;
-  background-color: var(--card-bg);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 8px 0;
-  min-width: 200px;
-  z-index: 100;
-  display: none;
-}
-
-.dropdown-menu.show {
-  display: block;
-}
-
-.dropdown-item {
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--text-primary);
-  text-decoration: none;
-  transition: var(--transition);
-  border-radius: 4px;
-  margin: 4px 8px;
-}
-
-.dropdown-item:hover {
-  background-color: var(--hover-color);
-  color: var(--primary-color);
-}
-
-.dropdown-item i {
-  width: 20px;
-  text-align: center;
-}
-
-/* ===== Webview principal ===== */
+/* ===== Webview Container ===== */
 .webview-container {
   flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--background);
   display: flex;
   flex-direction: column;
   padding: 0;
   margin: 0;
-  overflow: hidden;
 }
 
 .webview-wrapper {
@@ -427,104 +234,103 @@ webview.active {
   display: flex;
 }
 
-/* ===== Scrollbar customizado ===== */
+/* ===== Scrollbar ===== */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
+  background: var(--text-secondary);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--primary-color);
 }
 
-/* ===== Diálogo de Confirmação ===== */
+/* ===== Confirmação ===== */
 .confirmation-dialog {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 1000;
 }
 
 .confirmation-content {
-  background-color: var(--card-bg);
-  padding: 20px;
-  border-radius: var(--border-radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 300px;
+  background: var(--card-bg);
+  padding: 24px;
+  border-radius: 12px;
   max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .confirmation-content h3 {
-  margin: 0 0 15px 0;
+  margin: 0 0 16px;
   color: var(--text-primary);
   font-size: 18px;
 }
 
 .confirmation-content p {
-  margin: 0 0 20px 0;
+  margin: 0 0 24px;
   color: var(--text-secondary);
   font-size: 14px;
-  line-height: 1.5;
 }
 
 .confirmation-buttons {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
+  justify-content: center;
 }
 
 .confirmation-buttons button {
-  padding: 8px 16px;
-  border: none;
+  padding: 8px 24px;
   border-radius: 8px;
+  border: none;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
   transition: var(--transition);
-  color: var(--text-primary);
 }
 
 .confirm-btn {
-  background-color: var(--primary-color);
-  color: white !important;
+  background: var(--primary-color);
+  color: white;
 }
 
 .confirm-btn:hover {
-  background-color: var(--primary-light);
-  color: white !important;
+  background: var(--primary-light);
 }
 
 .cancel-btn {
-  background-color: var(--hover-color);
-  color: var(--text-primary) !important;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--component-border) !important;
 }
 
 .cancel-btn:hover {
-  background-color: var(--active-color);
-  color: var(--text-primary) !important;
+  background: var(--hover-color);
 }
 
 /* ===== Menu de Contexto ===== */
 .context-menu {
   position: fixed;
-  background-color: var(--card-bg);
-  border-radius: var(--border-radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: var(--card-bg);
+  border-radius: 8px;
   padding: 8px;
   min-width: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   border: var(--component-border);
 }
@@ -532,30 +338,31 @@ webview.active {
 .context-menu-item {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
-  color: var(--text-primary);
-  cursor: pointer;
-  border-radius: 8px;
-  transition: var(--transition);
-  font-size: 14px;
   gap: 8px;
-  user-select: none;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-primary);
+  border-radius: 6px;
+  transition: var(--transition);
 }
 
 .context-menu-item:hover {
-  background-color: var(--hover-color);
-  color: var(--primary-color);
+  background: var(--hover-color);
 }
 
 .context-menu-item svg {
   width: 16px;
   height: 16px;
-  stroke: currentColor;
+  color: var(--text-secondary);
 }
 
 .context-menu-separator {
   height: 1px;
-  background-color: var(--component-border);
+  background: var(--component-border);
   margin: 4px 0;
 }
 
@@ -581,55 +388,8 @@ body.dark-mode .header-title {
   color: var(--text-primary);
 }
 
-body.dark-mode .notification-bell {
-  color: var(--text-secondary);
-}
-
-body.dark-mode .notification-bell:hover {
-  color: var(--primary-color);
-}
-
-body.dark-mode .dropdown-menu {
-  background-color: var(--card-bg);
-  border: var(--component-border);
-}
-
-body.dark-mode .dropdown-item {
-  color: var(--text-primary);
-}
-
-body.dark-mode .dropdown-item:hover {
-  background-color: var(--hover-color);
-  color: var(--primary-color);
-}
-
-body.dark-mode .notification-menu {
-  background-color: var(--card-bg);
-  border: var(--component-border);
-}
-
-body.dark-mode .notification-item {
-  border-bottom-color: var(--component-border);
-}
-
-body.dark-mode .notification-item:hover {
-  background-color: var(--hover-color);
-}
-
-body.dark-mode .notification-message {
-  color: var(--text-primary);
-}
-
-body.dark-mode .notification-time {
-  color: var(--text-secondary);
-}
-
-body.dark-mode .notification-empty {
-  color: var(--text-secondary);
-}
-
 body.dark-mode .context-menu {
-  background-color: var(--card-bg);
+  background: var(--card-bg);
   border: var(--component-border);
 }
 
@@ -638,16 +398,15 @@ body.dark-mode .context-menu-item {
 }
 
 body.dark-mode .context-menu-item:hover {
-  background-color: var(--hover-color);
-  color: var(--primary-color);
+  background: var(--hover-color);
 }
 
 body.dark-mode .context-menu-separator {
-  background-color: var(--component-border);
+  background: var(--component-border);
 }
 
 body.dark-mode .confirmation-content {
-  background-color: var(--card-bg);
+  background: var(--card-bg);
   border: var(--component-border);
 }
 
@@ -660,23 +419,171 @@ body.dark-mode .confirmation-content p {
 }
 
 body.dark-mode .cancel-btn {
-  background-color: var(--hover-color);
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
 
 body.dark-mode .cancel-btn:hover {
-  background-color: var(--active-color);
+  background: var(--hover-color);
 }
 
-/* Ajuste da scrollbar para o modo escuro */
 body.dark-mode ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
 }
 
 body.dark-mode ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--text-secondary);
 }
 
 body.dark-mode ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--primary-color);
+}
+
+/* ===== Componente de Perfil ===== */
+.profile-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.profile-button:hover {
+  background: var(--hover-color);
+}
+
+.profile-button img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-button span {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.profile-button i {
+  color: var(--text-secondary);
+  font-size: 12px;
+  transition: var(--transition);
+}
+
+.profile-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 280px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin-top: 8px;
+  display: none;
+  z-index: 1000;
+  border: var(--component-border);
+}
+
+.profile-menu.show {
+  display: block;
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+
+.profile-info img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-details span:first-child {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.profile-details span:last-child {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.profile-menu-separator {
+  height: 1px;
+  background: var(--component-border);
+  margin: 8px 0;
+}
+
+.profile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: var(--transition);
+  text-align: left;
+}
+
+.profile-menu-item:hover {
+  background: var(--hover-color);
+}
+
+.profile-menu-item i {
+  width: 16px;
+  color: var(--text-secondary);
+}
+
+body.dark-mode .profile-menu {
+  background: var(--card-bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .profile-button {
+  color: var(--text-primary);
+}
+
+body.dark-mode .profile-menu-item {
+  color: var(--text-primary);
+}
+
+body.dark-mode .profile-menu-item:hover {
+  background: var(--hover-color);
+}
+
+/* ===== Ajustes para modo escuro ===== */
+body.dark-mode .webview-container {
+  background: var(--background);
+}
+
+body.dark-mode .webview-wrapper {
+  background: var(--card-bg);
+  border: var(--component-border);
+}
+
+body.dark-mode webview {
+  background: var(--background);
 }

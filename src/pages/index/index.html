@@ -32,67 +32,28 @@
       <div id="header">
         <div class="header-title" id="active-view-name"></div>
         <div class="header-actions">
-          <button class="notification-bell" id="notification-bell">
-            <img width="24" height="24" src="https://img.icons8.com/emoji/48/bell-emoji.png" alt="bell-emoji" />
-            <span class="notification-badge">3</span>
-          </button>
-          <!-- Menu de Notificações -->
-          <div class="notification-container">
-            <div class="notification-menu" id="notification-menu">
-              <div class="notification-header">
-                <div class="notification-title">Notificações</div>
-                <button class="notification-clear" id="clear-notifications">Limpar tudo</button>
-              </div>
-              <div class="notification-list" id="notification-list">
-                <div class="notification-item" data-service="whatsapp">
-                  <div class="notification-icon">
-                    <img width="24" height="24" src="https://img.icons8.com/fluency/24/whatsapp.png" alt="WhatsApp" />
-                  </div>
-                  <div class="notification-content">
-                    <div class="notification-message">Nova mensagem de João no WhatsApp</div>
-                    <div class="notification-time">5 minutos atrás</div>
-                  </div>
-                </div>
-
-                <div class="notification-item" data-service="instagram">
-                  <div class="notification-icon">
-                    <img width="24" height="24" src="https://img.icons8.com/fluency/24/instagram-new.png" />
-                  </div>
-                  <div class="notification-content">
-                    <div class="notification-message">Maria comentou em sua foto no Instagram</div>
-                    <div class="notification-time">20 minutos atrás</div>
-                  </div>
-                </div>
-
-                <div class="notification-item" data-service="slack">
-                  <div class="notification-icon">
-                    <img width="24" height="24" src="https://img.icons8.com/color/24/slack.png" />
-                  </div>
-                  <div class="notification-content">
-                    <div class="notification-message">Reunião em 15 minutos no canal #geral</div>
-                    <div class="notification-time">30 minutos atrás</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="menu-container">
-            <button class="menu-button" id="menu-button">
-              <img width="24" height="24" src="https://img.icons8.com/fluency/48/menu--v1.png" alt="Menu" />
+          <div class="profile-container">
+            <button class="profile-button" id="profile-button">
+              <img width="32" height="32" id="profile-avatar" src="https://img.icons8.com/fluency/48/user-male-circle.png" alt="Profile" />
+              <span id="profile-name">Usuário</span>
+              <i class="fas fa-chevron-down"></i>
             </button>
-            <div class="dropdown-menu" id="dropdown-menu">
-              <button id="todoist-button" class="dropdown-item" type="button">
-                <img width="24" height="24" src="https://img.icons8.com/color/48/todoist.png" alt="Todoist" />
-                <span>Todoist</span>
+            <div class="profile-menu" id="profile-menu">
+              <div class="profile-info">
+                <img width="64" height="64" id="profile-menu-avatar" src="https://img.icons8.com/fluency/48/user-male-circle.png" alt="Profile" />
+                <div class="profile-details">
+                  <span id="profile-menu-name">Usuário</span>
+                  <span id="profile-menu-email">usuario@email.com</span>
+                </div>
+              </div>
+              <div class="profile-menu-separator"></div>
+              <button class="profile-menu-item" id="profile-settings">
+                <i class="fas fa-cog"></i>
+                <span>Configurações</span>
               </button>
-
-              <button id="settings-button" class="dropdown-item" type="button">
-                <img width="24" height="24" src="https://img.icons8.com/color/48/settings--v1.png"
-                  alt="Configuração" /><span>Configuração</span>
-              </button>
-              <button id="logout-button" class="dropdown-item" type="button">
-                <img width="24" height="24" src="https://img.icons8.com/color/24/exit.png"
-                  alt="Sair" /><span>Logout</span>
+              <button class="profile-menu-item" id="profile-logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Sair</span>
               </button>
             </div>
           </div>
