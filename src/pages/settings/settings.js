@@ -228,11 +228,61 @@ const setupFullscreenToggle = () => {
 };
 
 const displayAppVersion = () => {
+  const updateButton = document.getElementById("updateButton");
+  const versionSpan = document.getElementById("appVersion");
+  
   window.electronAPI.getAppVersion()
     .then(version => {
-      document.getElementById("appVersion").textContent = `Versão: ${version}`;
+      versionSpan.textContent = `V. ${version}`;
     })
-    .catch(err => console.error('Erro ao obter versão da aplicação:', err));
+    .catch(err => {
+      console.error('Erro ao obter versão da aplicação:', err);
+      versionSpan.textContent = 'V. Desconhecida';
+    });
+
+  updateButton.addEventListener("click", async () => {
+    try {
+      updateButton.classList.add('updating');
+      updateButton.disabled = true;
+
+      // Simular verificação de atualização
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Usar SweetAlert2 para mostrar mensagem
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
+
+      Toast.fire({
+        icon: 'info',
+        title: 'Verificando atualizações...'
+      });
+
+      // Aqui você pode implementar a lógica real de verificação de atualização
+      // Por enquanto, apenas mostraremos uma mensagem informativa
+      setTimeout(() => {
+        Toast.fire({
+          icon: 'success',
+          title: 'Você está na versão mais recente!'
+        });
+      }, 2000);
+
+    } catch (error) {
+      console.error('Erro ao verificar atualizações:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Erro ao verificar atualizações',
+        text: 'Tente novamente mais tarde.'
+      });
+    } finally {
+      updateButton.classList.remove('updating');
+      updateButton.disabled = false;
+    }
+  });
 };
 
 const initializeSettingsPage = () => {

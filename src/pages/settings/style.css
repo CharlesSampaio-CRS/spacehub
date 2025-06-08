@@ -419,3 +419,51 @@ input:focus {
   will-change: transform;
   backface-visibility: hidden;
 }
+
+.update-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.update-button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.update-button:active {
+  transform: translateY(0);
+}
+
+.update-button i {
+  font-size: 14px;
+}
+
+.update-button.updating i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.dark-mode .update-button {
+  background-color: #7c8cff;
+}
+
+.dark-mode .update-button:hover {
+  background-color: #6b7bff;
+}
