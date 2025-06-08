@@ -597,8 +597,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (response.ok) {
           const userData = await response.json();
           
+          // Pegar apenas o primeiro nome
+          const firstName = userData.name ? userData.name.split(' ')[0] : 'Usuário';
+          
           // Atualizar informações no menu
-          document.getElementById('profile-name').textContent = userData.name || 'Usuário';
+          document.getElementById('profile-name').textContent = firstName;
           document.getElementById('profile-menu-name').textContent = userData.name || 'Usuário';
           document.getElementById('profile-menu-email').textContent = userData.email || 'usuario@email.com';
           
@@ -658,6 +661,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       setupContextMenu();
       setupSidebarScroll();
       refreshApplications();
+      // Abrir a webview-home ao iniciar
+      showWebview('webview-home', 'home-button');
     } catch (error) {
       console.error('Erro na inicialização:', error);
     }
