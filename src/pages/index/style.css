@@ -17,14 +17,14 @@
 
 /* Variáveis do modo escuro */
 body.dark-mode {
-  --background: #2d2d3a;
-  --sidebar-bg: #363645;
-  --card-bg: #363645;
+  --background: #363636;
+  --sidebar-bg: #404040;
+  --card-bg: #404040;
   --text-primary: #f0f0f0;
   --text-secondary: #b8b8b8;
   --hover-color: rgba(99, 102, 241, 0.15);
   --active-color: rgba(99, 102, 241, 0.25);
-  --component-bg: #363645;
+  --component-bg: #404040;
   --component-border: 1px solid rgba(255, 255, 255, 0.08);
 }
 

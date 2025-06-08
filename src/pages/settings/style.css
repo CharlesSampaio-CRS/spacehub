@@ -9,9 +9,9 @@
   --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s ease;
   --card-bg: #fff;
-  --card-bg-dark: #363645;
+  --card-bg-dark: #404040;
   --hover-bg: #f0f0f0;
-  --hover-bg-dark: #40404f;
+  --hover-bg-dark: #4a4a4a;
 }
 
 * {
@@ -29,7 +29,7 @@ body {
 }
 
 body.dark-mode {
-  background-color: #2d2d3a;
+  background-color: #363636;
   color: #f0f0f0;
 }
 
@@ -168,7 +168,7 @@ body.dark-mode {
 
 .dark-mode .application-item {
   background: var(--card-bg-dark);
-  border-color: #3a3a68;
+  border-color: #4a4a4a;
 }
 
 .application-item:hover {
@@ -245,7 +245,7 @@ input:checked + .slider:before {
 }
 
 .dark-mode .setting-item {
-  border-bottom-color: #3a3a68;
+  border-bottom-color: #4a4a4a;
 }
 
 .setting-item:last-child {
@@ -272,7 +272,7 @@ input:checked + .slider:before {
 
 .dark-mode .language-selector {
   background: var(--card-bg-dark);
-  border-color: #3a3a68;
+  border-color: #4a4a4a;
 }
 
 .language-selector h3 {
