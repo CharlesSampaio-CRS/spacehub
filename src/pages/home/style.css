@@ -1,40 +1,66 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary-color: #6366f1;
+  --primary-color: #4a6cf7;
+  --primary-hover: #3a5ce5;
+  --secondary-color: #f5f5f5;
+  --text-color: #333;
+  --text-light: #666;
+  --border-color: #ddd;
+  --success-color: #28a745;
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+  --card-bg: #fff;
+  --card-bg-dark: #404040;
+  --hover-bg: #f0f0f0;
+  --hover-bg-dark: #4a4a4a;
+  --background: #f7f9fc;
+  --background-dark: #363636;
   --primary-light: #a5b4fc;
-  --background: linear-gradient(160deg, #f0f4ff 0%, #e0e7ff 100%);
-  --sidebar-bg: linear-gradient(160deg, #f0f4ff 0%, #e0e7ff 100%);
-  --card-bg: #ffffff;
   --text-primary: #1e293b;
   --text-secondary: #64748b;
   --hover-color: rgba(99, 102, 241, 0.1);
   --active-color: rgba(99, 102, 241, 0.2);
   --border-radius: 16px;
   --sidebar-width: 80px;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode variables */
+body.dark-mode {
+  background-color: var(--background-dark);
+  color: #f0f0f0;
+  --background: linear-gradient(160deg, #1a1a1a 0%, #2d2d2d 100%);
+  --sidebar-bg: linear-gradient(160deg, #1a1a1a 0%, #2d2d2d 100%);
+  --card-bg: #2b2b2b;
+  --text-primary: #ffffff;
+  --text-secondary: #a0aec0;
+  --hover-color: rgba(99, 102, 241, 0.2);
+  --active-color: rgba(99, 102, 241, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.4);
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: var(--background);
-  color: var(--text-primary);
+  color: var(--text-color);
   line-height: 1.6;
-  padding: 20px;
+  min-height: 100vh;
   transition: var(--transition);
 }
 
 .container {
-  max-width: 1280px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -100,13 +126,17 @@ header {
 }
 
 .section-title {
-  font-size: 1.25rem;
+  font-size: 28px;
+  color: var(--primary-color);
   font-weight: 600;
-  margin: 40px 0 20px;
+  margin-bottom: 30px;
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--text-primary);
+}
+
+body.dark-mode .section-title {
+  color: #7c8cff;
 }
 
 .chat-apps {
@@ -257,14 +287,101 @@ body.dark-mode .app-card.right::after {
   }
 }
 
+/* Dark mode specific styles */
+body.dark-mode .app-card {
+  background-color: var(--card-bg);
+  border-color: var(--primary-light);
+}
 
-body.dark-mode .app-card,
-body.dark-mode .hero,
-body.dark-mode .feature-card,
+body.dark-mode .feature-card {
+  background-color: var(--card-bg);
+}
+
+body.dark-mode .hero {
+  background-color: var(--card-bg);
+}
+
+body.dark-mode .app-description,
+body.dark-mode .feature-description {
+  color: var(--text-secondary);
+}
+
+body.dark-mode .app-name,
+body.dark-mode .feature-title,
 body.dark-mode .section-title {
-  background-color: #404040;
+  color: var(--text-primary);
 }
 
 body.dark-mode .cta-button {
   background-color: #6ca0f3;
+}
+
+.content-section {
+  margin-bottom: 40px;
+}
+
+.text-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.text-block {
+  padding: 20px;
+  border-left: 4px solid var(--primary-color);
+  background-color: var(--card-bg);
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  transition: var(--transition);
+  box-shadow: var(--card-shadow);
+}
+
+body.dark-mode .text-block {
+  background-color: var(--card-bg-dark);
+  border-left-color: #7c8cff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.text-block:hover {
+  transform: translateX(8px);
+  box-shadow: var(--card-shadow);
+}
+
+body.dark-mode .text-block:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.text-block h3 {
+  color: var(--text-color);
+  font-size: 1.25rem;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+body.dark-mode .text-block h3 {
+  color: #f0f0f0;
+}
+
+.text-block p {
+  color: var(--text-light);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+body.dark-mode .text-block p {
+  color: #a0a0a0;
+}
+
+@media (max-width: 768px) {
+  .text-content {
+    gap: 16px;
+  }
+  
+  .text-block {
+    padding: 16px;
+  }
+  
+  .section-title {
+    font-size: 24px;
+  }
 } 
