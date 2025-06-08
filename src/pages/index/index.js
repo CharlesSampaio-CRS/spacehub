@@ -574,24 +574,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  const setupProfileMenu = () => {
+  const setupProfileMenu = async () => {
     const profileButton = document.getElementById('profile-button');
     const profileMenu = document.getElementById('profile-menu');
     const profileSettings = document.getElementById('profile-settings');
     const profileLogout = document.getElementById('profile-logout');
 
-    // Carregar informações do usuário
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user) {
-      document.getElementById('profile-name').textContent = user.name || 'Usuário';
-      document.getElementById('profile-menu-name').textContent = user.name || 'Usuário';
-      document.getElementById('profile-menu-email').textContent = user.email || 'usuario@email.com';
+    try {
+      // Buscar informações do usuário da API
+      const token = await window.electronAPI.invoke('get-token');
+      const userUuid = await window.electronAPI.invoke('get-userUuid');
       
-      // Atualizar avatares se houver
-      if (user.avatar) {
-        document.getElementById('profile-avatar').src = user.avatar;
-        document.getElementById('profile-menu-avatar').src = user.avatar;
+      if (token && userUuid) {
+        const response = await fetch(`https://spaceapp-digital-api.onrender.com/users/${userUuid}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          
+          // Atualizar informações no menu
+          document.getElementById('profile-name').textContent = userData.name || 'Usuário';
+          document.getElementById('profile-menu-name').textContent = userData.name || 'Usuário';
+          document.getElementById('profile-menu-email').textContent = userData.email || 'usuario@email.com';
+          
+          // Atualizar avatares se houver
+          if (userData.avatar) {
+            document.getElementById('profile-avatar').src = userData.avatar;
+            document.getElementById('profile-menu-avatar').src = userData.avatar;
+          }
+
+          // Salvar dados do usuário no localStorage
+          localStorage.setItem('user', JSON.stringify(userData));
+        }
       }
+    } catch (error) {
+      console.error('Erro ao carregar dados do usuário:', error);
     }
 
     // Toggle do menu
