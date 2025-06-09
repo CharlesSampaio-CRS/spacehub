@@ -157,9 +157,9 @@ window.addEventListener('DOMContentLoaded', () => {
   const passwordInput = document.getElementById('password');
   const rememberMe = document.getElementById('rememberMe');
 
-  const savedEmail = localStorage.getItem('savedEmail');
-  const savedPassword = localStorage.getItem('savedPassword');
-  const remember = localStorage.getItem('rememberMe') === 'true';
+  const savedEmail = localStorage.getItem('rememberedEmail');
+  const savedPassword = localStorage.getItem('rememberedPassword');
+  const remember = localStorage.getItem('rememberLogin') === 'true';
 
   if (remember && savedEmail && savedPassword) {
     emailInput.value = savedEmail;
@@ -177,13 +177,13 @@ window.addEventListener('DOMContentLoaded', () => {
     const rememberMe = document.getElementById('rememberMe');
 
     if (rememberMe.checked) {
-      localStorage.setItem('savedEmail', emailInput.value);
-      localStorage.setItem('savedPassword', passwordInput.value);
-      localStorage.setItem('rememberMe', 'true');
+      localStorage.setItem('rememberedEmail', emailInput.value);
+      localStorage.setItem('rememberedPassword', passwordInput.value);
+      localStorage.setItem('rememberLogin', 'true');
     } else {
-      localStorage.removeItem('savedEmail');
-      localStorage.removeItem('savedPassword');
-      localStorage.setItem('rememberMe', 'false');
+      localStorage.removeItem('rememberedEmail');
+      localStorage.removeItem('rememberedPassword');
+      localStorage.setItem('rememberLogin', 'false');
     }
 
     login();

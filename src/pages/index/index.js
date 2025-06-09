@@ -261,19 +261,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
-  const setupLogout = () => {
-    document.getElementById('logout-button')?.addEventListener('click', () => {
-      showConfirmationDialog('Deseja realmente sair do Space Hub?', async () => {
-        try {
-          await clearUserSession();
-          window.electronAPI.logout();
-        } catch (error) {
-          console.error('Erro ao fazer logout:', error);
-        }
-      });
-    });
-  };
-
   const hasOpenWebviews = () => {
     const webviews = document.querySelectorAll('webview');
     return Array.from(webviews).some(webview => webview.id !== 'webview-home' && webview.id !== 'webview-settings');
@@ -654,6 +641,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             localStorage.removeItem('user');
             localStorage.removeItem('token');
             localStorage.removeItem('userUuid');
+            localStorage.removeItem('rememberedEmail');
+            localStorage.removeItem('rememberedPassword');
+            localStorage.removeItem('rememberLogin');
           }
           
           await window.electronAPI.invoke('logout');

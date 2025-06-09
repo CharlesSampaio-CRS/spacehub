@@ -631,8 +631,9 @@ ipcMain.handle('logout', async (event, userId) => {
     for (const [id, session] of userSessions.entries()) {
       try {
         await session.clearCache();
+        // Limpar tudo exceto localStorage
         await session.clearStorageData({
-          storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
+          storages: ['cookies', 'filesystem', 'indexdb', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
         });
       } catch (error) {
         console.error(`Erro ao limpar sessão ${id}:`, error);
@@ -643,8 +644,10 @@ ipcMain.handle('logout', async (event, userId) => {
     // Limpar sessão principal
     const mainSession = session.fromPartition('persist:mainSession');
     await mainSession.clearCache();
+    
+    // Limpar tudo exceto localStorage
     await mainSession.clearStorageData({
-      storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
+      storages: ['cookies', 'filesystem', 'indexdb', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
     });
 
     return { success: true };
