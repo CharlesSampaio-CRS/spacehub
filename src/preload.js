@@ -6,7 +6,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   logout: () => ipcRenderer.send('logout-success'),
   getToken: () => ipcRenderer.invoke('get-token'),
   getUserUuid: () => ipcRenderer.invoke('get-userUuid'),
-  restartApp: () => ipcRenderer.invoke('restartApp'),
+  restartApp: () => ipcRenderer.invoke('restart-app'),
   checkForUpdates: () => ipcRenderer.send('check-for-updates'),
   onUpdateNotAvailable: (callback) => ipcRenderer.on('update-not-available', (_, msg) => callback(msg)),
   onUpdateProgress: (callback) => ipcRenderer.on('update-progress', (_, data) => callback(data)),
@@ -28,7 +28,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   register: (data) => ipcRenderer.invoke('register', data),
   onLanguageChanged: (callback) => ipcRenderer.on('language-changed', (_, language) => callback(language)),
   sendLanguageChanged: (language) => ipcRenderer.send('language-changed', language),
-  getLanguage: () => ipcRenderer.invoke('get-language')
+  getLanguage: () => ipcRenderer.invoke('get-language'),
+  setLanguage: (language) => ipcRenderer.send('language-changed', language)
 });
 
 window.addEventListener('DOMContentLoaded', () => {

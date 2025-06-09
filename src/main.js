@@ -740,3 +740,9 @@ ipcMain.handle('close-current-window', (event) => {
     win.close();
   }
 });
+
+// Adicionar handler para reiniciar a aplicação
+ipcMain.handle('restart-app', () => {
+  app.relaunch();
+  app.exit(0);
+});

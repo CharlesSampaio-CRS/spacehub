@@ -222,6 +222,57 @@ const setupFullscreenToggle = () => {
   });
 };
 
+// Objeto com as traduções
+const translations = {
+  'pt-BR': {
+    'Perfil': 'Perfil',
+    'Nome': 'Nome',
+    'Email': 'Email',
+    'Plano': 'Plano',
+    'Preferências': 'Preferências',
+    'Notificações': 'Notificações',
+    'Modo Escuro': 'Tema',
+    'Auto Login': 'Auto Login',
+    'Idioma': 'Idioma',
+    'Aplicações': 'Aplicações',
+    'Salvar': 'Salvar',
+    'Configurações': 'Configurações',
+    'Confirmação': 'Confirmação',
+    'Confirmar': 'Confirmar',
+    'Cancelar': 'Cancelar',
+    'language_change_confirmation': 'Deseja realmente mudar o idioma? A aplicação será reiniciada.'
+  },
+  'en-US': {
+    'Perfil': 'Profile',
+    'Nome': 'Name',
+    'Email': 'Email',
+    'Plano': 'Plan',
+    'Preferências': 'Preferences',
+    'Notificações': 'Notifications',
+    'Modo Escuro': 'Theme',
+    'Auto Login': 'Auto Login',
+    'Idioma': 'Language',
+    'Aplicações': 'Applications',
+    'Salvar': 'Save',
+    'Configurações': 'Settings',
+    'Confirmação': 'Confirmation',
+    'Confirmar': 'Confirm',
+    'Cancelar': 'Cancel',
+    'language_change_confirmation': 'Do you really want to change the language? The application will be restarted.'
+  }
+};
+
+// Função para traduzir os elementos
+function translatePage(language) {
+  const elements = document.querySelectorAll('[data-translate]');
+  elements.forEach(element => {
+    const key = element.getAttribute('data-translate');
+    if (translations[language] && translations[language][key]) {
+      element.textContent = translations[language][key];
+    }
+  });
+}
+
 const setupLanguageToggle = () => {
   const toggle = document.getElementById("language-toggle");
   const toggleIcon = document.getElementById("language-icon");
@@ -234,21 +285,65 @@ const setupLanguageToggle = () => {
     translatePage(language);
     
     // Atualizar o ícone inicial
-    toggleIcon.textContent = language === 'pt-BR' ? '🇧🇷' : '🇺🇸';
-  });
-
-  // Adicionar listener para mudanças no idioma
-  window.electronAPI.onLanguageChanged((language) => {
-    toggle.checked = language === 'en-US';
-    document.documentElement.lang = language;
-    translatePage(language);
-    toggleIcon.textContent = language === 'pt-BR' ? '🇧🇷' : '🇺🇸';
+    toggleIcon.innerHTML = language === 'pt-BR' ? '🇧🇷' : '🇺🇸';
   });
 
   // Evento de mudança do toggle
-  toggle.addEventListener('change', () => {
+  toggle.addEventListener('change', async () => {
     const newLanguage = toggle.checked ? 'en-US' : 'pt-BR';
-    window.electronAPI.sendLanguageChanged(newLanguage);
+    const currentLanguage = await window.electronAPI.getLanguage();
+
+    const translations = {
+      'pt-BR': {
+        title: 'Confirmação',
+        text: 'Deseja realmente mudar o idioma? A aplicação será reiniciada.',
+        confirm: 'Sim, mudar',
+        cancel: 'Não, cancelar'
+      },
+      'en-US': {
+        title: 'Confirmation',
+        text: 'Do you really want to change the language? The application will be restarted.',
+        confirm: 'Yes, change',
+        cancel: 'No, cancel'
+      }
+    };
+
+    try {
+      const result = await Swal.fire({
+        title: translations[currentLanguage].title,
+        text: translations[currentLanguage].text,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: translations[currentLanguage].confirm,
+        cancelButtonText: translations[currentLanguage].cancel,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33'
+      });
+
+      if (result.isConfirmed) {
+        // Primeiro envia a mudança de idioma
+        await window.electronAPI.sendLanguageChanged(newLanguage);
+        
+        // Pequeno delay antes de reiniciar para garantir que a mudança de idioma foi processada
+        setTimeout(async () => {
+          try {
+            await window.electronAPI.restartApp();
+          } catch (error) {
+            console.error('Erro ao reiniciar:', error);
+            // Se falhar, volta o toggle para o estado anterior
+            toggle.checked = !toggle.checked;
+            toggleIcon.innerHTML = !toggle.checked ? '🇧🇷' : '🇺🇸';
+          }
+        }, 500);
+      } else {
+        toggle.checked = !toggle.checked;
+        toggleIcon.innerHTML = !toggle.checked ? '🇧🇷' : '🇺🇸';
+      }
+    } catch (error) {
+      console.error('Erro ao processar mudança de idioma:', error);
+      toggle.checked = !toggle.checked;
+      toggleIcon.innerHTML = !toggle.checked ? '🇧🇷' : '🇺��';
+    }
   });
 };
 
