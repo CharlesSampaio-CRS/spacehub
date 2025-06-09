@@ -197,16 +197,18 @@ body.dark-mode {
 }
 
 .dark-mode .application-item {
-  background: var(--card-bg-dark);
-  border-color: #3a3a68;
+  background: #464646;
+  border-color: #787777;
 }
 
 .application-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: var(--hover-bg);
 }
 
 .dark-mode .application-item:hover {
+  background: #464646;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
@@ -221,6 +223,12 @@ body.dark-mode {
   height: 40px;
   border-radius: 8px;
   object-fit: cover;
+  background: white;
+  padding: 2px;
+}
+
+.dark-mode .application-info img {
+  background: #2a2a2a;
 }
 
 .application-info p {
@@ -231,7 +239,7 @@ body.dark-mode {
 }
 
 .dark-mode .application-info p {
-  color: #f0f0f0;
+  color: #e0e0e0;
 }
 
 .application-info p strong {
@@ -239,6 +247,11 @@ body.dark-mode {
   display: block;
   margin-bottom: 4px;
   font-size: 15px;
+  color: var(--text-color);
+}
+
+.dark-mode .application-info p strong {
+  color: #ffffff;
 }
 
 .application-toggle {
@@ -673,4 +686,17 @@ input:focus {
 
 .dark-mode .cancel-btn:hover {
   background: var(--hover-bg-dark);
+}
+
+/* Ajuste do toggle switch para modo escuro */
+.dark-mode .slider {
+  background-color: #4a4a4a;
+}
+
+.dark-mode input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+.dark-mode .slider:before {
+  background-color: #e0e0e0;
 }
