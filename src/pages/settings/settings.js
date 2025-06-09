@@ -242,7 +242,16 @@ const translations = {
     'Cancelar': 'Cancelar',
     'language_change_confirmation': 'Deseja realmente mudar o idioma para %s? A aplicação será reiniciada.',
     'Português': 'Português',
-    'Inglês': 'Inglês'
+    'Inglês': 'Inglês',
+    'update_available': 'Uma nova versão está disponível para download.',
+    'current_version': 'Versão Atual',
+    'new_version': 'Nova Versão',
+    'latest_version': 'Você está usando a versão mais recente.',
+    'update_check_error': 'Não foi possível verificar atualizações no momento.',
+    'restart_confirmation': 'O sistema será reiniciado para aplicar a atualização. Deseja continuar?',
+    'Atualizar': 'Atualizar',
+    'OK': 'OK',
+    'Erro': 'Erro'
   },
   'en-US': {
     'Perfil': 'Profile',
@@ -262,7 +271,16 @@ const translations = {
     'Cancelar': 'Cancel',
     'language_change_confirmation': 'Do you really want to change the language to %s? The application will be restarted.',
     'Português': 'Portuguese',
-    'Inglês': 'English'
+    'Inglês': 'English',
+    'update_available': 'A new version is available for download.',
+    'current_version': 'Current Version',
+    'new_version': 'New Version',
+    'latest_version': 'You are using the latest version.',
+    'update_check_error': 'Unable to check for updates at this time.',
+    'restart_confirmation': 'The system will restart to apply the update. Do you want to continue?',
+    'Atualizar': 'Update',
+    'OK': 'OK',
+    'Erro': 'Error'
   }
 };
 
@@ -353,20 +371,184 @@ const setupLanguageToggle = () => {
   });
 };
 
-const initializeSettingsPage = () => {
+// Função para carregar informações do sistema
+async function loadSystemInfo() {
+  try {
+    const version = await window.electronAPI.getAppVersion();
+    const versionButton = document.getElementById('versionButton');
+    console.log('Versão obtida:', version); // Debug
+    
+    if (versionButton) {
+      versionButton.querySelector('#appVersion').textContent = `v${version}`;
+      versionButton.title = `Clique para verificar atualizações`;
+      
+      // Remover listener anterior se existir
+      versionButton.removeEventListener('click', checkForUpdates);
+      
+      // Adicionar novo listener
+      versionButton.addEventListener('click', () => {
+        console.log('Verificando atualizações...'); // Debug
+        checkForUpdates();
+      });
+    } else {
+      console.error('Botão de versão não encontrado!'); // Debug
+    }
+  } catch (error) {
+    console.error('Erro ao carregar versão:', error);
+    const versionButton = document.getElementById('versionButton');
+    if (versionButton) {
+      versionButton.querySelector('#appVersion').textContent = 'v?.?.?';
+    }
+  }
+}
+
+const initializeSettingsPage = async () => {
+  console.log('Inicializando página de configurações...'); // Debug
+  
+  // Carregar informações do sistema primeiro
+  await loadSystemInfo();
+  
+  // Carregar outras informações
   loadApplications();
   loadUserInfo();
+  
+  // Restaurar configurações de tema e toggles
   setupDarkModeToggle();
   setupNotificationToggle();
   setupAutoLoginToggle();
   setupCompactLayoutToggle();
   setupFullscreenToggle();
   setupLanguageToggle();
-
+  
+  // Configurar eventos
   const saveButton = document.getElementById("saveButton");
   if (saveButton) {
     saveButton.addEventListener("click", updateApplications);
   }
 };
 
-initializeSettingsPage();
+// Garantir que o evento DOMContentLoaded está sendo chamado
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('DOM carregado, inicializando...'); // Debug
+  await initializeSettingsPage();
+});
+
+// Função para verificar atualizações
+async function checkForUpdates() {
+  try {
+    console.log('Iniciando verificação de atualizações...'); // Debug
+    
+    // Sempre obter a versão atual primeiro
+    const currentVersion = await window.electronAPI.getAppVersion();
+    console.log('Versão atual:', currentVersion); // Debug
+    
+    // Verificar se há atualizações disponíveis
+    const latestVersion = await window.electronAPI.checkForUpdates();
+    console.log('Última versão disponível:', latestVersion); // Debug
+    
+    // Se não houver nova versão ou se a versão atual for igual à mais recente
+    if (!latestVersion || latestVersion === currentVersion) {
+      console.log('Usando versão mais recente'); // Debug
+      Swal.fire({
+        title: translations[currentLanguage]['Confirmação'],
+        html: `
+          <div class="confirmation-dialog">
+            <div class="confirmation-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="confirmation-content">
+              <p>${translations[currentLanguage]['latest_version']}</p>
+              <div class="version-info">
+                <span>${translations[currentLanguage]['current_version']}: v${currentVersion}</span>
+              </div>
+            </div>
+          </div>
+        `,
+        confirmButtonText: translations[currentLanguage]['OK'],
+        confirmButtonColor: '#3085d6',
+        customClass: {
+          container: 'confirmation-dialog-container'
+        }
+      });
+      return;
+    }
+    
+    // Se houver uma nova versão disponível
+    console.log('Nova versão disponível:', latestVersion); // Debug
+    Swal.fire({
+      title: translations[currentLanguage]['Confirmação'],
+      html: `
+        <div class="confirmation-dialog">
+          <div class="confirmation-icon">
+            <i class="fas fa-download"></i>
+          </div>
+          <div class="confirmation-content">
+            <p>${translations[currentLanguage]['update_available']}</p>
+            <div class="version-info">
+              <span>${translations[currentLanguage]['current_version']}: v${currentVersion}</span>
+              <span>${translations[currentLanguage]['new_version']}: v${latestVersion}</span>
+            </div>
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: translations[currentLanguage]['Atualizar'],
+      cancelButtonText: translations[currentLanguage]['Cancelar'],
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      customClass: {
+        container: 'confirmation-dialog-container'
+      }
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        // Segundo modal - Confirmação de reinicialização
+        Swal.fire({
+          title: translations[currentLanguage]['Confirmação'],
+          html: `
+            <div class="confirmation-dialog">
+              <div class="confirmation-icon">
+                <i class="fas fa-sync-alt"></i>
+              </div>
+              <div class="confirmation-content">
+                <p>${translations[currentLanguage]['restart_confirmation']}</p>
+              </div>
+            </div>
+          `,
+          showCancelButton: true,
+          confirmButtonText: translations[currentLanguage]['Confirmar'],
+          cancelButtonText: translations[currentLanguage]['Cancelar'],
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          customClass: {
+            container: 'confirmation-dialog-container'
+          }
+        }).then((restartResult) => {
+          if (restartResult.isConfirmed) {
+            console.log('Iniciando atualização...'); // Debug
+            window.electronAPI.downloadUpdate();
+          }
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao verificar atualizações:', error);
+    Swal.fire({
+      title: translations[currentLanguage]['Erro'],
+      html: `
+        <div class="confirmation-dialog">
+          <div class="confirmation-icon">
+            <i class="fas fa-exclamation-circle"></i>
+          </div>
+          <div class="confirmation-content">
+            <p>${translations[currentLanguage]['update_check_error']}</p>
+          </div>
+        </div>
+      `,
+      confirmButtonText: translations[currentLanguage]['OK'],
+      confirmButtonColor: '#3085d6',
+      customClass: {
+        container: 'confirmation-dialog-container'
+      }
+    });
+  }
+}

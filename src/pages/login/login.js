@@ -123,7 +123,9 @@ const validateForm = () => {
         'new_version': 'Nova Versão',
         'latest_version': 'Você está usando a versão mais recente.',
         'update_check_error': 'Não foi possível verificar atualizações no momento.',
+        'restart_confirmation': 'O sistema será reiniciado para aplicar a atualização. Deseja continuar?',
         'Atualizar': 'Atualizar',
+        'Confirmar': 'Confirmar',
         'OK': 'OK',
         'Erro': 'Erro',
         'Confirmação': 'Confirmação',
@@ -138,7 +140,9 @@ const validateForm = () => {
         'new_version': 'New Version',
         'latest_version': 'You are using the latest version.',
         'update_check_error': 'Unable to check for updates at this time.',
+        'restart_confirmation': 'The system will restart to apply the update. Do you want to continue?',
         'Atualizar': 'Update',
+        'Confirmar': 'Confirm',
         'OK': 'OK',
         'Erro': 'Error',
         'Confirmação': 'Confirmation',
@@ -295,6 +299,7 @@ async function checkForUpdates() {
     const latestVersion = await window.electronAPI.checkForUpdates();
     
     if (latestVersion && latestVersion !== currentVersion) {
+      // Primeiro modal - Confirmação de atualização
       Swal.fire({
         title: translations[currentLanguage]['Confirmação'],
         html: `
@@ -319,12 +324,39 @@ async function checkForUpdates() {
         customClass: {
           container: 'confirmation-dialog-container'
         }
-      }).then((result) => {
+      }).then(async (result) => {
         if (result.isConfirmed) {
-          window.electronAPI.downloadUpdate();
+          // Segundo modal - Confirmação de reinicialização
+          Swal.fire({
+            title: translations[currentLanguage]['Confirmação'],
+            html: `
+              <div class="confirmation-dialog">
+                <div class="confirmation-icon">
+                  <i class="fas fa-sync-alt"></i>
+                </div>
+                <div class="confirmation-content">
+                  <p>${translations[currentLanguage]['restart_confirmation']}</p>
+                </div>
+              </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: translations[currentLanguage]['Confirmar'],
+            cancelButtonText: translations[currentLanguage]['Cancelar'],
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            customClass: {
+              container: 'confirmation-dialog-container'
+            }
+          }).then((restartResult) => {
+            if (restartResult.isConfirmed) {
+              // Iniciar download e reiniciar
+              window.electronAPI.downloadUpdate();
+            }
+          });
         }
       });
     } else {
+      // Modal de versão atual
       Swal.fire({
         title: translations[currentLanguage]['Confirmação'],
         html: `
