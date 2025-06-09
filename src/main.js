@@ -660,8 +660,6 @@ const createUserSession = (email) => {
   tempWindow.close();
 
   userSessions.set(email, userSession);
-  console.log('Sessões ativas:', Array.from(userSessions.keys()));
-  console.log('Total de sessões:', userSessions.size);
   return { sessionId: `persist:user_${email}` };
 };
 

@@ -117,12 +117,32 @@ const validateForm = () => {
       'pt-BR': {
         'Email inválido': 'Email inválido',
         'Senha inválida': 'Senha inválida',
-        'Preencha todos os campos': 'Preencha todos os campos'
+        'Preencha todos os campos': 'Preencha todos os campos',
+        'update_available': 'Uma nova versão está disponível para download.',
+        'current_version': 'Versão Atual',
+        'new_version': 'Nova Versão',
+        'latest_version': 'Você está usando a versão mais recente.',
+        'update_check_error': 'Não foi possível verificar atualizações no momento.',
+        'Atualizar': 'Atualizar',
+        'OK': 'OK',
+        'Erro': 'Erro',
+        'Confirmação': 'Confirmação',
+        'Cancelar': 'Cancelar'
       },
       'en-US': {
         'Email inválido': 'Invalid email',
         'Senha inválida': 'Invalid password',
-        'Preencha todos os campos': 'Please fill in all fields'
+        'Preencha todos os campos': 'Please fill in all fields',
+        'update_available': 'A new version is available for download.',
+        'current_version': 'Current Version',
+        'new_version': 'New Version',
+        'latest_version': 'You are using the latest version.',
+        'update_check_error': 'Unable to check for updates at this time.',
+        'Atualizar': 'Update',
+        'OK': 'OK',
+        'Erro': 'Error',
+        'Confirmação': 'Confirmation',
+        'Cancelar': 'Cancel'
       }
     };
 
@@ -242,4 +262,110 @@ window.addEventListener('DOMContentLoaded', () => {
 
   setupDarkMode();
   setupLanguage();
+
+  loadAppVersion();
 });
+
+// Função para carregar a versão do aplicativo
+async function loadAppVersion() {
+  try {
+    const version = await window.electronAPI.getAppVersion();
+    const versionButton = document.getElementById('versionButton');
+    
+    if (versionButton) {
+      versionButton.querySelector('#appVersion').textContent = `v${version}`;
+      versionButton.title = `Clique para verificar atualizações`;
+      
+      // Adicionar evento de clique
+      versionButton.addEventListener('click', checkForUpdates);
+    }
+  } catch (error) {
+    console.error('Erro ao carregar versão:', error);
+    const versionButton = document.getElementById('versionButton');
+    if (versionButton) {
+      versionButton.querySelector('#appVersion').textContent = 'v?.?.?';
+    }
+  }
+}
+
+// Função para verificar atualizações
+async function checkForUpdates() {
+  try {
+    const currentVersion = await window.electronAPI.getAppVersion();
+    const latestVersion = await window.electronAPI.checkForUpdates();
+    
+    if (latestVersion && latestVersion !== currentVersion) {
+      Swal.fire({
+        title: translations[currentLanguage]['Confirmação'],
+        html: `
+          <div class="confirmation-dialog">
+            <div class="confirmation-icon">
+              <i class="fas fa-download"></i>
+            </div>
+            <div class="confirmation-content">
+              <p>${translations[currentLanguage]['update_available']}</p>
+              <div class="version-info">
+                <span>${translations[currentLanguage]['current_version']}: v${currentVersion}</span>
+                <span>${translations[currentLanguage]['new_version']}: v${latestVersion}</span>
+              </div>
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: translations[currentLanguage]['Atualizar'],
+        cancelButtonText: translations[currentLanguage]['Cancelar'],
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        customClass: {
+          container: 'confirmation-dialog-container'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.electronAPI.downloadUpdate();
+        }
+      });
+    } else {
+      Swal.fire({
+        title: translations[currentLanguage]['Confirmação'],
+        html: `
+          <div class="confirmation-dialog">
+            <div class="confirmation-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="confirmation-content">
+              <p>${translations[currentLanguage]['latest_version']}</p>
+              <div class="version-info">
+                <span>${translations[currentLanguage]['current_version']}: v${currentVersion}</span>
+              </div>
+            </div>
+          </div>
+        `,
+        confirmButtonText: translations[currentLanguage]['OK'],
+        confirmButtonColor: '#3085d6',
+        customClass: {
+          container: 'confirmation-dialog-container'
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao verificar atualizações:', error);
+    Swal.fire({
+      title: translations[currentLanguage]['Erro'],
+      html: `
+        <div class="confirmation-dialog">
+          <div class="confirmation-icon">
+            <i class="fas fa-exclamation-circle"></i>
+          </div>
+          <div class="confirmation-content">
+            <p>${translations[currentLanguage]['update_check_error']}</p>
+          </div>
+        </div>
+      `,
+      confirmButtonText: translations[currentLanguage]['OK'],
+      confirmButtonColor: '#3085d6',
+      customClass: {
+        container: 'confirmation-dialog-container'
+      }
+    });
+  }
+}
