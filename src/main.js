@@ -64,15 +64,6 @@ function saveToken(token) {
       } else {
         console.warn('UUID não encontrado no token.');
       }
-      
-      // Log da sessão logada
-      if (payload.email) {
-        console.log('=== Sessão Atual ===');
-        console.log('Email:', payload.email);
-        console.log('UUID:', payload.uuid);
-        console.log('Data de Login:', new Date().toLocaleString('pt-BR'));
-        console.log('===================');
-      }
     }
   }
 }
