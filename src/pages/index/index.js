@@ -641,12 +641,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     profileLogout?.addEventListener('click', () => {
       profileMenu.classList.remove('show');
-      showConfirmationDialog('Deseja realmente sair?', async () => {
+      const logoutMessage = translations[localStorage.getItem('language') || 'pt-BR']['logout_confirmation'];
+      showConfirmationDialog(logoutMessage, async () => {
         try {
           await clearUserSession();
           window.electronAPI.send('logout-success');
         } catch (error) {
           console.error('Erro ao fazer logout:', error);
+        }
+      });
+    });
+
+    // Adicionar listener para mudanças no idioma
+    window.electronAPI.onLanguageChanged((language) => {
+      const elements = document.querySelectorAll('[data-translate]');
+      elements.forEach(element => {
+        const key = element.getAttribute('data-translate');
+        if (translations[language] && translations[language][key]) {
+          element.textContent = translations[language][key];
         }
       });
     });
