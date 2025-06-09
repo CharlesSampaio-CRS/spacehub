@@ -337,6 +337,10 @@ ipcMain.on('start-google-login', () => {
 
       const token = loginRes.data.token;
       saveToken(token);
+
+      // Criar sessão específica para o email do Google
+      const sessionInfo = createUserSession(email);
+      console.log(`Nova sessão Google criada para: ${email}`);
       
       if (loginWindow) {
         loginWindow.webContents.send('google-login-success', { token });
@@ -591,19 +595,19 @@ ipcMain.on('dark-mode-changed', (event, isDark) => {
 const userSessions = new Map();
 
 const createUserSession = (email) => {
-  console.log('Criando sessão para email:', email);
   
   if (!email) {
-    console.error('Email não fornecido para criar sessão');
     return null;
   }
 
   if (userSessions.has(email)) {
-    console.log('Sessão já existe para:', email);
     return { sessionId: `persist:user_${email}` };
   }
 
-  const userSession = session.fromPartition(`persist:user_${email}`);
+  const userSession = session.fromPartition(`persist:user_${email}`, {
+    cache: true,
+    persistent: true
+  });
   
   // Configurar permissões da sessão
   userSession.setPermissionRequestHandler((webContents, permission, callback) => {
@@ -615,14 +619,45 @@ const createUserSession = (email) => {
     }
   });
 
-  // Configurar limpeza periódica do cache
+  // Configurar gerenciamento de cookies
+  userSession.cookies.on('changed', (event, cookie, cause, removed) => {
+    if (removed) {
+      console.log(`Cookie removido: ${cookie.name}`);
+    } else {
+      console.log(`Cookie modificado: ${cookie.name}`);
+    }
+  });
+
+  // Configurar limpeza periódica do cache e dados
   setInterval(async () => {
     try {
       await userSession.clearCache();
+      await userSession.clearStorageData({
+        storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
+      });
+      console.log(`Cache e dados limpos para sessão: ${email}`);
     } catch (error) {
       console.error(`Erro ao limpar cache da sessão ${email}:`, error);
     }
   }, 3600000); // A cada hora
+
+  // Configurar proteção contra vazamento de memória
+  userSession.setPreloads([path.join(__dirname, 'preload.js')]);
+
+  // Configurar limites de memória através do BrowserWindow
+  const tempWindow = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      session: userSession
+    }
+  });
+  
+  // Configurar limites de memória para a janela
+  tempWindow.webContents.setFrameRate(30); // Reduzir taxa de quadros para economizar memória
+  tempWindow.webContents.setBackgroundThrottling(true); // Habilitar throttling em segundo plano
+  
+  // Fechar a janela temporária após a configuração
+  tempWindow.close();
 
   userSessions.set(email, userSession);
   console.log('Sessões ativas:', Array.from(userSessions.keys()));
@@ -658,34 +693,18 @@ ipcMain.handle('get-user-session', (event, email) => {
   return userSessions.has(email) ? { sessionId: `persist:user_${email}` } : null;
 });
 
-// Modificar o handler de login do Google
-ipcMain.handle('handleGoogleLogin', async (event, idToken) => {
-  try {
-    const ticket = await client.verifyIdToken({
-      idToken: idToken,
-      audience: process.env.GOOGLE_CLIENT_ID
-    });
-    const payload = ticket.getPayload();
-    const email = payload.email;
-    
-    // Criar sessão específica para o email do Google
-    const sessionInfo = createUserSession(email);
-    console.log(`Nova sessão Google criada para: ${email}`);
-    
-    return { success: true, user: payload };
-  } catch (error) {
-    console.error('Erro no login do Google:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-// Adicionar handler de login
+// Modificar o handler de login
 ipcMain.handle('login', async (event, { email, password }) => {
   try {
     const { data } = await axios.post('https://spaceapp-digital-api.onrender.com/login', {
       email,
       password
     });
+
+    // Criar sessão específica para o email
+    const sessionInfo = createUserSession(email);
+    console.log(`Nova sessão criada para login com email: ${email}`);
+
     return data;
   } catch (error) {
     console.error('Login error in main process:', error);
@@ -693,7 +712,7 @@ ipcMain.handle('login', async (event, { email, password }) => {
   }
 });
 
-// Adicionar handler de registro
+// Modificar o handler de registro
 ipcMain.handle('register', async (event, { name, email, password }) => {
   try {
     const { data } = await axios.post('https://spaceapp-digital-api.onrender.com/register', {
@@ -701,6 +720,11 @@ ipcMain.handle('register', async (event, { name, email, password }) => {
       email,
       password
     });
+
+    // Criar sessão específica para o email registrado
+    const sessionInfo = createUserSession(email);
+    console.log(`Nova sessão criada para registro com email: ${email}`);
+
     return { status: 201, data };
   } catch (error) {
     console.error('Register error in main process:', error);
@@ -754,10 +778,21 @@ ipcMain.handle('restart-app', () => {
   }, 100);
 });
 
-// Modificar o handler de logout
+// Modificar o handler de logout para limpar a sessão
 ipcMain.handle('logout', async (event, email) => {
   try {
-    // Apenas fechar a janela principal e criar a janela de login
+    // Limpar a sessão do usuário
+    if (email) {
+      await clearUserSession(email);
+      console.log(`Sessão limpa para: ${email}`);
+    }
+
+    // Limpar dados do store
+    store.delete('token');
+    store.delete('userUuid');
+    store.delete('user');
+
+    // Fechar janela principal e criar janela de login
     closeWindow(mainWindow);
     createLoginWindow();
     return { success: true };
@@ -765,4 +800,26 @@ ipcMain.handle('logout', async (event, email) => {
     console.error('Erro no logout:', error);
     return { success: false, error: error.message };
   }
+});
+
+// Adicionar função para limpar todas as sessões
+const clearAllSessions = async () => {
+  for (const [email, session] of userSessions.entries()) {
+    try {
+      await session.clearCache();
+      await session.clearStorageData({
+        storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
+      });
+      console.log(`Sessão limpa para: ${email}`);
+    } catch (error) {
+      console.error(`Erro ao limpar sessão ${email}:`, error);
+    }
+  }
+  userSessions.clear();
+};
+
+// Adicionar handler para limpar todas as sessões
+ipcMain.handle('clear-all-sessions', async () => {
+  await clearAllSessions();
+  return { success: true };
 });
