@@ -1,9 +1,13 @@
 {
   "name": "spaceapp",
-  "version": "1.0.212",
+  "version": "1.0.213",
   "description": "Electron App with Modern UI",
   "author": "Charles Sampaio",
   "main": "src/main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/crsampaio/spacehub.git"
+  },
   "scripts": {
     "bump-version": "node scripts/bump-version.js",
     "prestart": "node scripts/generate-config.js",
@@ -35,7 +39,8 @@
     "owner": "crsampaio",
     "repo": "spacehub",
     "private": false,
-    "releaseType": "release"
+    "releaseType": "release",
+    "token": "GH_TOKEN"
   },
   "build": {
     "appId": "com.spacehub.app",
@@ -45,7 +50,8 @@
       "owner": "crsampaio",
       "repo": "spacehub",
       "private": false,
-      "releaseType": "release"
+      "releaseType": "release",
+      "token": "GH_TOKEN"
     },
     "directories": {
       "output": "dist"
