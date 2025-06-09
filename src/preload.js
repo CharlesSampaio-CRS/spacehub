@@ -25,7 +25,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sendDarkModeChanged: (isDark) => ipcRenderer.send('dark-mode-changed', isDark),
   getDarkMode: () => ipcRenderer.invoke('get-dark-mode'),
   login: (credentials) => ipcRenderer.invoke('login', credentials),
-  register: (data) => ipcRenderer.invoke('register', data)
+  register: (data) => ipcRenderer.invoke('register', data),
+  onLanguageChanged: (callback) => ipcRenderer.on('language-changed', (_, language) => callback(language)),
+  sendLanguageChanged: (language) => ipcRenderer.send('language-changed', language),
+  getLanguage: () => ipcRenderer.invoke('get-language')
 });
 
 window.addEventListener('DOMContentLoaded', () => {

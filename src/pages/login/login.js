@@ -86,6 +86,71 @@ const setupDarkMode = () => {
   });
 };
 
+const setupLanguage = () => {
+  // Verificar o idioma atual no store do Electron
+  window.electronAPI.getLanguage().then(language => {
+    document.documentElement.lang = language;
+    translatePage(language);
+  });
+
+  // Adicionar listener para mudanças no idioma
+  window.electronAPI.onLanguageChanged((language) => {
+    document.documentElement.lang = language;
+    translatePage(language);
+  });
+};
+
+const showError = (message) => {
+  const errorElement = document.getElementById('errorMessage');
+  errorElement.textContent = message;
+  errorElement.style.display = 'block';
+};
+
+const validateForm = () => {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const loginButton = document.getElementById('loginButton');
+
+  // Obter o idioma atual do Electron
+  window.electronAPI.getLanguage().then(currentLanguage => {
+    const translations = {
+      'pt-BR': {
+        'Email inválido': 'Email inválido',
+        'Senha inválida': 'Senha inválida',
+        'Preencha todos os campos': 'Preencha todos os campos'
+      },
+      'en-US': {
+        'Email inválido': 'Invalid email',
+        'Senha inválida': 'Invalid password',
+        'Preencha todos os campos': 'Please fill in all fields'
+      }
+    };
+
+    if (!email || !password) {
+      showError(translations[currentLanguage]['Preencha todos os campos']);
+      loginButton.disabled = true;
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showError(translations[currentLanguage]['Email inválido']);
+      loginButton.disabled = true;
+      return false;
+    }
+
+    if (password.length < 6) {
+      showError(translations[currentLanguage]['Senha inválida']);
+      loginButton.disabled = true;
+      return false;
+    }
+
+    document.getElementById('errorMessage').style.display = 'none';
+    loginButton.disabled = false;
+    return true;
+  });
+};
+
 // Carregar dados do LocalStorage ao iniciar
 window.addEventListener('DOMContentLoaded', () => {
   const emailInput = document.getElementById('email');
@@ -157,4 +222,5 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   setupDarkMode();
+  setupLanguage();
 });

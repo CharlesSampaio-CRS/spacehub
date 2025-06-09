@@ -493,6 +493,14 @@ ipcMain.on('restart-for-update', () => {
 app.whenReady().then(() => {
   createLoginWindow();
 
+  // Configurar idioma inicial
+  const initialLanguage = store.get('language') || 'pt-BR';
+  BrowserWindow.getAllWindows().forEach(window => {
+    if (!window.isDestroyed()) {
+      window.webContents.send('language-changed', initialLanguage);
+    }
+  });
+
   autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.autoRunAppAfterInstall = true;
   
@@ -680,4 +688,17 @@ ipcMain.handle('register', async (event, { name, email, password }) => {
 
 ipcMain.handle('get-dark-mode', () => {
   return store.get('darkMode') === true;
+});
+
+// Adicionar handlers de idioma
+ipcMain.handle('get-language', () => store.get('language') || 'pt-BR');
+
+ipcMain.on('language-changed', (event, language) => {
+  store.set('language', language);
+  // Propagar para todas as janelas
+  BrowserWindow.getAllWindows().forEach(window => {
+    if (!window.isDestroyed()) {
+      window.webContents.send('language-changed', language);
+    }
+  });
 });

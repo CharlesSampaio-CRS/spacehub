@@ -156,7 +156,7 @@ const setupDarkModeToggle = () => {
     window.electronAPI.sendDarkModeChanged(isDark);
     
     // Atualizar o ícone
-    toggleIcon.innerHTML = isDark ? '��' : '☀️';
+    toggleIcon.innerHTML = isDark ? '🌙' : '☀️';
   });
 };
 
@@ -222,6 +222,35 @@ const setupFullscreenToggle = () => {
   });
 };
 
+const setupLanguageToggle = () => {
+  const toggle = document.getElementById("language-toggle");
+  const toggleIcon = document.getElementById("language-icon");
+  if (!toggle || !toggleIcon) return;
+
+  // Verificar o estado atual do idioma no store do Electron
+  window.electronAPI.getLanguage().then(language => {
+    toggle.checked = language === 'en-US';
+    document.documentElement.lang = language;
+    translatePage(language);
+    
+    // Atualizar o ícone inicial
+    toggleIcon.textContent = language === 'pt-BR' ? '🇧🇷' : '🇺🇸';
+  });
+
+  // Adicionar listener para mudanças no idioma
+  window.electronAPI.onLanguageChanged((language) => {
+    toggle.checked = language === 'en-US';
+    document.documentElement.lang = language;
+    translatePage(language);
+    toggleIcon.textContent = language === 'pt-BR' ? '🇧🇷' : '🇺🇸';
+  });
+
+  // Evento de mudança do toggle
+  toggle.addEventListener('change', () => {
+    const newLanguage = toggle.checked ? 'en-US' : 'pt-BR';
+    window.electronAPI.sendLanguageChanged(newLanguage);
+  });
+};
 
 const initializeSettingsPage = () => {
   loadApplications();
@@ -231,6 +260,7 @@ const initializeSettingsPage = () => {
   setupAutoLoginToggle();
   setupCompactLayoutToggle();
   setupFullscreenToggle();
+  setupLanguageToggle();
 
   const saveButton = document.getElementById("saveButton");
   if (saveButton) {
