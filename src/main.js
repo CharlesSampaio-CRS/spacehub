@@ -743,6 +743,13 @@ ipcMain.handle('close-current-window', (event) => {
 
 // Adicionar handler para reiniciar a aplicação
 ipcMain.handle('restart-app', () => {
-  app.relaunch();
-  app.exit(0);
+  // Primeiro, salvar o idioma no store
+  const currentLanguage = store.get('language');
+  store.set('language', currentLanguage);
+  
+  // Pequeno delay antes de reiniciar
+  setTimeout(() => {
+    app.relaunch();
+    app.exit(0);
+  }, 100);
 });

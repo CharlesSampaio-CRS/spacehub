@@ -293,57 +293,41 @@ const setupLanguageToggle = () => {
     const newLanguage = toggle.checked ? 'en-US' : 'pt-BR';
     const currentLanguage = await window.electronAPI.getLanguage();
 
-    const translations = {
-      'pt-BR': {
-        title: 'Confirmação',
-        text: 'Deseja realmente mudar o idioma? A aplicação será reiniciada.',
-        confirm: 'Sim, mudar',
-        cancel: 'Não, cancelar'
-      },
-      'en-US': {
-        title: 'Confirmation',
-        text: 'Do you really want to change the language? The application will be restarted.',
-        confirm: 'Yes, change',
-        cancel: 'No, cancel'
-      }
-    };
+    const showConfirmationDialog = async (message, onConfirm) => {
+      const dialog = document.createElement('div');
+      dialog.className = 'confirmation-dialog';
+      dialog.innerHTML = `
+        <div class="confirmation-content">
+          <h3>${translations[currentLanguage]['Confirmação']}</h3>
+          <p>${message}</p>
+          <div class="confirmation-buttons">
+            <button class="confirm-btn">${translations[currentLanguage]['Confirmar']}</button>
+            <button class="cancel-btn">${translations[currentLanguage]['Cancelar']}</button>
+          </div>
+        </div>
+      `;
 
-    try {
-      const result = await Swal.fire({
-        title: translations[currentLanguage].title,
-        text: translations[currentLanguage].text,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: translations[currentLanguage].confirm,
-        cancelButtonText: translations[currentLanguage].cancel,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33'
+      document.body.appendChild(dialog);
+
+      const confirmBtn = dialog.querySelector('.confirm-btn');
+      const cancelBtn = dialog.querySelector('.cancel-btn');
+
+      confirmBtn.addEventListener('click', () => {
+        document.body.removeChild(dialog);
+        onConfirm();
       });
 
-      if (result.isConfirmed) {
-        // Primeiro envia a mudança de idioma
-        await window.electronAPI.sendLanguageChanged(newLanguage);
-        
-        // Pequeno delay antes de reiniciar para garantir que a mudança de idioma foi processada
-        setTimeout(async () => {
-          try {
-            await window.electronAPI.restartApp();
-          } catch (error) {
-            console.error('Erro ao reiniciar:', error);
-            // Se falhar, volta o toggle para o estado anterior
-            toggle.checked = !toggle.checked;
-            toggleIcon.innerHTML = !toggle.checked ? '🇧🇷' : '🇺🇸';
-          }
-        }, 500);
-      } else {
+      cancelBtn.addEventListener('click', () => {
+        document.body.removeChild(dialog);
         toggle.checked = !toggle.checked;
-        toggleIcon.innerHTML = !toggle.checked ? '🇧🇷' : '🇺🇸';
-      }
-    } catch (error) {
-      console.error('Erro ao processar mudança de idioma:', error);
-      toggle.checked = !toggle.checked;
-      toggleIcon.innerHTML = !toggle.checked ? '🇧🇷' : '🇺��';
-    }
+        toggleIcon.innerHTML = currentLanguage === 'pt-BR' ? '🇧🇷' : '🇺🇸';
+      });
+    };
+
+    showConfirmationDialog(translations[currentLanguage]['language_change_confirmation'], async () => {
+      await window.electronAPI.setLanguage(newLanguage);
+      await window.electronAPI.restartApp();
+    });
   });
 };
 
