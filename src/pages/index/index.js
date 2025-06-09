@@ -647,7 +647,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
           
           await window.electronAPI.invoke('logout');
-          window.location.href = '../login/login.html';
+          
+          // Abrir nova janela de login
+          await window.electronAPI.invoke('create-login-window');
+          
+          // Fechar a janela atual
+          window.electronAPI.invoke('close-current-window');
         } catch (error) {
           console.error('Erro ao fazer logout:', error);
         }

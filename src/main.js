@@ -116,6 +116,8 @@ function createMainWindow() {
     }
   });
 
+  mainWindow.webContents.setMaxListeners(20);
+
   mainWindow.webContents.setFrameRate(60);
   mainWindow.webContents.setBackgroundThrottling(false);
   
@@ -137,9 +139,18 @@ function createMainWindow() {
     return { action: 'deny' };
   });
 
-  mainWindow.on('closed', () => { mainWindow = null; });
+  mainWindow.on('closed', () => { 
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.removeAllListeners('did-finish-load');
+    }
+    mainWindow = null; 
+  });
 
-  mainWindow.once('did-finish-load', () => {
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.removeAllListeners('did-finish-load');
+  }
+  
+  mainWindow.webContents.once('did-finish-load', () => {
     const isDarkMode = store.get('darkMode') === true;
     mainWindow.webContents.send('dark-mode-changed', isDarkMode);
     
@@ -324,6 +335,10 @@ ipcMain.on('login-success', (event, token) => {
   closeWindow(loginWindow);
   createMainWindow();
 
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.removeAllListeners('did-finish-load');
+  }
+  
   mainWindow.webContents.once('did-finish-load', () => {
     mainWindow.webContents.send('set-token', token);
   });
@@ -624,14 +639,21 @@ ipcMain.handle('handleGoogleLogin', async (event, idToken) => {
 ipcMain.handle('logout', async (event, userId) => {
   try {
     if (userId) {
-      await clearUserSession(userId);
+      // Limpar sessão específica do usuário
+      const userSession = userSessions.get(userId);
+      if (userSession) {
+        await userSession.clearCache();
+        await userSession.clearStorageData({
+          storages: ['cookies', 'filesystem', 'indexdb', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
+        });
+        userSessions.delete(userId);
+      }
     }
     
-    // Limpar todas as sessões
+    // Limpar todas as outras sessões
     for (const [id, session] of userSessions.entries()) {
       try {
         await session.clearCache();
-        // Limpar tudo exceto localStorage
         await session.clearStorageData({
           storages: ['cookies', 'filesystem', 'indexdb', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
         });
@@ -704,4 +726,17 @@ ipcMain.on('language-changed', (event, language) => {
       window.webContents.send('language-changed', language);
     }
   });
+});
+
+// Handler para criar janela de login
+ipcMain.handle('create-login-window', () => {
+  createLoginWindow();
+});
+
+// Handler para fechar a janela atual
+ipcMain.handle('close-current-window', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) {
+    win.close();
+  }
 });
