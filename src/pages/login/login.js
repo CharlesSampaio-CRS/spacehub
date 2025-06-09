@@ -195,16 +195,35 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Eventos de resposta de login com Google
-  window.electronAPI.on('google-login-success', (event, tokens) => {
-    const token = tokens.id_token || tokens.access_token;
-    localStorage.setItem('token', token);
-    window.electronAPI.send('login-success', token);
+  window.electronAPI.on('google-login-success', async (event, tokens) => {
+    try {
+      if (!tokens || !tokens.token) {
+        throw new Error('Token não recebido do login com Google');
+      }
+
+      const token = tokens.token;
+      localStorage.setItem('token', token);
+      
+      // Aguardar um pequeno delay para garantir que o token foi salvo
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      window.electronAPI.send('login-success', token);
+    } catch (error) {
+      console.error('Erro ao processar login com Google:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Erro no Login',
+        text: 'Não foi possível processar o login com Google: ' + error.message,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'OK'
+      });
+    }
   });
 
   window.electronAPI.on('google-login-failed', async (event, message) => {
     await Swal.fire({
       icon: 'error',
-      title: 'Falha no Google Login',
+      title: 'Falha no Login com Google',
       text: 'Não foi possível fazer login com Google: ' + message,
       confirmButtonColor: '#d33',
       confirmButtonText: 'OK'

@@ -62,7 +62,16 @@ function saveToken(token) {
       if (payload.uuid) {
         store.set('userUuid', payload.uuid);
       } else {
-        console.warn('UUID not found in token.');
+        console.warn('UUID não encontrado no token.');
+      }
+      
+      // Log da sessão logada
+      if (payload.email) {
+        console.log('=== Sessão Atual ===');
+        console.log('Email:', payload.email);
+        console.log('UUID:', payload.uuid);
+        console.log('Data de Login:', new Date().toLocaleString('pt-BR'));
+        console.log('===================');
       }
     }
   }
@@ -70,11 +79,15 @@ function saveToken(token) {
 
 function parseJwt(token) {
   try {
+    if (!token) {
+      console.warn('Token não fornecido para parseJwt');
+      return null;
+    }
     const base64Payload = token.split('.')[1];
     const payload = Buffer.from(base64Payload, 'base64').toString('utf8');
     return JSON.parse(payload);
   } catch (e) {
-    console.error('Failed to parse JWT', e);
+    console.error('Falha ao fazer parse do JWT:', e);
     return null;
   }
 }
@@ -226,7 +239,7 @@ function generateFakePassword(email) {
   return `${email}_googleAuth!`;
 }
 
-function handleLogout() {
+async function handleLogout() {
   closeWindow(mainWindow);
   createLoginWindow();
 }
@@ -276,6 +289,9 @@ ipcMain.on('start-google-login', () => {
 
     try {
       const code = new URL(url).searchParams.get('code');
+      if (!code) {
+        throw new Error('Código de autorização não recebido');
+      }
 
       const tokenRes = await axios.post('https://oauth2.googleapis.com/token', qs.stringify({
         code,
@@ -287,11 +303,19 @@ ipcMain.on('start-google-login', () => {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
 
+      if (!tokenRes.data.access_token) {
+        throw new Error('Token de acesso não recebido');
+      }
+
       const accessToken = tokenRes.data.access_token;
 
       const userRes = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
+
+      if (!userRes.data || !userRes.data.email) {
+        throw new Error('Informações do usuário não recebidas');
+      }
 
       const { id: googleId, name, email } = userRes.data;
       const fakePassword = generateFakePassword(email);
@@ -303,8 +327,8 @@ ipcMain.on('start-google-login', () => {
       } catch (err) {
         if (err.response?.status !== 409) {
           const msg = err.response?.status === 500
-            ? 'Error logging in with Google. Please try again.'
-            : 'Unexpected error registering with Google.';
+            ? 'Erro ao fazer login com Google. Por favor, tente novamente.'
+            : 'Erro inesperado ao registrar com Google.';
           loginWindow.webContents.executeJavaScript(`alert("${msg}");`);
           closeWindow(loginWindow);
           createLoginWindow();
@@ -316,11 +340,20 @@ ipcMain.on('start-google-login', () => {
         email, password: fakePassword
       });
 
+      if (!loginRes.data || !loginRes.data.token) {
+        throw new Error('Token de autenticação não recebido');
+      }
+
       const token = loginRes.data.token;
       saveToken(token);
-      if (loginWindow) loginWindow.webContents.send('google-login-success', { token });
+      
+      if (loginWindow) {
+        loginWindow.webContents.send('google-login-success', { token });
+      } else {
+        throw new Error('Janela de login não encontrada');
+      }
     } catch (error) {
-      console.error('Google login error:', error);
+      console.error('Erro no login do Google:', error);
       loginWindow?.webContents.send('google-login-failed', error.message);
       closeWindow(loginWindow);
       createLoginWindow();
@@ -330,8 +363,24 @@ ipcMain.on('start-google-login', () => {
   });
 });
 
-ipcMain.on('login-success', (event, token) => {
+ipcMain.on('login-success', async (event, token) => {
+  if (!token) {
+    console.error('Token não fornecido no login-success');
+    return;
+  }
+
   saveToken(token);
+  
+  // Obter o email do token
+  const payload = parseJwt(token);
+  if (payload && payload.email) {
+    // Criar uma nova sessão para este email
+    const sessionInfo = createUserSession(payload.email);
+    console.log(`Nova sessão criada para: ${payload.email}`);
+  } else {
+    console.warn('Não foi possível obter o email do token');
+  }
+  
   closeWindow(loginWindow);
   createMainWindow();
 
@@ -550,12 +599,20 @@ ipcMain.on('dark-mode-changed', (event, isDark) => {
 // Gerenciamento de sessões
 const userSessions = new Map();
 
-const createUserSession = (userId) => {
-  if (userSessions.has(userId)) {
-    return { sessionId: `persist:user_${userId}` };
+const createUserSession = (email) => {
+  console.log('Criando sessão para email:', email);
+  
+  if (!email) {
+    console.error('Email não fornecido para criar sessão');
+    return null;
   }
 
-  const userSession = session.fromPartition(`persist:user_${userId}`);
+  if (userSessions.has(email)) {
+    console.log('Sessão já existe para:', email);
+    return { sessionId: `persist:user_${email}` };
+  }
+
+  const userSession = session.fromPartition(`persist:user_${email}`);
   
   // Configurar permissões da sessão
   userSession.setPermissionRequestHandler((webContents, permission, callback) => {
@@ -572,40 +629,42 @@ const createUserSession = (userId) => {
     try {
       await userSession.clearCache();
     } catch (error) {
-      console.error(`Erro ao limpar cache da sessão ${userId}:`, error);
+      console.error(`Erro ao limpar cache da sessão ${email}:`, error);
     }
   }, 3600000); // A cada hora
 
-  userSessions.set(userId, userSession);
-  return { sessionId: `persist:user_${userId}` };
+  userSessions.set(email, userSession);
+  console.log('Sessões ativas:', Array.from(userSessions.keys()));
+  console.log('Total de sessões:', userSessions.size);
+  return { sessionId: `persist:user_${email}` };
 };
 
-const clearUserSession = async (userId) => {
-  const userSession = userSessions.get(userId);
+const clearUserSession = async (email) => {
+  const userSession = userSessions.get(email);
   if (userSession) {
     try {
       await userSession.clearCache();
       await userSession.clearStorageData({
         storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
       });
-      userSessions.delete(userId);
+      userSessions.delete(email);
     } catch (error) {
-      console.error(`Erro ao limpar sessão do usuário ${userId}:`, error);
+      console.error(`Erro ao limpar sessão do usuário ${email}:`, error);
     }
   }
 };
 
 // Handlers IPC para gerenciamento de sessão
-ipcMain.handle('create-user-session', (event, userId) => {
-  return createUserSession(userId);
+ipcMain.handle('create-user-session', (event, email) => {
+  return createUserSession(email);
 });
 
-ipcMain.handle('clear-user-session', (event, userId) => {
-  return clearUserSession(userId);
+ipcMain.handle('clear-user-session', (event, email) => {
+  return clearUserSession(email);
 });
 
-ipcMain.handle('get-user-session', (event, userId) => {
-  return userSessions.has(userId) ? { sessionId: `persist:user_${userId}` } : null;
+ipcMain.handle('get-user-session', (event, email) => {
+  return userSessions.has(email) ? { sessionId: `persist:user_${email}` } : null;
 });
 
 // Modificar o handler de login do Google
@@ -616,67 +675,15 @@ ipcMain.handle('handleGoogleLogin', async (event, idToken) => {
       audience: process.env.GOOGLE_CLIENT_ID
     });
     const payload = ticket.getPayload();
-    const userId = payload.sub;
+    const email = payload.email;
     
-    // Criar sessão para o usuário
-    const userSession = createUserSession(userId);
+    // Criar sessão específica para o email do Google
+    const sessionInfo = createUserSession(email);
+    console.log(`Nova sessão Google criada para: ${email}`);
     
-    // Salvar dados do usuário
-    const userData = {
-      id: userId,
-      email: payload.email,
-      name: payload.name,
-      picture: payload.picture,
-      sessionId: `user_${userId}`
-    };
-    
-    return { success: true, user: userData };
+    return { success: true, user: payload };
   } catch (error) {
     console.error('Erro no login do Google:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-// Modificar o handler de logout
-ipcMain.handle('logout', async (event, userId) => {
-  try {
-    if (userId) {
-      // Limpar sessão específica do usuário
-      const userSession = userSessions.get(userId);
-      if (userSession) {
-        await userSession.clearCache();
-        await userSession.clearStorageData({
-          storages: ['cookies', 'filesystem', 'indexdb', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
-        });
-        userSessions.delete(userId);
-      }
-    }
-    
-    // Limpar todas as outras sessões
-    for (const [id, session] of userSessions.entries()) {
-      try {
-        await session.clearCache();
-        await session.clearStorageData({
-          storages: ['cookies', 'filesystem', 'indexdb', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
-        });
-      } catch (error) {
-        console.error(`Erro ao limpar sessão ${id}:`, error);
-      }
-    }
-    userSessions.clear();
-
-    // Limpar sessão principal
-    const mainSession = session.fromPartition('persist:mainSession');
-    await mainSession.clearCache();
-    
-    // Limpar tudo exceto localStorage
-    await mainSession.clearStorageData({
-      storages: ['cookies', 'filesystem', 'indexdb', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error('Erro no logout:', error);
     return { success: false, error: error.message };
   }
 });
@@ -754,4 +761,17 @@ ipcMain.handle('restart-app', () => {
     app.relaunch();
     app.exit(0);
   }, 100);
+});
+
+// Modificar o handler de logout
+ipcMain.handle('logout', async (event, email) => {
+  try {
+    // Apenas fechar a janela principal e criar a janela de login
+    closeWindow(mainWindow);
+    createLoginWindow();
+    return { success: true };
+  } catch (error) {
+    console.error('Erro no logout:', error);
+    return { success: false, error: error.message };
+  }
 });

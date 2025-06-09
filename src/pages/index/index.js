@@ -530,7 +530,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const user = JSON.parse(localStorage.getItem('user'));
       if (user) {
         // Criar sessão específica para o usuário
-        await window.electronAPI.createUserSession(user.id);
+        await window.electronAPI.createUserSession(user.email);
         
         // Limpar webviews existentes
         webviewCache.forEach((webview) => {
