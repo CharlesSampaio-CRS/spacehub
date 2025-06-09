@@ -1,6 +1,6 @@
 {
   "name": "spaceapp",
-  "version": "1.0.208",
+  "version": "1.0.209",
   "description": "Electron App with Modern UI",
   "author": "Charles Sampaio",
   "main": "src/main.js",
@@ -30,19 +30,23 @@
     "node-fetch": "^2.7.0",
     "sweetalert2": "^11.6.13"
   },
+  "publish": {
+    "provider": "github",
+    "owner": "crsampaio",
+    "repo": "spacehub",
+    "private": false,
+    "releaseType": "release"
+  },
   "build": {
-    "appId": "com.spacehub",
+    "appId": "com.spacehub.app",
     "productName": "SpaceHub",
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "CharlesSampaio-CRS",
-        "repo": "spacehub",
-        "releaseType": "release",
-        "vPrefixedTagName": true,
-        "publishAutoUpdate": true
-      }
-    ],
+    "publish": {
+      "provider": "github",
+      "owner": "crsampaio",
+      "repo": "spacehub",
+      "private": false,
+      "releaseType": "release"
+    },
     "directories": {
       "output": "dist"
     },
@@ -56,6 +60,12 @@
       "config.js",
       ".env",
       "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "src/assets",
+        "to": "assets"
+      }
     ],
     "mac": {
       "target": [
