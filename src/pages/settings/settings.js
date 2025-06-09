@@ -335,8 +335,20 @@ const setupLanguageToggle = () => {
     const confirmationMessage = translations[currentLanguage]['language_change_confirmation'].replace('%s', languageName);
 
     showConfirmationDialog(confirmationMessage, async () => {
-      await window.electronAPI.setLanguage(newLanguage);
-      await window.electronAPI.restartApp();
+      try {
+        await window.electronAPI.setLanguage(newLanguage);
+        // Pequeno delay antes de reiniciar para garantir que a mudança de idioma foi processada
+        setTimeout(() => {
+          window.electronAPI.restartApp().catch(() => {
+            // Ignorar erro de objeto destruído
+          });
+        }, 100);
+      } catch (error) {
+        console.error('Erro ao mudar idioma:', error);
+        // Reverter o toggle em caso de erro
+        toggle.checked = !toggle.checked;
+        toggleIcon.innerHTML = currentLanguage === 'pt-BR' ? '🇧🇷' : '🇺🇸';
+      }
     });
   });
 };
