@@ -1,6 +1,6 @@
 {
   "name": "spaceapp",
-  "version": "1.0.223",
+  "version": "1.0.224",
   "description": "Electron App with Modern UI",
   "author": "Charles Sampaio",
   "main": "src/main.js",
