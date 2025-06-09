@@ -29,7 +29,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onLanguageChanged: (callback) => ipcRenderer.on('language-changed', (_, language) => callback(language)),
   sendLanguageChanged: (language) => ipcRenderer.send('language-changed', language),
   getLanguage: () => ipcRenderer.invoke('get-language'),
-  setLanguage: (language) => ipcRenderer.send('language-changed', language)
+  setLanguage: (language) => ipcRenderer.send('language-changed', language),
+  createUserSession: (userId) => ipcRenderer.invoke('create-user-session', userId),
+  clearUserSession: (userId) => ipcRenderer.invoke('clear-user-session', userId),
+  getUserSession: (userId) => ipcRenderer.invoke('get-user-session', userId)
 });
 
 window.addEventListener('DOMContentLoaded', () => {

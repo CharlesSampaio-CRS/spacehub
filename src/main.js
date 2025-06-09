@@ -552,13 +552,13 @@ const userSessions = new Map();
 
 const createUserSession = (userId) => {
   if (userSessions.has(userId)) {
-    return userSessions.get(userId);
+    return { sessionId: `persist:user_${userId}` };
   }
 
-  const session = session.fromPartition(`persist:user_${userId}`);
+  const userSession = session.fromPartition(`persist:user_${userId}`);
   
   // Configurar permissões da sessão
-  session.setPermissionRequestHandler((webContents, permission, callback) => {
+  userSession.setPermissionRequestHandler((webContents, permission, callback) => {
     const allowedPermissions = ['media', 'geolocation', 'notifications', 'fullscreen'];
     if (allowedPermissions.includes(permission)) {
       callback(true);
@@ -567,23 +567,25 @@ const createUserSession = (userId) => {
     }
   });
 
-  // Configurar limites de cache
-  session.setCacheSize(100 * 1024 * 1024); // 100MB
+  // Configurar limpeza periódica do cache
+  setInterval(async () => {
+    try {
+      await userSession.clearCache();
+    } catch (error) {
+      console.error(`Erro ao limpar cache da sessão ${userId}:`, error);
+    }
+  }, 3600000); // A cada hora
 
-  // Configurar limpeza automática
-  session.setSpellCheckerDictionaryDownloadEnabled(false);
-  session.setSpellCheckerEnabled(false);
-
-  userSessions.set(userId, session);
-  return session;
+  userSessions.set(userId, userSession);
+  return { sessionId: `persist:user_${userId}` };
 };
 
 const clearUserSession = async (userId) => {
-  const session = userSessions.get(userId);
-  if (session) {
+  const userSession = userSessions.get(userId);
+  if (userSession) {
     try {
-      await session.clearCache();
-      await session.clearStorageData({
+      await userSession.clearCache();
+      await userSession.clearStorageData({
         storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
       });
       userSessions.delete(userId);
@@ -603,7 +605,7 @@ ipcMain.handle('clear-user-session', (event, userId) => {
 });
 
 ipcMain.handle('get-user-session', (event, userId) => {
-  return userSessions.get(userId);
+  return userSessions.has(userId) ? { sessionId: `persist:user_${userId}` } : null;
 });
 
 // Modificar o handler de login do Google
