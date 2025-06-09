@@ -131,10 +131,17 @@ body.dark-mode {
 }
 
 .application-info img {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 8px;
   object-fit: cover;
+  background: white;
+  padding: 2px;
+}
+
+.dark-mode .application-info img {
+  background: transparent;
+  padding: 0;
 }
 
 .status-label {
@@ -210,25 +217,6 @@ body.dark-mode {
 .dark-mode .application-item:hover {
   background: #464646;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.application-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.application-info img {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  object-fit: cover;
-  background: white;
-  padding: 2px;
-}
-
-.dark-mode .application-info img {
-  background: #2a2a2a;
 }
 
 .application-info p {
