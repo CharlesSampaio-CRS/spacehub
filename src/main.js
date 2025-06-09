@@ -133,7 +133,7 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
-  //mainWindow.setMenu(null);
+  mainWindow.setMenu(null);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url) || url.includes('accounts.google.com')) {
@@ -143,11 +143,13 @@ function createMainWindow() {
     return { action: 'deny' };
   });
 
-  mainWindow.on('closed', () => { 
+  mainWindow.on('close', () => {
     if (mainWindow && mainWindow.webContents) {
       mainWindow.webContents.removeAllListeners('did-finish-load');
     }
-    mainWindow = null; 
+  });
+  mainWindow.on('closed', () => {
+    mainWindow = null;
   });
 
   if (mainWindow && mainWindow.webContents) {
@@ -371,9 +373,7 @@ ipcMain.on('login-success', async (event, token) => {
   if (payload && payload.email) {
     // Criar uma nova sessão para este email
     const sessionInfo = createUserSession(payload.email);
-    console.log(`Nova sessão criada para: ${payload.email}`);
   } else {
-    console.warn('Não foi possível obter o email do token');
   }
   
   closeWindow(loginWindow);
@@ -703,7 +703,6 @@ ipcMain.handle('login', async (event, { email, password }) => {
 
     // Criar sessão específica para o email
     const sessionInfo = createUserSession(email);
-    console.log(`Nova sessão criada para login com email: ${email}`);
 
     return data;
   } catch (error) {
@@ -723,7 +722,6 @@ ipcMain.handle('register', async (event, { name, email, password }) => {
 
     // Criar sessão específica para o email registrado
     const sessionInfo = createUserSession(email);
-    console.log(`Nova sessão criada para registro com email: ${email}`);
 
     return { status: 201, data };
   } catch (error) {
