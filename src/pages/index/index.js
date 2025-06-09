@@ -645,7 +645,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       showConfirmationDialog(logoutMessage, async () => {
         try {
           await clearUserSession();
-          window.electronAPI.send('logout-success');
+          await window.electronAPI.invoke('logout');
         } catch (error) {
           console.error('Erro ao fazer logout:', error);
         }
@@ -667,6 +667,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Inicialização
   const init = async () => {
     try {
+      // Configurar idioma inicial
+      const currentLanguage = await window.electronAPI.getLanguage();
+      document.documentElement.lang = currentLanguage;
+      translatePage(currentLanguage);
+
       await setupUserSession();
       setupProfileMenu();
       setupButtonEvents();
