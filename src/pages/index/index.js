@@ -408,7 +408,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Receber comandos do menu de contexto
-    window.electronAPI.on('context-menu-command', (event, command, targetId) => {
+    window.electronAPI.on('context-menu-command', async (event, command, targetId) => {
       switch (command) {
         case 'reload-applications':
           // Recarregar apenas as webviews que estão abertas
@@ -419,7 +419,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
           break;
         case 'close-all-webviews':
-          showConfirmationDialog('Deseja realmente fechar todas as janelas?', () => {
+          const currentLanguage = await window.electronAPI.getLanguage();
+          showConfirmationDialog(translations[currentLanguage]['close_all_confirmation'], () => {
             document.querySelectorAll('webview').forEach(w => {
               if (w.id !== 'webview-home') {
                 w.remove();
@@ -477,16 +478,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
-  const showConfirmationDialog = (message, onConfirm) => {
+  const showConfirmationDialog = async (message, onConfirm) => {
+    const currentLanguage = await window.electronAPI.getLanguage();
     const dialog = document.createElement('div');
     dialog.className = 'confirmation-dialog';
     dialog.innerHTML = `
       <div class="confirmation-content">
-        <h3>Confirmação</h3>
+        <h3>${translations[currentLanguage]['Confirmação']}</h3>
         <p>${message}</p>
         <div class="confirmation-buttons">
-          <button class="confirm-btn">Confirmar</button>
-          <button class="cancel-btn">Cancelar</button>
+          <button class="confirm-btn">${translations[currentLanguage]['Confirmar']}</button>
+          <button class="cancel-btn">${translations[currentLanguage]['Cancelar']}</button>
         </div>
       </div>
     `;
@@ -639,13 +641,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       profileMenu.classList.remove('show');
     });
 
-    profileLogout?.addEventListener('click', () => {
+    profileLogout?.addEventListener('click', async () => {
       profileMenu.classList.remove('show');
-      const logoutMessage = translations[localStorage.getItem('language') || 'pt-BR']['logout_confirmation'];
-      showConfirmationDialog(logoutMessage, async () => {
+      const currentLanguage = await window.electronAPI.getLanguage();
+      showConfirmationDialog(translations[currentLanguage]['logout_confirmation'], async () => {
         try {
-          await clearUserSession();
+          // Verificar se deve manter os dados
+          const rememberLogin = localStorage.getItem('rememberLogin') === 'true';
+          
+          // Se não estiver marcado para lembrar, limpar os dados
+          if (!rememberLogin) {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            localStorage.removeItem('userUuid');
+          }
+          
           await window.electronAPI.invoke('logout');
+          window.location.href = '../login/login.html';
         } catch (error) {
           console.error('Erro ao fazer logout:', error);
         }
