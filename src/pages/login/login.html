@@ -13,9 +13,53 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="./login.js"></script>
+  <style>
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 50%;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+    }
+
+    .dark-mode .theme-toggle {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .mode-icon {
+      font-size: 1.4em;
+      transition: transform 0.3s ease;
+    }
+
+    .theme-toggle:hover .mode-icon {
+      transform: rotate(30deg);
+    }
+
+    .dark-mode .mode-icon {
+      transform: rotate(180deg);
+    }
+
+    .dark-mode .theme-toggle:hover .mode-icon {
+      transform: rotate(210deg);
+    }
+  </style>
 </head>
 
 <body>
+  <div class="theme-toggle" id="dark-mode-toggle">
+    <span id="dark-mode-icon" class="mode-icon">☀️</span>
+  </div>
+
   <div class="login-container">
     <div class="logo-container">
       <div class="logo-icon">
@@ -58,14 +102,6 @@
     <p class="footer-text" style="margin-top: 20px;">
       <span data-translate="Não tem uma conta?">Não tem uma conta?</span> <a href="#" id="registerLink" data-translate="Cadastre-se">Cadastre-se</a>
     </p>
-
-    <div class="theme-toggle">
-      <span id="dark-mode-icon" class="mode-icon">☀️</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="dark-mode-toggle" />
-        <span class="slider"></span>
-      </label>
-    </div>
   </div>
 
   <script>
@@ -133,6 +169,18 @@
       const isDarkMode = localStorage.getItem('darkMode') === 'true';
       document.documentElement.classList.toggle('dark-mode', isDarkMode);
       document.body.classList.toggle('dark-mode', isDarkMode);
+
+      // Configurar o toggle de tema
+      const themeToggle = document.getElementById('dark-mode-toggle');
+      const themeIcon = document.getElementById('dark-mode-icon');
+
+      themeToggle.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark-mode');
+        document.body.classList.toggle('dark-mode', isDark);
+        localStorage.setItem('darkMode', isDark);
+        themeIcon.textContent = isDark ? '🌙' : '☀️';
+        window.electronAPI.sendDarkModeChanged(isDark);
+      });
 
       // Aplicar o idioma salvo
       const currentLanguage = localStorage.getItem('language') || 'pt-BR';
