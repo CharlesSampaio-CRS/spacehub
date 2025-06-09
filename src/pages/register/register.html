@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="./register.js"></script>
 </head>
 
 <body>
@@ -22,22 +23,22 @@
         <img width="48" height="48" src="../../assets/spacehub.png" alt="SpaceHub" />
       </div>
       <h2>Space Hub</h2>
-      <p class="subtitle">Crie sua conta</p>
+      <p class="subtitle" data-translate="Crie sua conta">Crie sua conta</p>
     </div>
 
     <form id="registerForm">
       <div class="input-group">
-        <label for="name">Nome</label>
+        <label for="name" data-translate="Nome completo">Nome</label>
         <input type="text" id="name" placeholder="Seu nome completo" autocomplete="name"/>
       </div>
 
       <div class="input-group">
-        <label for="email">E-mail</label>
+        <label for="email" data-translate="E-mail">E-mail</label>
         <input type="email" id="email" placeholder="seu@email.com" autocomplete="email"/>
       </div>
 
       <div class="input-group">
-        <label for="password">Senha</label>
+        <label for="password" data-translate="Senha">Senha</label>
         <input type="password" id="password" placeholder="••••••••" autocomplete="new-password"/>
         <div class="password-strength">
           <div class="strength-bar">
@@ -47,15 +48,117 @@
         </div>
       </div>
 
-      <button type="submit" class="btn btn-primary">Criar conta</button>
+      <div class="input-group">
+        <label for="confirmPassword" data-translate="Confirmar senha">Confirmar senha</label>
+        <input type="password" id="confirmPassword" placeholder="••••••••" />
+      </div>
+
+      <p id="errorMessage" style="color: #ef4444; display: none; margin-top: 8px;"></p>
+
+      <button id="registerButton" class="btn btn-primary" data-translate="Cadastrar">Criar conta</button>
     </form>
 
+    <div class="register-actions">
+      <p style="margin: 16px 0 8px;" data-translate="ou">ou</p>
+      <button id="googleRegister" class="btn btn-google">
+        <img width="24" height="24" src="https://img.icons8.com/color/48/google-logo.png" alt="google-logo" />
+        <span data-translate="Cadastrar com Google">Cadastrar com Google</span>
+      </button>
+    </div>
+
     <p class="footer-text" style="margin-top: 20px;">
-      Já tem uma conta? <a href="#" id="loginLink">Faça login</a>
+      <span data-translate="Já tem uma conta?">Já tem uma conta?</span> <a href="#" id="loginLink" data-translate="Faça login">Faça login</a>
     </p>
+
+    <div class="theme-toggle">
+      <span id="dark-mode-icon" class="mode-icon">☀️</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="dark-mode-toggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
   </div>
 
-  <script src="./register.js"></script>
+  <script>
+    // Objeto com as traduções
+    const translations = {
+      'pt-BR': {
+        'Crie sua conta': 'Crie sua conta',
+        'Nome completo': 'Nome completo',
+        'E-mail': 'E-mail',
+        'Senha': 'Senha',
+        'Confirmar senha': 'Confirmar senha',
+        'Cadastrar': 'Cadastrar',
+        'ou': 'ou',
+        'Cadastrar com Google': 'Cadastrar com Google',
+        'Já tem uma conta?': 'Já tem uma conta?',
+        'Faça login': 'Faça login',
+        'Seu nome completo': 'Seu nome completo',
+        'seu@email.com': 'seu@email.com',
+        '••••••••': '••••••••',
+        'Nome inválido': 'Nome inválido',
+        'Email inválido': 'Email inválido',
+        'Senha inválida': 'Senha inválida',
+        'As senhas não coincidem': 'As senhas não coincidem',
+        'Preencha todos os campos': 'Preencha todos os campos',
+        'Erro ao criar conta': 'Erro ao criar conta'
+      },
+      'en-US': {
+        'Crie sua conta': 'Create your account',
+        'Nome completo': 'Full name',
+        'E-mail': 'Email',
+        'Senha': 'Password',
+        'Confirmar senha': 'Confirm password',
+        'Cadastrar': 'Sign up',
+        'ou': 'or',
+        'Cadastrar com Google': 'Sign up with Google',
+        'Já tem uma conta?': 'Already have an account?',
+        'Faça login': 'Sign in',
+        'Seu nome completo': 'Your full name',
+        'seu@email.com': 'your@email.com',
+        '••••••••': '••••••••',
+        'Nome inválido': 'Invalid name',
+        'Email inválido': 'Invalid email',
+        'Senha inválida': 'Invalid password',
+        'As senhas não coincidem': 'Passwords do not match',
+        'Preencha todos os campos': 'Please fill in all fields',
+        'Erro ao criar conta': 'Error creating account'
+      }
+    };
+
+    // Função para traduzir os elementos
+    function translatePage(language) {
+      // Traduzir elementos com data-translate
+      const elements = document.querySelectorAll('[data-translate]');
+      elements.forEach(element => {
+        const key = element.getAttribute('data-translate');
+        if (translations[language] && translations[language][key]) {
+          element.textContent = translations[language][key];
+        }
+      });
+
+      // Traduzir placeholders
+      const inputs = document.querySelectorAll('[data-translate-placeholder]');
+      inputs.forEach(input => {
+        const key = input.getAttribute('data-translate-placeholder');
+        if (translations[language] && translations[language][key]) {
+          input.placeholder = translations[language][key];
+        }
+      });
+    }
+
+    // Aplicar dark mode e tradução ao carregar a página
+    document.addEventListener('DOMContentLoaded', () => {
+      const isDarkMode = localStorage.getItem('darkMode') === 'true';
+      document.documentElement.classList.toggle('dark-mode', isDarkMode);
+      document.body.classList.toggle('dark-mode', isDarkMode);
+
+      // Aplicar o idioma salvo
+      const currentLanguage = localStorage.getItem('language') || 'pt-BR';
+      document.documentElement.lang = currentLanguage;
+      translatePage(currentLanguage);
+    });
+  </script>
 </body>
 
 </html>
