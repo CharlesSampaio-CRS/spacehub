@@ -240,7 +240,9 @@ const translations = {
     'Confirmação': 'Confirmação',
     'Confirmar': 'Confirmar',
     'Cancelar': 'Cancelar',
-    'language_change_confirmation': 'Deseja realmente mudar o idioma? A aplicação será reiniciada.'
+    'language_change_confirmation': 'Deseja realmente mudar o idioma para %s? A aplicação será reiniciada.',
+    'Português': 'Português',
+    'Inglês': 'Inglês'
   },
   'en-US': {
     'Perfil': 'Profile',
@@ -258,7 +260,9 @@ const translations = {
     'Confirmação': 'Confirmation',
     'Confirmar': 'Confirm',
     'Cancelar': 'Cancel',
-    'language_change_confirmation': 'Do you really want to change the language? The application will be restarted.'
+    'language_change_confirmation': 'Do you really want to change the language to %s? The application will be restarted.',
+    'Português': 'Portuguese',
+    'Inglês': 'English'
   }
 };
 
@@ -292,6 +296,9 @@ const setupLanguageToggle = () => {
   toggle.addEventListener('change', async () => {
     const newLanguage = toggle.checked ? 'en-US' : 'pt-BR';
     const currentLanguage = await window.electronAPI.getLanguage();
+    
+    // Atualizar o ícone imediatamente
+    toggleIcon.innerHTML = newLanguage === 'pt-BR' ? '🇧🇷' : '🇺🇸';
 
     const showConfirmationDialog = async (message, onConfirm) => {
       const dialog = document.createElement('div');
@@ -324,7 +331,10 @@ const setupLanguageToggle = () => {
       });
     };
 
-    showConfirmationDialog(translations[currentLanguage]['language_change_confirmation'], async () => {
+    const languageName = newLanguage === 'pt-BR' ? translations[currentLanguage]['Português'] : translations[currentLanguage]['Inglês'];
+    const confirmationMessage = translations[currentLanguage]['language_change_confirmation'].replace('%s', languageName);
+
+    showConfirmationDialog(confirmationMessage, async () => {
       await window.electronAPI.setLanguage(newLanguage);
       await window.electronAPI.restartApp();
     });
