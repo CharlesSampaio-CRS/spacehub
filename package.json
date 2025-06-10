@@ -1,6 +1,6 @@
 {
   "name": "spaceapp",
-  "version": "1.0.241",
+  "version": "1.0.242",
   "description": "Electron App with Modern UI",
   "author": "Charles Sampaio",
   "main": "src/main.js",
@@ -39,7 +39,7 @@
     "productName": "SpaceHub",
     "publish": {
       "provider": "github",
-      "owner": "crsampaio",
+      "owner": "CharlesSampaio-CRS",
       "repo": "spacehub"
     },
     "directories": {
