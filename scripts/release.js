@@ -2,6 +2,9 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
+const REPO_OWNER = "CharlesSampaio-CRS";
+const REPO_NAME = "spacehub";
+
 const pkgPath = path.join(__dirname, "..", "package.json");
 const pkg = require(pkgPath);
 
