@@ -491,7 +491,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   const setupMenuPosition = (menu, x, y) => {
-    const rect = document.body.getBoundingClientRect();
+    const rect = document .body.getBoundingClientRect();
     const menuWidth = 200;
     const menuHeight = 100;
     
@@ -632,14 +632,59 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.stopPropagation();
 
         const target = e.target.closest('.nav-button');
-        if (!target) return;
+        if (!target) {
+          console.log('Nenhum botão encontrado');
+          return;
+        }
 
         const webviewId = target.getAttribute('data-id');
-        if (!webviewId) return;
-
-        if (isWebviewActive(webviewId)) {
-          showContextMenu(e.clientX, e.clientY, webviewId);
+        if (!webviewId) {
+          return;
         }
+
+        // Se for o botão home, verificar se existem outras webviews abertas
+        if (webviewId === 'webview-home') {
+          // Verificar todas as webviews existentes
+          const webviews = document.querySelectorAll('webview');
+          
+          // Verificar também os botões que estão marcados como abertos
+          const openButtons = document.querySelectorAll('.nav-button.opened');
+          
+          const hasOtherWebviews = Array.from(webviews).some(webview => {
+            const isOther = webview.id !== 'webview-home' && webview.id !== 'webview-settings';
+            // Verificar se a webview existe no DOM e se seu botão correspondente está marcado como aberto
+            const button = document.querySelector(`.nav-button[data-id="${webview.id}"]`);
+            const isButtonOpened = button && button.classList.contains('opened');
+            const isWebviewActive = webview.classList.contains('active') || webview.classList.contains('opened');
+            
+            console.log('Verificando webview:', {
+              id: webview.id,
+              isOther,
+              isButtonOpened,
+              isWebviewActive,
+              buttonClasses: button ? button.className : 'no button',
+              webviewClasses: webview.className
+            });
+            
+            return isOther && (isButtonOpened || isWebviewActive);
+          });
+          
+          
+          // Só mostrar o menu se houver outras webviews abertas
+          if (!hasOtherWebviews) {
+            return;
+          }
+        }
+
+        // Verificar se o botão está ativo ou tem uma webview aberta
+        const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
+        const isButtonActive = button && (button.classList.contains('active') || button.classList.contains('opened'));
+        const webview = document.getElementById(webviewId);
+        const isWebviewActive = webview && (webview.classList.contains('active') || webview.classList.contains('opened'));
+
+        if (isButtonActive || isWebviewActive) {
+          showContextMenu(e.clientX, e.clientY, webviewId);
+        } 
       });
     }
 
@@ -648,7 +693,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.preventDefault();
         e.stopPropagation();
         const webviewId = e.target.id;
-        if (isWebviewActive(webviewId)) {
+        
+        const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
+        const isButtonOpened = button && button.classList.contains('opened');
+        const isWebviewActive = e.target.classList.contains('active') || e.target.classList.contains('opened');
+      
+        
+        if (isButtonOpened || isWebviewActive) {
           showContextMenu(e.clientX, e.clientY, webviewId);
         }
       }
