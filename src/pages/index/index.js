@@ -196,9 +196,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       // Atualizar o título da janela
-      const title = button ? button.title : webviewId.replace('webview-', '');
-      document.getElementById('active-view-name').textContent = title;
+      let title;
+      if (webviewId === 'webview-settings') {
+        title = 'Settings';
+      } else if (webviewId === 'webview-home') {
+        title = 'Home';
+      } else {
+        title = button ? button.title : webviewId.replace('webview-', '');
+      }
+
+      const titleElement = document.getElementById('active-view-name');
+      titleElement.textContent = title;
+      titleElement.setAttribute('data-translate', title);
       webview.setAttribute('alt', title);
+
+      // Traduzir o título imediatamente
+      const currentLanguage = document.documentElement.lang;
+      if (translations[currentLanguage] && translations[currentLanguage][title]) {
+        titleElement.textContent = translations[currentLanguage][title];
+      }
 
       // Adicionar a webview ao container
       webviewContainer.appendChild(webview);
@@ -251,7 +267,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const updateActiveViewTitle = (webview) => {
     if (!webview) return;
     const title = webview.getAttribute('alt');
-    document.getElementById('active-view-name').textContent = title || '';
+    const titleElement = document.getElementById('active-view-name');
+    titleElement.textContent = title;
+    titleElement.setAttribute('data-translate', title);
+
+    // Traduzir o título imediatamente
+    const currentLanguage = document.documentElement.lang;
+    if (translations[currentLanguage] && translations[currentLanguage][title]) {
+      titleElement.textContent = translations[currentLanguage][title];
+    }
   };
 
   const loadWithToken = (token, userUuid) => {
@@ -821,6 +845,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (webview) {
       webview.src = url;
     }
+  });
+
+  // Função para traduzir os elementos
+  const translatePage = (language) => {
+    const elements = document.querySelectorAll('[data-translate]');
+    elements.forEach(element => {
+      const key = element.getAttribute('data-translate');
+      if (translations[language] && translations[language][key]) {
+        element.textContent = translations[language][key];
+      }
+    });
+  };
+
+  // Adicionar listener para mudanças no idioma
+  window.electronAPI.onLanguageChanged((language) => {
+    document.documentElement.lang = language;
+    translatePage(language);
   });
 
   // Inicialização
