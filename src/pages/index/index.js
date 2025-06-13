@@ -47,8 +47,43 @@ document.addEventListener('DOMContentLoaded', async () => {
       webview.setAttribute('partition', 'persist:mainSession');
       webview.setAttribute('webpreferences', 'allowRunningInsecureContent=yes, experimentalFeatures=yes, webSecurity=no, plugins=yes, webgl=yes, nodeIntegrationInSubFrames=yes, backgroundThrottling=no');
 
-      // Configurações específicas para LinkedIn
-      if (url && url.includes('linkedin.com')) {
+      // Configurações específicas para WhatsApp
+      if (url && url.includes('web.whatsapp.com')) {
+        console.log('Configurando webview do WhatsApp...');
+        webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        webview.setAttribute('webpreferences', 'contextIsolation=no, nodeIntegration=no, webSecurity=no, allowRunningInsecureContent=yes');
+        
+        // Eventos específicos para WhatsApp
+        webview.addEventListener('dom-ready', () => {
+          console.log('WhatsApp webview DOM ready');
+          webview.setZoomFactor(currentZoom);
+        });
+
+        webview.addEventListener('did-start-loading', () => {
+          console.log('WhatsApp webview started loading');
+          showLoading();
+        });
+
+        webview.addEventListener('did-finish-load', () => {
+          console.log('WhatsApp webview finished loading');
+          hideLoading();
+        });
+
+        webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
+          console.error('WhatsApp webview failed to load:', errorCode, errorDescription);
+          hideLoading();
+          if (errorCode === -3 || errorCode === -102) {
+            setTimeout(() => webview.reload(), 2000);
+          }
+        });
+
+        // Monitorar erros de console do WhatsApp
+        webview.addEventListener('console-message', (event) => {
+          console.log('WhatsApp console:', event.message);
+        });
+      }
+      // Configurações específicas para LinkedIn (mantendo o código existente)
+      else if (url && url.includes('linkedin.com')) {
         console.log('Configurando webview do LinkedIn...');
         webview.setAttribute('allowpopups', 'true');
         webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
