@@ -231,10 +231,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.querySelectorAll('.webview').forEach(w => w.classList.remove('active'));
       document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
 
-      // Adicionar classes active e opened ao botão atual
+      // Adicionar classes ao botão atual
       const button = document.getElementById(buttonId);
       if (button) {
-        button.classList.add('active', 'opened');
+        button.classList.add('active');
+        // Adicionar opened apenas se não for o botão home
+        if (buttonId !== 'home-button') {
+          button.classList.add('opened');
+        }
         button.setAttribute('data-id', webviewId);
       }
 
@@ -252,7 +256,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Atualizar o botão correspondente na sidebar
         const sidebarButton = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
         if (sidebarButton) {
-          sidebarButton.classList.add('active', 'opened');
+          sidebarButton.classList.add('active');
+          // Adicionar opened apenas se não for o botão home
+          if (sidebarButton.id !== 'home-button') {
+            sidebarButton.classList.add('opened');
+          }
         }
       }
     } catch (error) {
