@@ -129,7 +129,7 @@ body {
   filter: brightness(1.2) contrast(1.2) saturate(1.2);
 }
 
-.nav-button.active::after {
+.nav-button.active::before {
   content: '';
   position: absolute;
   left: -4px;
@@ -142,7 +142,23 @@ body {
 }
 
 .nav-button.opened {
-  border-bottom: 2px solid #ADD8E6;
+  border-bottom: none;
+}
+
+.nav-button.opened::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  background-color: #22c55e; /* Verde */
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+body.dark-mode .nav-button.opened::after {
+  background-color: #4ade80; /* Verde mais claro para modo escuro */
 }
 
 /* ===== Header superior ===== */
