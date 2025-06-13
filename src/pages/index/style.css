@@ -68,8 +68,8 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 6px;
-  padding: 6px 5px;
+  gap: 12px;
+  padding: 12px 6px;
   overflow: hidden;
 }
 
@@ -78,10 +78,10 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 36px;
-  max-width: 42px;
-  min-height: 36px;
-  max-height: 42px;
+  min-width: 44px;
+  max-width: 48px;
+  min-height: 44px;
+  max-height: 48px;
   width: 100%;
   aspect-ratio: 1;
   border-radius: 50%;
@@ -92,8 +92,9 @@ body {
   position: relative;
   transition: var(--transition);
   text-decoration: none;
-  padding: 6px;
+  padding: 10px;
   flex-shrink: 1;
+  margin: 0 auto;
 }
 
 .nav-button:hover {
@@ -103,20 +104,24 @@ body {
 
 .nav-button i,
 .nav-button img {
-  width: 18px;
-  height: 18px;
-  min-width: 14px;
-  min-height: 14px;
-  max-width: 22px;
-  max-height: 22px;
+  width: 24px;
+  height: 24px;
+  min-width: 20px;
+  min-height: 20px;
+  max-width: 28px;
+  max-height: 28px;
   object-fit: contain;
   transition: var(--transition);
-  filter: brightness(0.9) contrast(1.1);
+  filter: brightness(1) contrast(1.2) saturate(1.1);
+  display: block;
+  margin: auto;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .nav-button:hover img {
   transform: scale(1.1);
-  filter: brightness(1.2) contrast(1.2) saturate(1.2);
+  filter: brightness(1.1) contrast(1.3) saturate(1.2);
 }
 
 .nav-button.active {
@@ -126,7 +131,7 @@ body {
 
 .nav-button.active img {
   transform: scale(1.1);
-  filter: brightness(1.2) contrast(1.2) saturate(1.2);
+  filter: brightness(1.1) contrast(1.3) saturate(1.2);
 }
 
 .nav-button.active::before {
@@ -622,33 +627,74 @@ body.dark-mode webview {
 
 /* Ajustes específicos para modo escuro */
 body.dark-mode .nav-button img {
-  filter: brightness(1.1) contrast(1.2) saturate(1.1);
+  filter: brightness(1.1) contrast(1.25) saturate(1.15);
 }
 
 body.dark-mode .nav-button:hover img,
 body.dark-mode .nav-button.active img {
-  filter: brightness(1.3) contrast(1.3) saturate(1.3);
+  filter: brightness(1.2) contrast(1.35) saturate(1.25);
 }
 
-/* Ajuste para ícones específicos que precisam de mais contraste */
+body.dark-mode #home-button img {
+  filter: brightness(1.15) contrast(1.25) saturate(1.2);
+}
+
+body.dark-mode #home-button:hover img,
+body.dark-mode #home-button.active img {
+  filter: brightness(1.25) contrast(1.35) saturate(1.3);
+}
+
+/* Ajustes específicos para ícones vibrantes no modo escuro */
 body.dark-mode .nav-button img[alt*="LinkedIn"],
 body.dark-mode .nav-button img[alt*="WhatsApp"],
-body.dark-mode .nav-button img[alt*="Telegram"] {
-  filter: brightness(1.2) contrast(1.3) saturate(1.2);
+body.dark-mode .nav-button img[alt*="Telegram"],
+body.dark-mode .nav-button img[alt*="Discord"] {
+  filter: brightness(1.15) contrast(1.3) saturate(1.25);
 }
 
 body.dark-mode .nav-button:hover img[alt*="LinkedIn"],
 body.dark-mode .nav-button:hover img[alt*="WhatsApp"],
 body.dark-mode .nav-button:hover img[alt*="Telegram"],
+body.dark-mode .nav-button:hover img[alt*="Discord"],
 body.dark-mode .nav-button.active img[alt*="LinkedIn"],
 body.dark-mode .nav-button.active img[alt*="WhatsApp"],
-body.dark-mode .nav-button.active img[alt*="Telegram"] {
-  filter: brightness(1.4) contrast(1.4) saturate(1.4);
+body.dark-mode .nav-button.active img[alt*="Telegram"],
+body.dark-mode .nav-button.active img[alt*="Discord"] {
+  filter: brightness(1.25) contrast(1.4) saturate(1.35);
+}
+
+/* Ajustes específicos para ícones claros no modo escuro */
+body.dark-mode .nav-button img[alt*="Gmail"],
+body.dark-mode .nav-button img[alt*="Google"],
+body.dark-mode .nav-button img[alt*="Drive"],
+body.dark-mode .nav-button img[alt*="Calendar"] {
+  filter: brightness(1.2) contrast(1.3) saturate(1.2);
+}
+
+body.dark-mode .nav-button:hover img[alt*="Gmail"],
+body.dark-mode .nav-button:hover img[alt*="Google"],
+body.dark-mode .nav-button:hover img[alt*="Drive"],
+body.dark-mode .nav-button:hover img[alt*="Calendar"],
+body.dark-mode .nav-button.active img[alt*="Gmail"],
+body.dark-mode .nav-button.active img[alt*="Google"],
+body.dark-mode .nav-button.active img[alt*="Drive"],
+body.dark-mode .nav-button.active img[alt*="Calendar"] {
+  filter: brightness(1.3) contrast(1.4) saturate(1.3);
 }
 
 /* Ajuste para o ícone do SpaceHub */
-.nav-button img[alt="Home"] {
-  filter: brightness(1) contrast(1.1) saturate(1.1);
+#home-button {
+  margin-bottom: 4px;
+}
+
+#home-button img {
+  width: 28px;
+  height: 28px;
+  min-width: 24px;
+  min-height: 24px;
+  max-width: 32px;
+  max-height: 32px;
+  filter: brightness(1.05) contrast(1.2) saturate(1.15);
 }
 
 body.dark-mode .nav-button img[alt="Home"] {
@@ -663,23 +709,27 @@ body.dark-mode .nav-button.active img[alt="Home"] {
 /* Ajuste para ícones com fundo claro */
 .nav-button img[alt*="Gmail"],
 .nav-button img[alt*="Google"],
-.nav-button img[alt*="Drive"] {
-  filter: brightness(0.95) contrast(1.1) saturate(1.1);
+.nav-button img[alt*="Drive"],
+.nav-button img[alt*="Calendar"] {
+  filter: brightness(0.98) contrast(1.15) saturate(1.1);
 }
 
 body.dark-mode .nav-button img[alt*="Gmail"],
 body.dark-mode .nav-button img[alt*="Google"],
-body.dark-mode .nav-button img[alt*="Drive"] {
-  filter: brightness(1.15) contrast(1.2) saturate(1.2);
+body.dark-mode .nav-button img[alt*="Drive"],
+body.dark-mode .nav-button img[alt*="Calendar"] {
+  filter: brightness(1.08) contrast(1.25) saturate(1.2);
 }
 
 body.dark-mode .nav-button:hover img[alt*="Gmail"],
 body.dark-mode .nav-button:hover img[alt*="Google"],
 body.dark-mode .nav-button:hover img[alt*="Drive"],
+body.dark-mode .nav-button:hover img[alt*="Calendar"],
 body.dark-mode .nav-button.active img[alt*="Gmail"],
 body.dark-mode .nav-button.active img[alt*="Google"],
-body.dark-mode .nav-button.active img[alt*="Drive"] {
-  filter: brightness(1.25) contrast(1.3) saturate(1.3);
+body.dark-mode .nav-button.active img[alt*="Drive"],
+body.dark-mode .nav-button.active img[alt*="Calendar"] {
+  filter: brightness(1.08) contrast(1.25) saturate(1.2);
 }
 
 /* Remover estilos do loading */
@@ -692,43 +742,35 @@ body.dark-mode .nav-button.active img[alt*="Drive"] {
 /* Media query para ajustar em telas menores */
 @media (max-height: 600px) {
   .nav-section {
-    gap: 3px;
-    padding: 3px 5px;
+    gap: 8px;
+    padding: 8px 6px;
   }
 
   .nav-button {
-    min-width: 32px;
-    min-height: 32px;
-    padding: 5px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 8px;
   }
 
-  .nav-button i,
-  .nav-button img {
-    width: 16px;
-    height: 16px;
-    min-width: 12px;
-    min-height: 12px;
+  #home-button {
+    margin-bottom: 2px;
   }
 }
 
 /* Media query para ajustar em telas muito pequenas */
 @media (max-height: 400px) {
   .nav-section {
-    gap: 2px;
-    padding: 2px 7px;
+    gap: 6px;
+    padding: 6px 6px;
   }
 
   .nav-button {
     min-width: 32px;
     min-height: 32px;
-    padding: 4px;
+    padding: 6px;
   }
 
-  .nav-button i,
-  .nav-button img {
-    width: 16px;
-    height: 16px;
-    min-width: 12px;
-    min-height: 12px;
+  #home-button {
+    margin-bottom: 0;
   }
 }

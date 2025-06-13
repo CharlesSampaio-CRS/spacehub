@@ -307,19 +307,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     button.setAttribute('data-id', appId);
 
     const img = document.createElement('img');
-    img.src = `../../assets/${app.application.toLowerCase()}.png`;
+    img.src = app.icon;
     img.alt = app.application;
-    img.style.width = '20px';
-    img.style.height = '20px';
+    img.width = 24;
+    img.height = 24;
     img.style.objectFit = 'contain';
     img.style.transition = 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
 
-    // Fallback para ícone personalizado se o ícone padrão não carregar
+    // Fallback para ícone local se o ícone da API não carregar
     img.onerror = () => {
-      img.src = app.icon;
-      // Garantir que o ícone personalizado também mantenha o estilo
-      img.style.width = '20px';
-      img.style.height = '20px';
+      img.src = `../../assets/${app.application.toLowerCase()}.png`;
+      img.width = 24;
+      img.height = 24;
       img.style.objectFit = 'contain';
     };
 
