@@ -9,7 +9,7 @@
   --hover-color: rgba(99, 102, 241, 0.1);
   --active-color: rgba(99, 102, 241, 0.2);
   --border-radius: 16px;
-  --sidebar-width: 64px;
+  --sidebar-width: 52px;
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --component-bg: #ffffff;
   --component-border: 1px solid rgba(0, 0, 0, 0.05);
@@ -68,8 +68,8 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
-  padding: 8px 7px;
+  gap: 6px;
+  padding: 6px 5px;
   overflow: hidden;
 }
 
@@ -78,10 +78,10 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 40px;
-  max-width: 48px;
-  min-height: 40px;
-  max-height: 48px;
+  min-width: 36px;
+  max-width: 42px;
+  min-height: 36px;
+  max-height: 42px;
   width: 100%;
   aspect-ratio: 1;
   border-radius: 50%;
@@ -92,7 +92,7 @@ body {
   position: relative;
   transition: var(--transition);
   text-decoration: none;
-  padding: 8px;
+  padding: 6px;
   flex-shrink: 1;
 }
 
@@ -103,12 +103,12 @@ body {
 
 .nav-button i,
 .nav-button img {
-  width: 20px;
-  height: 20px;
-  min-width: 16px;
-  min-height: 16px;
-  max-width: 24px;
-  max-height: 24px;
+  width: 18px;
+  height: 18px;
+  min-width: 14px;
+  min-height: 14px;
+  max-width: 22px;
+  max-height: 22px;
   object-fit: contain;
   transition: var(--transition);
   filter: brightness(0.9) contrast(1.1);
@@ -164,7 +164,7 @@ body.dark-mode .nav-button.opened::after {
 /* ===== Header superior ===== */
 #header {
   position: relative;
-  height: 48px;
+  height: 40px;
   background-color: var(--card-bg);
   border-bottom: var(--component-border);
   display: flex;
@@ -172,11 +172,12 @@ body.dark-mode .nav-button.opened::after {
   justify-content: flex-end;
   flex-shrink: 0;
   z-index: 10;
+  padding: 0 12px;
 }
 
 .header-title {
   font-weight: 400;
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--text-primary);
   text-align: center;
   flex: 1;
@@ -185,7 +186,7 @@ body.dark-mode .nav-button.opened::after {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 /* ===== Rodapé fixo ===== */
@@ -691,22 +692,22 @@ body.dark-mode .nav-button.active img[alt*="Drive"] {
 /* Media query para ajustar em telas menores */
 @media (max-height: 600px) {
   .nav-section {
-    gap: 4px;
-    padding: 4px 7px;
+    gap: 3px;
+    padding: 3px 5px;
   }
 
   .nav-button {
-    min-width: 36px;
-    min-height: 36px;
-    padding: 6px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 5px;
   }
 
   .nav-button i,
   .nav-button img {
-    width: 18px;
-    height: 18px;
-    min-width: 14px;
-    min-height: 14px;
+    width: 16px;
+    height: 16px;
+    min-width: 12px;
+    min-height: 12px;
   }
 }
 
