@@ -31,9 +31,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         oldWebview.remove();
       }
 
+      // Atualizar o botão correspondente
       const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
       if (button) {
-        button.classList.add('opened', 'active');
+        button.classList.add('opened');
       }
 
       // Criar a webview
@@ -210,14 +211,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const showWebview = (webviewId, buttonId) => {
     try {
-      // Remover classe active de todas as webviews
+      // Remover apenas a classe active de todas as webviews e botões
       document.querySelectorAll('.webview').forEach(w => w.classList.remove('active'));
       document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
 
-      // Adicionar classes ao botão
+      // Adicionar classe active ao botão atual
       const button = document.getElementById(buttonId);
       if (button) {
-        button.classList.add('opened');
+        button.classList.add('active');
         button.setAttribute('data-id', webviewId);
       }
 
@@ -225,12 +226,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       let webview = document.getElementById(webviewId);
       if (!webview) {
         webview = createWebview(webviewId, serviceMap[webviewId]);
+        // Adicionar classe opened ao botão quando a webview é criada
+        if (button) {
+          button.classList.add('opened');
+        }
       }
 
       if (webview) {
         webview.classList.add('active');
         updateActiveViewTitle(webview);
         currentWebview = webview;
+
+        // Atualizar o botão correspondente na sidebar
+        const sidebarButton = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
+        if (sidebarButton) {
+          sidebarButton.classList.add('active');
+        }
       }
     } catch (error) {
       console.error('Erro ao mostrar webview:', error);
@@ -251,6 +262,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       homeButton.id = 'home-button';
       homeButton.className = 'nav-button';
       homeButton.title = 'Space Hub';
+      homeButton.setAttribute('data-id', 'webview-home');
       homeButton.innerHTML = `<img width="48" height="48" src="../../assets/spacehub.png" alt="Home"/>`;
       homeButton.addEventListener('click', () => showWebview('webview-home', 'home-button'));
       navSection.appendChild(homeButton);
@@ -275,7 +287,6 @@ document.addEventListener('DOMContentLoaded', async () => {
               services[buttonId] = appId;
 
               const button = createApplicationButton(app);
-
               button.addEventListener('click', () => showWebview(appId, buttonId));
               navSection?.appendChild(button);
             }
@@ -287,8 +298,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function createApplicationButton(app) {
     const button = document.createElement('button');
+    const appId = `webview-${app.application.toLowerCase()}`;
+    const buttonId = `${app.application.toLowerCase()}-button`;
+    
+    button.id = buttonId;
     button.className = 'nav-button';
     button.title = app.application;
+    button.setAttribute('data-id', appId);
 
     const img = document.createElement('img');
     img.src = `../../assets/${app.application.toLowerCase()}.png`;
@@ -546,7 +562,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
               }
             });
-            document.querySelectorAll('.nav-button.opened').forEach(b => {
+            document.querySelectorAll('.nav-button').forEach(b => {
               if (b.id !== 'home-button') {
                 b.classList.remove('opened');
               }
