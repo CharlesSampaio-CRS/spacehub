@@ -61,17 +61,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         webview.addEventListener('did-start-loading', () => {
           console.log('WhatsApp webview started loading');
-          showLoading();
         });
 
         webview.addEventListener('did-finish-load', () => {
           console.log('WhatsApp webview finished loading');
-          hideLoading();
         });
 
         webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
           console.error('WhatsApp webview failed to load:', errorCode, errorDescription);
-          hideLoading();
           if (errorCode === -3 || errorCode === -102) {
             setTimeout(() => webview.reload(), 2000);
           }
@@ -102,19 +99,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         webview.addEventListener('did-start-loading', () => {
           console.log('LinkedIn webview started loading');
-          showLoading();
         });
 
         webview.addEventListener('did-finish-load', () => {
           console.log('LinkedIn webview finished loading');
-          hideLoading();
           loadAttempts = 0;
           clearTimeout(loadTimeout);
         });
 
         webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
           console.error('LinkedIn webview failed to load:', errorCode, errorDescription);
-          hideLoading();
 
           if (loadAttempts < maxLoadAttempts) {
             loadAttempts++;
@@ -134,7 +128,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         webview.addEventListener('crashed', () => {
           console.error('LinkedIn webview crashed');
-          hideLoading();
           if (loadAttempts < maxLoadAttempts) {
             loadAttempts++;
             console.log(`Tentativa ${loadAttempts} de ${maxLoadAttempts} para recriar LinkedIn após crash...`);
@@ -148,7 +141,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           console.log('LinkedIn navigation:', event.url);
           if (event.url.includes('linkedin.com')) {
             event.preventDefault();
-            showLoading();
             webview.loadURL(event.url);
           }
         });
@@ -157,7 +149,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           console.log('LinkedIn new window:', event.url);
           if (event.url.includes('linkedin.com')) {
             event.preventDefault();
-            showLoading();
             webview.loadURL(event.url);
           }
         });
@@ -189,7 +180,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Monitorar erros de renderização
         webview.addEventListener('render-process-gone', (event) => {
           console.error('LinkedIn render process gone:', event.reason);
-          hideLoading();
           if (loadAttempts < maxLoadAttempts) {
             loadAttempts++;
             setTimeout(() => {
@@ -202,7 +192,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Eventos comuns para todas as webviews
       webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
         console.error(`Erro ao carregar ${webviewId}:`, errorCode, errorDescription);
-        hideLoading();
       });
 
       // Atualizar o título da janela
@@ -215,7 +204,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       return webview;
     } catch (error) {
       console.error('Erro ao criar webview:', error);
-      hideLoading();
       return null;
     }
   };
