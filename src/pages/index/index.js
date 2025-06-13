@@ -436,7 +436,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const getMenuTemplate = (currentViewId) => {
     const menuItems = {
       home: `
-        <div class="context-menu-item" data-command="reload-applications">
+        <div class="context-menu-item" data-command="reload-all">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M23 4v6h-6M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke-linecap="round" stroke-linejoin="round"/>
@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <span>Atualizar Todos</span>
         </div>
         <div class="context-menu-separator"></div>
-        <div class="context-menu-item" data-command="close-all-webviews">
+        <div class="context-menu-item" data-command="close-all">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -452,7 +452,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       `,
       other: `
-        <div class="context-menu-item" data-command="reload-current-webview">
+        <div class="context-menu-item" data-command="reload-current">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M23 4v6h-6M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke-linecap="round" stroke-linejoin="round"/>
@@ -460,7 +460,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <span>Atualizar</span>
         </div>
         <div class="context-menu-separator"></div>
-        <div class="context-menu-item" data-command="close-current-webview">
+        <div class="context-menu-item" data-command="close-current">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -486,10 +486,77 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const setupMenuEvents = (menu, currentViewId) => {
     menu.querySelectorAll('.context-menu-item').forEach(item => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', async () => {
         const command = item.getAttribute('data-command');
-        window.electronAPI.invoke('context-menu-command', command, currentViewId);
         menu.remove();
+
+        // Executar comandos diretamente no renderer
+        switch (command) {
+          case 'reload-all':
+            console.log('Executando reload-all...');
+            document.querySelectorAll('webview').forEach(w => {
+              if (w.classList.contains('active') || w.classList.contains('opened')) {
+                console.log('Recarregando webview:', w.id);
+                w.reload();
+              }
+            });
+            break;
+
+          case 'close-all':
+            console.log('Executando close-all...');
+            const currentLanguage = await window.electronAPI.getLanguage();
+            showConfirmationDialog(translations[currentLanguage]['close_all_confirmation'], () => {
+              document.querySelectorAll('webview').forEach(w => {
+                if (w.id !== 'webview-home' && (w.classList.contains('active') || w.classList.contains('opened'))) {
+                  console.log('Fechando webview:', w.id);
+                  w.remove();
+                  const button = document.querySelector(`.nav-button[data-id="${w.id}"]`);
+                  if (button) {
+                    button.classList.remove('active', 'opened');
+                  }
+                }
+              });
+              document.querySelectorAll('.nav-button').forEach(b => {
+                if (b.id !== 'home-button') {
+                  b.classList.remove('opened');
+                }
+              });
+              if (currentWebview && currentWebview.id !== 'webview-home') {
+                currentWebview = null;
+                document.getElementById('active-view-name').textContent = '';
+              }
+              showWebview('webview-home', 'home-button');
+            });
+            break;
+
+          case 'reload-current':
+            console.log('Executando reload-current para:', currentViewId);
+            const targetReload = document.getElementById(currentViewId);
+            if (targetReload?.reload && isWebviewActive(currentViewId)) {
+              targetReload.reload();
+            }
+            break;
+
+          case 'close-current':
+            console.log('Executando close-current para:', currentViewId);
+            const targetClose = document.getElementById(currentViewId);
+            if (targetClose && isWebviewActive(currentViewId)) {
+              const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+              if (button) {
+                button.classList.remove('opened', 'active');
+              }
+              targetClose.remove();
+              document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.classList.remove('active');
+              });
+              const homeButton = document.getElementById('home-button');
+              if (homeButton) {
+                homeButton.classList.add('active');
+              }
+              showWebview('webview-home', 'home-button');
+            }
+            break;
+        }
       });
     });
 
@@ -505,8 +572,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 100);
   };
 
+  const isWebviewActive = (webviewId) => {
+    const webview = document.getElementById(webviewId);
+    return webview && (webview.classList.contains('active') || webview.classList.contains('opened'));
+  };
+
   const showContextMenu = (x, y, currentViewId) => {
-    if (!hasOpenWebviews()) {
+    // Verificar se a webview existe e está ativa/aberta
+    if (!currentViewId || !isWebviewActive(currentViewId)) {
       return;
     }
 
@@ -531,103 +604,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       sidebar.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        // Se clicar no botão home, mostrar menu de contexto do home
-        if (e.target.closest('#home-button')) {
-          showContextMenu(e.clientX, e.clientY, 'webview-home');
-          return;
+
+        const target = e.target.closest('.nav-button');
+        if (!target) return;
+
+        const webviewId = target.getAttribute('data-id');
+        if (!webviewId) return;
+
+        if (isWebviewActive(webviewId)) {
+          showContextMenu(e.clientX, e.clientY, webviewId);
         }
-        // Para outros elementos, usar a webview atual
-        const currentViewId = currentWebview?.id || '';
-        showContextMenu(e.clientX, e.clientY, currentViewId);
       });
     }
 
-    // Adicionar evento de contexto para as webviews
     document.addEventListener('contextmenu', (e) => {
       if (e.target.tagName === 'WEBVIEW') {
         e.preventDefault();
         e.stopPropagation();
-        showContextMenu(e.clientX, e.clientY, e.target.id);
-      }
-    });
-
-    // Adicionar evento de contexto para o botão do Todoist
-    document.getElementById('todoist-button')?.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const todoistWebview = document.getElementById('webview-todoist');
-      if (todoistWebview) {
-        showContextMenu(e.clientX, e.clientY, 'webview-todoist');
-      }
-    });
-
-    // Receber comandos do menu de contexto
-    window.electronAPI.on('context-menu-command', async (event, command, targetId) => {
-      switch (command) {
-        case 'reload-applications':
-          // Recarregar apenas as webviews que estão abertas
-          document.querySelectorAll('webview').forEach(w => {
-            if (w.reload) {
-              w.reload();
-            }
-          });
-          break;
-        case 'close-all-webviews':
-          const currentLanguage = await window.electronAPI.getLanguage();
-          showConfirmationDialog(translations[currentLanguage]['close_all_confirmation'], () => {
-            document.querySelectorAll('webview').forEach(w => {
-              if (w.id !== 'webview-home') {
-                w.remove();
-                // Remover classes do botão correspondente
-                const button = document.querySelector(`.nav-button[data-id="${w.id}"]`);
-                if (button) {
-                  button.classList.remove('active', 'opened');
-                }
-              }
-            });
-            document.querySelectorAll('.nav-button').forEach(b => {
-              if (b.id !== 'home-button') {
-                b.classList.remove('opened');
-              }
-            });
-            if (currentWebview && currentWebview.id !== 'webview-home') {
-              currentWebview = null;
-              document.getElementById('active-view-name').textContent = '';
-            }
-            // Voltar para a webview home
-            showWebview('webview-home', 'home-button');
-          });
-          break;
-        case 'reload-current-webview':
-          const targetReload = document.getElementById(targetId);
-          if (targetReload?.reload) targetReload.reload();
-          break;
-        case 'close-current-webview':
-          const targetClose = document.getElementById(targetId);
-          if (targetClose) {
-            // Desmarcar o botão como aberto e ativo antes de remover a webview
-            const button = document.querySelector(`.nav-button[data-id="${targetId}"]`);
-            if (button) {
-              button.classList.remove('opened', 'active');
-            }
-
-            // Remover a webview
-            targetClose.remove();
-            
-            // Voltar para a home
-            document.querySelectorAll('.nav-button').forEach(btn => {
-              btn.classList.remove('active');
-            });
-            
-            // Ativar o botão home
-            const homeButton = document.getElementById('home-button');
-            if (homeButton) {
-              homeButton.classList.add('active');
-            }
-            
-            showWebview('webview-home', 'home-button');
-          }
-          break;
+        const webviewId = e.target.id;
+        if (isWebviewActive(webviewId)) {
+          showContextMenu(e.clientX, e.clientY, webviewId);
+        }
       }
     });
   };
