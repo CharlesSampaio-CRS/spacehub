@@ -1,4 +1,6 @@
+/* ===== Variáveis do Componente ===== */
 :root {
+  /* Cores */
   --primary-color: #6366f1;
   --primary-light: #a5b4fc;
   --background: #f8fafc;
@@ -8,59 +10,37 @@
   --text-secondary: #64748b;
   --hover-color: rgba(99, 102, 241, 0.1);
   --active-color: rgba(99, 102, 241, 0.2);
-  --border-radius: 16px;
+  --success-color: #22c55e;
+  --error-color: #ef4444;
+
+  /* Dimensões */
   --sidebar-width: 64px;
+  --header-height: 40px;
+  --footer-height: 24px;
+  --border-radius: 16px;
+  --component-padding: 12px;
+  --component-gap: 8px;
+
+  /* Efeitos */
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --component-bg: #ffffff;
   --component-border: 1px solid rgba(0, 0, 0, 0.05);
+  --component-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --component-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --component-bg: #ffffff;
 }
 
-/* Variáveis do modo escuro */
-html.dark-mode,
-body.dark-mode {
-  --background: #363636;
-  --sidebar-bg: #404040;
-  --card-bg: #404040;
-  --text-primary: #f0f0f0;
-  --text-secondary: #b8b8b8;
-  --hover-color: rgba(99, 102, 241, 0.15);
-  --active-color: rgba(99, 102, 241, 0.25);
-  --component-bg: #404040;
-  --component-border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-html,
-body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: var(--background);
-  color: var(--text-primary);
-  overflow: hidden;
-  transition: var(--transition);
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* ===== Layout base ===== */
+/* ===== Componente Principal ===== */
 #app {
   display: flex;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
   background-color: var(--background);
+  position: relative;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.main-layout {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
+/* ===== Componente de Navegação ===== */
 #sidebar {
   width: var(--sidebar-width);
   background: var(--sidebar-bg);
@@ -77,17 +57,6 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* Container para o botão home */
-.home-container {
-  width: 100%;
-  padding: 8px 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-bottom: var(--component-border);
-  background: var(--sidebar-bg);
-}
-
 .nav-section {
   flex: 1;
   width: 100%;
@@ -100,6 +69,7 @@ body {
   overflow: hidden;
 }
 
+/* ===== Componente de Botão ===== */
 .nav-button {
   display: flex;
   flex-direction: column;
@@ -202,7 +172,33 @@ body.dark-mode .nav-button.opened::after {
   background-color: #4ade80; /* Verde mais claro para modo escuro */
 }
 
-/* ===== Header superior ===== */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-version {
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.footer-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.footer-status i {
+  font-size: 8px;
+  color: #22c55e;
+}
+
+.footer-status i.offline {
+  color: #ef4444;
+}
+
+/* ===== Componente de Cabeçalho ===== */
 #header {
   position: relative;
   height: 40px;
@@ -218,12 +214,320 @@ body.dark-mode .nav-button.opened::after {
 }
 
 .header-title {
-  font-weight: 500;
-  font-size: 1rem;
+  font-weight: 400;
+  font-size: 0.95rem;
   color: var(--text-primary);
   text-align: center;
   flex: 1;
   letter-spacing: 0.3px;
+  opacity: 0.9;
+}
+
+/* ===== Componente de Rodapé ===== */
+#footer {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  height: 24px;
+  background-color: var(--card-bg);
+  border-top: var(--component-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  z-index: 100;
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.footer-content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ===== Componente de Perfil ===== */
+.profile-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.profile-button:hover {
+  background: var(--hover-color);
+}
+
+.profile-button img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-button span {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.profile-button i {
+  color: var(--text-secondary);
+  font-size: 12px;
+  transition: var(--transition);
+}
+
+.profile-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 280px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin-top: 8px;
+  display: none;
+  z-index: 1000;
+  border: var(--component-border);
+}
+
+.profile-menu.show {
+  display: block;
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+
+.profile-info img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-details span:first-child {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.profile-details span:last-child {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.profile-menu-separator {
+  height: 1px;
+  background: var(--component-border);
+  margin: 8px 0;
+}
+
+.profile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: var(--transition);
+  text-align: left;
+}
+
+.profile-menu-item:hover {
+  background: var(--hover-color);
+}
+
+.profile-menu-item i {
+  width: 16px;
+  color: var(--text-secondary);
+}
+
+/* ===== Componente de Conteúdo ===== */
+#content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--background);
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.webview-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 40px);
+}
+
+.webview-wrapper {
+  flex: 1;
+  display: flex;
+  height: 100%;
+  width: 100%;
+  background-color: var(--card-bg);
+  overflow: hidden;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+webview {
+  flex: 1;
+  display: none;
+  height: 100%;
+  width: 100%;
+  border: none;
+  background: var(--background);
+}
+
+webview.active {
+  display: flex;
+}
+
+/* ===== Modo Escuro ===== */
+html.dark-mode,
+body.dark-mode {
+  --background: #363636;
+  --sidebar-bg: #404040;
+  --card-bg: #404040;
+  --text-primary: #f0f0f0;
+  --text-secondary: #b8b8b8;
+  --hover-color: rgba(99, 102, 241, 0.15);
+  --active-color: rgba(99, 102, 241, 0.25);
+  --component-bg: #404040;
+  --component-border: 1px solid rgba(255, 255, 255, 0.08);
+  --component-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --component-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== Responsividade ===== */
+@media (max-height: 700px) {
+  :root {
+    --header-height: 36px;
+    --footer-height: 20px;
+    --component-padding: 8px;
+    --component-gap: 6px;
+  }
+
+  .header-title {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-height: 600px) {
+  :root {
+    --header-height: 32px;
+    --footer-height: 18px;
+    --component-padding: 6px;
+    --component-gap: 4px;
+  }
+
+  .header-title {
+    font-size: 0.85rem;
+  }
+}
+
+/* ===== Layout base ===== */
+#app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--background);
+  position: relative;
+}
+
+.main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Container para o botão home */
+.home-container {
+  width: 100%;
+  padding: 8px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: var(--component-border);
+  background: var(--sidebar-bg);
+}
+
+.nav-button.active {
+  background: var(--active-color);
+  color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+.nav-button.active img {
+  transform: scale(1.1) translateZ(0);
+  filter: brightness(1.1) contrast(1.3) saturate(1.2);
+}
+
+.nav-button.active::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 24px;
+  background: var(--primary-color);
+  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+}
+
+.nav-button.opened {
+  border-bottom: none;
+}
+
+.nav-button.opened::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  background-color: #22c55e; /* Verde */
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+body.dark-mode .nav-button.opened::after {
+  background-color: #4ade80; /* Verde mais claro para modo escuro */
 }
 
 .header-actions {
@@ -232,9 +536,24 @@ body.dark-mode .nav-button.opened::after {
   gap: 8px;
 }
 
-/* ===== Rodapé fixo ===== */
-#footer {
-  display: none; /* Removendo o footer que estava causando problemas */
+.footer-version {
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.footer-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.footer-status i {
+  font-size: 8px;
+  color: #22c55e;
+}
+
+.footer-status i.offline {
+  color: #ef4444;
 }
 
 /* ===== Sidebar direita ===== */
@@ -246,31 +565,6 @@ body.dark-mode .nav-button.opened::after {
   overflow-y: auto;
   flex-shrink: 0;
   transition: var(--transition);
-}
-
-/* ===== Conteúdo principal ===== */
-#content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  background-color: var(--background);
-  position: relative;
-}
-
-/* ===== Webview Container ===== */
-.webview-container {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  background: var(--background);
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  margin: 0;
-  height: calc(100vh - 40px); /* Altura total menos o header */
 }
 
 .webview-wrapper {
@@ -496,142 +790,6 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-color);
 }
 
-/* ===== Componente de Perfil ===== */
-.profile-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.profile-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 12px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.profile-button:hover {
-  background: var(--hover-color);
-}
-
-.profile-button img {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.profile-button span {
-  color: var(--text-primary);
-  font-size: 14px;
-}
-
-.profile-button i {
-  color: var(--text-secondary);
-  font-size: 12px;
-  transition: var(--transition);
-}
-
-.profile-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  width: 280px;
-  background: var(--card-bg);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 16px;
-  margin-top: 8px;
-  display: none;
-  z-index: 1000;
-  border: var(--component-border);
-}
-
-.profile-menu.show {
-  display: block;
-}
-
-.profile-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 12px;
-}
-
-.profile-info img {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.profile-details {
-  display: flex;
-  flex-direction: column;
-}
-
-.profile-details span:first-child {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.profile-details span:last-child {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.profile-menu-separator {
-  height: 1px;
-  background: var(--component-border);
-  margin: 8px 0;
-}
-
-.profile-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 8px 12px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  color: var(--text-primary);
-  transition: var(--transition);
-  text-align: left;
-}
-
-.profile-menu-item:hover {
-  background: var(--hover-color);
-}
-
-.profile-menu-item i {
-  width: 16px;
-  color: var(--text-secondary);
-}
-
-body.dark-mode .profile-menu {
-  background: var(--card-bg);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-body.dark-mode .profile-button {
-  color: var(--text-primary);
-}
-
-body.dark-mode .profile-menu-item {
-  color: var(--text-primary);
-}
-
-body.dark-mode .profile-menu-item:hover {
-  background: var(--hover-color);
-}
-
 /* Ajustes para modo escuro */
 body.dark-mode .webview-container {
   background: var(--background);
@@ -645,6 +803,16 @@ body.dark-mode .webview-wrapper {
 
 body.dark-mode webview {
   background: var(--background);
+}
+
+body.dark-mode #footer {
+  background: var(--card-bg);
+  border-top: var(--component-border);
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .footer-status i {
+  opacity: 0.9;
 }
 
 /* Ajustes para telas menores */
@@ -679,6 +847,24 @@ body.dark-mode webview {
   #home-button {
     margin-bottom: 6px;
   }
+
+  #content {
+    padding-bottom: 20px;
+  }
+
+  #footer {
+    height: 20px;
+    padding: 0 8px;
+    font-size: 10px;
+  }
+
+  .webview-container {
+    height: calc(100vh - 60px); /* Altura total menos header (40px) e footer (20px) */
+  }
+
+  .header-title {
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-height: 600px) {
@@ -711,6 +897,24 @@ body.dark-mode webview {
 
   #home-button {
     margin-bottom: 4px;
+  }
+
+  #content {
+    padding-bottom: 18px;
+  }
+
+  #footer {
+    height: 18px;
+    padding: 0 6px;
+    font-size: 9px;
+  }
+
+  .webview-container {
+    height: calc(100vh - 58px); /* Altura total menos header (40px) e footer (18px) */
+  }
+
+  .header-title {
+    font-size: 0.85rem;
   }
 }
 
