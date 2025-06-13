@@ -112,11 +112,7 @@ function createMainWindow() {
       enableRemoteModule: false,
       nodeIntegrationInSubFrames: true,
       backgroundThrottling: false,
-      enableBlinkFeatures: 'OutOfBlinkCors',
-      spellcheck: false,
-      enableWebSQL: false,
-      offscreen: false,
-      enableHardwareAcceleration: true
+      enableBlinkFeatures: 'OutOfBlinkCors,Popups'
     }
   });
 
@@ -136,11 +132,11 @@ function createMainWindow() {
   mainWindow.setMenu(null);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:\/\//.test(url) || url.includes('accounts.google.com')) {
+    if (/^https?:\/\//.test(url) && !url.includes('linkedin.com')) {
       shell.openExternal(url);
       return { action: 'deny' };
     }
-    return { action: 'deny' };
+    return { action: 'allow' };
   });
 
   mainWindow.on('close', () => {
@@ -818,4 +814,13 @@ const clearAllSessions = async () => {
 ipcMain.handle('clear-all-sessions', async () => {
   await clearAllSessions();
   return { success: true };
+});
+
+ipcMain.on('create-webview', (event, webviewId, url) => {
+  // Send the webview creation request back to the renderer process
+  event.sender.send('create-webview-request', {
+    webviewId,
+    url,
+    isLinkedIn: url.includes('linkedin.com')
+  });
 });

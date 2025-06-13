@@ -36,22 +36,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         button.classList.add('opened');
       }
 
+      // Criar a webview no renderer process
       const webview = document.createElement('webview');
       webview.id = webviewId;
       webview.className = 'webview w-100 h-100 active';
       webview.src = serviceMap[webviewId] || '../../pages/home/home.html';
 
-      // Obter sessão do usuário atual
-      const user = JSON.parse(localStorage.getItem('user'));
-      const sessionId = user ? `persist:user_${user.id}` : 'persist:mainSession';
-      webview.setAttribute('partition', sessionId);
+      // Configurações específicas para LinkedIn
+      if (webview.src.includes('linkedin.com')) {
+        webview.setAttribute('allowpopups', 'true');
+        webview.setAttribute('webpreferences', 'contextIsolation=no');
+        webview.setAttribute('partition', 'persist:mainSession');
+        
+        webview.addEventListener('will-navigate', (event) => {
+          if (event.url.includes('linkedin.com')) {
+            event.preventDefault();
+            webview.loadURL(event.url);
+          }
+        });
+      } else {
+        // Configurações padrão para outras webviews
+        webview.setAttribute('allowpopups', '');
+        webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
+        webview.setAttribute('partition', 'persist:mainSession');
+      }
 
-      webview.setAttribute('allowpopups', '');
-      webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
+      // Atualizar o título da janela
+      document.getElementById('active-view-name').textContent = getTitleFromWebviewId(webviewId);
+
       webview.setAttribute('alt', getTitleFromWebviewId(webviewId));
       webview.setAttribute('preload', '../../preload.js');
       webview.setAttribute('webpreferences', 'allowRunningInsecureContent=yes, experimentalFeatures=yes, webSecurity=no, plugins=yes, webgl=yes, nodeIntegrationInSubFrames=yes, backgroundThrottling=no');
 
+      // Adicionar event listeners
       webview.addEventListener('dom-ready', () => {
         webview.setZoomFactor(currentZoom);
         
@@ -670,6 +687,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
   };
+
+  // Adicionar listener para o evento create-webview-request
+  window.electronAPI.on('create-webview-request', (data) => {
+    const { webviewId, url, isLinkedIn } = data;
+    const webview = createWebview(webviewId);
+    if (webview) {
+      webview.src = url;
+    }
+  });
 
   // Inicialização
   const init = async () => {
