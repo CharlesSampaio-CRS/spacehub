@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const webviewContainer = document.querySelector('.webview-wrapper');
 
-  const createWebview = (webviewId) => {
+  const createWebview = (webviewId, url) => {
     try {
       // Remover webview antiga se existir
       const oldWebview = document.getElementById(webviewId);
@@ -33,89 +33,154 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
       if (button) {
-        button.classList.add('opened');
+        button.classList.add('opened', 'active');
       }
 
-      // Criar a webview no renderer process
+      // Criar a webview
       const webview = document.createElement('webview');
       webview.id = webviewId;
       webview.className = 'webview w-100 h-100 active';
-      webview.src = serviceMap[webviewId] || '../../pages/home/home.html';
+      webview.src = url || '../../pages/home/home.html';
+
+      // Configurações comuns para todas as webviews
+      webview.setAttribute('preload', '../../preload.js');
+      webview.setAttribute('partition', 'persist:mainSession');
+      webview.setAttribute('webpreferences', 'allowRunningInsecureContent=yes, experimentalFeatures=yes, webSecurity=no, plugins=yes, webgl=yes, nodeIntegrationInSubFrames=yes, backgroundThrottling=no');
 
       // Configurações específicas para LinkedIn
-      if (webview.src.includes('linkedin.com')) {
+      if (url && url.includes('linkedin.com')) {
+        console.log('Configurando webview do LinkedIn...');
         webview.setAttribute('allowpopups', 'true');
-        webview.setAttribute('webpreferences', 'contextIsolation=no');
-        webview.setAttribute('partition', 'persist:mainSession');
+        webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
+        webview.setAttribute('webpreferences', 'contextIsolation=no, nodeIntegration=no, webSecurity=no, allowRunningInsecureContent=yes');
         
+        let loadAttempts = 0;
+        const maxLoadAttempts = 3;
+        let loadTimeout;
+
+        // Eventos específicos para LinkedIn
+        webview.addEventListener('dom-ready', () => {
+          console.log('LinkedIn webview DOM ready');
+          webview.setZoomFactor(currentZoom);
+          clearTimeout(loadTimeout);
+        });
+
+        webview.addEventListener('did-start-loading', () => {
+          console.log('LinkedIn webview started loading');
+          showLoading();
+        });
+
+        webview.addEventListener('did-finish-load', () => {
+          console.log('LinkedIn webview finished loading');
+          hideLoading();
+          loadAttempts = 0;
+          clearTimeout(loadTimeout);
+        });
+
+        webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
+          console.error('LinkedIn webview failed to load:', errorCode, errorDescription);
+          hideLoading();
+
+          if (loadAttempts < maxLoadAttempts) {
+            loadAttempts++;
+            console.log(`Tentativa ${loadAttempts} de ${maxLoadAttempts} para recarregar LinkedIn...`);
+            setTimeout(() => {
+              webview.reload();
+            }, 2000 * loadAttempts); // Aumenta o tempo entre tentativas
+          } else {
+            console.error('Número máximo de tentativas de carregamento atingido');
+            // Mostrar mensagem de erro para o usuário
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'error-message';
+            errorMsg.textContent = 'Não foi possível carregar o LinkedIn. Por favor, tente novamente.';
+            webviewContainer.appendChild(errorMsg);
+          }
+        });
+
+        webview.addEventListener('crashed', () => {
+          console.error('LinkedIn webview crashed');
+          hideLoading();
+          if (loadAttempts < maxLoadAttempts) {
+            loadAttempts++;
+            console.log(`Tentativa ${loadAttempts} de ${maxLoadAttempts} para recriar LinkedIn após crash...`);
+            setTimeout(() => {
+              createWebview(webviewId, url);
+            }, 2000 * loadAttempts);
+          }
+        });
+
         webview.addEventListener('will-navigate', (event) => {
+          console.log('LinkedIn navigation:', event.url);
           if (event.url.includes('linkedin.com')) {
             event.preventDefault();
+            showLoading();
             webview.loadURL(event.url);
           }
         });
-      } else {
-        // Configurações padrão para outras webviews
-        webview.setAttribute('allowpopups', '');
-        webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
-        webview.setAttribute('partition', 'persist:mainSession');
+
+        webview.addEventListener('new-window', (event) => {
+          console.log('LinkedIn new window:', event.url);
+          if (event.url.includes('linkedin.com')) {
+            event.preventDefault();
+            showLoading();
+            webview.loadURL(event.url);
+          }
+        });
+
+        // Timeout para verificar se a página carregou
+        loadTimeout = setTimeout(() => {
+          if (webview.getURL() === 'about:blank' || webview.getURL() === '') {
+            console.log('LinkedIn webview timeout, attempting reload...');
+            if (loadAttempts < maxLoadAttempts) {
+              loadAttempts++;
+              webview.reload();
+            }
+          }
+        }, 10000);
+
+        // Monitorar mudanças de URL
+        webview.addEventListener('did-navigate', (event) => {
+          console.log('LinkedIn navigated to:', event.url);
+          if (event.url.includes('linkedin.com')) {
+            clearTimeout(loadTimeout);
+          }
+        });
+
+        // Monitorar erros de console
+        webview.addEventListener('console-message', (event) => {
+          console.log('LinkedIn console:', event.message);
+        });
+
+        // Monitorar erros de renderização
+        webview.addEventListener('render-process-gone', (event) => {
+          console.error('LinkedIn render process gone:', event.reason);
+          hideLoading();
+          if (loadAttempts < maxLoadAttempts) {
+            loadAttempts++;
+            setTimeout(() => {
+              createWebview(webviewId, url);
+            }, 2000 * loadAttempts);
+          }
+        });
       }
 
-      // Atualizar o título da janela
-      document.getElementById('active-view-name').textContent = getTitleFromWebviewId(webviewId);
-
-      webview.setAttribute('alt', getTitleFromWebviewId(webviewId));
-      webview.setAttribute('preload', '../../preload.js');
-      webview.setAttribute('webpreferences', 'allowRunningInsecureContent=yes, experimentalFeatures=yes, webSecurity=no, plugins=yes, webgl=yes, nodeIntegrationInSubFrames=yes, backgroundThrottling=no');
-
-      // Adicionar event listeners
-      webview.addEventListener('dom-ready', () => {
-        webview.setZoomFactor(currentZoom);
-        
-        // Configurações específicas para o Telegram
-        if (webviewId === 'webview-telegram') {
-          try {
-            webview.executeJavaScript(`
-              if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia = async (constraints) => {
-                  try {
-                    return await navigator.mediaDevices.getUserMedia(constraints);
-                  } catch (error) {
-                    console.error('Erro ao acessar a câmera:', error);
-                    throw error;
-                  }
-                };
-              }
-            `).catch(err => console.error('Erro ao executar script:', err));
-          } catch (err) {
-            console.error('Erro ao configurar webview do Telegram:', err);
-          }
-        }
-      });
-
-      webview.addEventListener('new-window', e => {
-        e.preventDefault();
-        webview.loadURL(e.url);
-      });
-
-      webview.addEventListener('will-navigate', e => {
-        if (e.url !== webview.src) {
-          e.preventDefault();
-          webview.loadURL(e.url);
-        }
-      });
-
+      // Eventos comuns para todas as webviews
       webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
         console.error(`Erro ao carregar ${webviewId}:`, errorCode, errorDescription);
-        if (errorCode === -3) {
-          setTimeout(() => webview.reload(), 2000);
-        }
+        hideLoading();
       });
 
+      // Atualizar o título da janela
+      const title = button ? button.title : webviewId.replace('webview-', '');
+      document.getElementById('active-view-name').textContent = title;
+      webview.setAttribute('alt', title);
+
+      // Adicionar a webview ao container
       webviewContainer.appendChild(webview);
       return webview;
     } catch (error) {
-      console.error(`Erro ao criar webview ${webviewId}:`, error);
+      console.error('Erro ao criar webview:', error);
+      hideLoading();
       return null;
     }
   };
@@ -136,7 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Criar ou obter webview
       let webview = document.getElementById(webviewId);
       if (!webview) {
-        webview = createWebview(webviewId);
+        webview = createWebview(webviewId, serviceMap[webviewId]);
       }
 
       if (webview) {
@@ -186,10 +251,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               serviceMap[appId] = app.url;
               services[buttonId] = appId;
 
-              const button = document.createElement('button');
-              button.id = buttonId;
-              button.className = 'nav-button';
-              button.innerHTML = `<img src="${app.icon}" alt="${app.application}"/>`;
+              const button = createApplicationButton(app);
 
               button.addEventListener('click', () => showWebview(appId, buttonId));
               navSection?.appendChild(button);
@@ -199,6 +261,32 @@ document.addEventListener('DOMContentLoaded', async () => {
       })
       .catch(error => console.error('Error loading applications:', error));
   };
+
+  function createApplicationButton(app) {
+    const button = document.createElement('button');
+    button.className = 'nav-button';
+    button.title = app.application;
+
+    const img = document.createElement('img');
+    img.src = `../../assets/${app.application.toLowerCase()}.png`;
+    img.alt = app.application;
+    img.style.width = '20px';
+    img.style.height = '20px';
+    img.style.objectFit = 'contain';
+    img.style.transition = 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
+
+    // Fallback para ícone personalizado se o ícone padrão não carregar
+    img.onerror = () => {
+      img.src = app.icon;
+      // Garantir que o ícone personalizado também mantenha o estilo
+      img.style.width = '20px';
+      img.style.height = '20px';
+      img.style.objectFit = 'contain';
+    };
+
+    button.appendChild(img);
+    return button;
+  }
 
   const refreshApplications = () => {
     window.electronAPI.invoke('get-token').then(token => {
@@ -236,7 +324,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const service = item.getAttribute('data-service');
         const webviewId = `webview-${service}`;
         let webview = document.getElementById(webviewId);
-        if (!webview) webview = createWebview(webviewId);
+        if (!webview) webview = createWebview(webviewId, serviceMap[webviewId]);
         document.querySelectorAll('webview').forEach(w => w.classList.remove('active'));
         webview.classList.add('active');
         updateActiveViewTitle(webview);
@@ -691,7 +779,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Adicionar listener para o evento create-webview-request
   window.electronAPI.on('create-webview-request', (data) => {
     const { webviewId, url, isLinkedIn } = data;
-    const webview = createWebview(webviewId);
+    const webview = createWebview(webviewId, url);
     if (webview) {
       webview.src = url;
     }
