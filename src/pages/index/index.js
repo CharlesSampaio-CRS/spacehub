@@ -433,7 +433,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     return Array.from(webviews).some(webview => webview.id !== 'webview-home' && webview.id !== 'webview-settings');
   };
 
-  const getMenuTemplate = (currentViewId) => {
+  const getMenuTemplate = async (currentViewId) => {
+    const currentLanguage = await window.electronAPI.getLanguage();
+    const translations = {
+      'pt-BR': {
+        'Atualizar Todos': 'Atualizar Todos',
+        'Fechar Todos': 'Fechar Todos',
+        'Atualizar': 'Atualizar',
+        'Fechar': 'Fechar'
+      },
+      'en-US': {
+        'Atualizar Todos': 'Refresh All',
+        'Fechar Todos': 'Close All',
+        'Atualizar': 'Refresh',
+        'Fechar': 'Close'
+      }
+    };
+
+    const t = translations[currentLanguage] || translations['en-US'];
+
     const menuItems = {
       home: `
         <div class="context-menu-item" data-command="reload-all">
@@ -441,14 +459,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             <path d="M23 4v6h-6M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span>Atualizar Todos</span>
+          <span>${t['Atualizar Todos']}</span>
         </div>
         <div class="context-menu-separator"></div>
         <div class="context-menu-item" data-command="close-all">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span>Fechar Todos</span>
+          <span>${t['Fechar Todos']}</span>
         </div>
       `,
       other: `
@@ -457,14 +475,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             <path d="M23 4v6h-6M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span>Atualizar</span>
+          <span>${t['Atualizar']}</span>
         </div>
         <div class="context-menu-separator"></div>
         <div class="context-menu-item" data-command="close-current">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span>Fechar</span>
+          <span>${t['Fechar']}</span>
         </div>
       `
     };
@@ -505,7 +523,16 @@ document.addEventListener('DOMContentLoaded', async () => {
           case 'close-all':
             console.log('Executando close-all...');
             const currentLanguage = await window.electronAPI.getLanguage();
-            showConfirmationDialog(translations[currentLanguage]['close_all_confirmation'], () => {
+            const translations = {
+              'pt-BR': {
+                'close_all_confirmation': 'Tem certeza que deseja fechar todas as abas?'
+              },
+              'en-US': {
+                'close_all_confirmation': 'Are you sure you want to close all tabs?'
+              }
+            };
+            const t = translations[currentLanguage] || translations['en-US'];
+            showConfirmationDialog(t['close_all_confirmation'], () => {
               document.querySelectorAll('webview').forEach(w => {
                 if (w.id !== 'webview-home' && (w.classList.contains('active') || w.classList.contains('opened'))) {
                   console.log('Fechando webview:', w.id);
@@ -577,8 +604,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return webview && (webview.classList.contains('active') || webview.classList.contains('opened'));
   };
 
-  const showContextMenu = (x, y, currentViewId) => {
-    // Verificar se a webview existe e está ativa/aberta
+  const showContextMenu = async (x, y, currentViewId) => {
     if (!currentViewId || !isWebviewActive(currentViewId)) {
       return;
     }
@@ -590,7 +616,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const menu = document.createElement('div');
     menu.className = 'context-menu';
-    menu.innerHTML = getMenuTemplate(currentViewId);
+    menu.innerHTML = await getMenuTemplate(currentViewId);
     
     setupMenuPosition(menu, x, y);
     document.body.appendChild(menu);
