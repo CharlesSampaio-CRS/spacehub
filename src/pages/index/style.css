@@ -9,7 +9,7 @@
   --hover-color: rgba(99, 102, 241, 0.1);
   --active-color: rgba(99, 102, 241, 0.2);
   --border-radius: 16px;
-  --sidebar-width: 52px;
+  --sidebar-width: 64px;
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --component-bg: #ffffff;
   --component-border: 1px solid rgba(0, 0, 0, 0.05);
@@ -52,6 +52,7 @@ body {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  background-color: var(--background);
 }
 
 .main-layout {
@@ -60,6 +61,32 @@ body {
   overflow: hidden;
 }
 
+#sidebar {
+  width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-right: var(--component-border);
+  z-index: 10;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: var(--transition);
+  height: 100vh;
+  padding: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Container para o botão home */
+.home-container {
+  width: 100%;
+  padding: 8px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: var(--component-border);
+  background: var(--sidebar-bg);
+}
 
 .nav-section {
   flex: 1;
@@ -68,8 +95,8 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
-  padding: 12px 6px;
+  gap: 8px;
+  padding: 8px 4px;
   overflow: hidden;
 }
 
@@ -79,12 +106,12 @@ body {
   align-items: center;
   justify-content: center;
   min-width: 44px;
-  max-width: 48px;
+  max-width: 52px;
   min-height: 44px;
-  max-height: 48px;
+  max-height: 52px;
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 50%;
+  border-radius: 12px;
   background: transparent;
   border: none;
   color: var(--text-secondary);
@@ -95,21 +122,24 @@ body {
   padding: 10px;
   flex-shrink: 1;
   margin: 0 auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .nav-button:hover {
   background: var(--hover-color);
   color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .nav-button i,
 .nav-button img {
-  width: 24px;
-  height: 24px;
-  min-width: 20px;
-  min-height: 20px;
-  max-width: 28px;
-  max-height: 28px;
+  width: 26px;
+  height: 26px;
+  min-width: 22px;
+  min-height: 22px;
+  max-width: 30px;
+  max-height: 30px;
   object-fit: contain;
   transition: var(--transition);
   filter: brightness(1) contrast(1.2) saturate(1.1);
@@ -117,20 +147,25 @@ body {
   margin: auto;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .nav-button:hover img {
-  transform: scale(1.1);
+  transform: scale(1.1) translateZ(0);
   filter: brightness(1.1) contrast(1.3) saturate(1.2);
 }
 
 .nav-button.active {
   background: var(--active-color);
   color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
 }
 
 .nav-button.active img {
-  transform: scale(1.1);
+  transform: scale(1.1) translateZ(0);
   filter: brightness(1.1) contrast(1.3) saturate(1.2);
 }
 
@@ -141,9 +176,10 @@ body {
   top: 50%;
   transform: translateY(-50%);
   width: 3px;
-  height: 20px;
+  height: 24px;
   background: var(--primary-color);
   border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
 }
 
 .nav-button.opened {
@@ -178,14 +214,16 @@ body.dark-mode .nav-button.opened::after {
   flex-shrink: 0;
   z-index: 10;
   padding: 0 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .header-title {
-  font-weight: 400;
-  font-size: 0.9rem;
+  font-weight: 500;
+  font-size: 1rem;
   color: var(--text-primary);
   text-align: center;
   flex: 1;
+  letter-spacing: 0.3px;
 }
 
 .header-actions {
@@ -198,22 +236,6 @@ body.dark-mode .nav-button.opened::after {
 #footer {
   display: none; /* Removendo o footer que estava causando problemas */
 }
-
-/* ===== Sidebar esquerda ===== */
-#sidebar {
-  width: var(--sidebar-width);
-  background: var(--sidebar-bg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border-right: var(--component-border);
-  z-index: 10;
-  flex-shrink: 0;
-  overflow: hidden;
-  transition: var(--transition);
-  height: 100vh;
-}
-
 
 /* ===== Sidebar direita ===== */
 #right-sidebar {
@@ -232,8 +254,10 @@ body.dark-mode .nav-button.opened::after {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
   overflow: hidden;
   background-color: var(--background);
+  position: relative;
 }
 
 /* ===== Webview Container ===== */
@@ -246,6 +270,7 @@ body.dark-mode .nav-button.opened::after {
   flex-direction: column;
   padding: 0;
   margin: 0;
+  height: calc(100vh - 40px); /* Altura total menos o header */
 }
 
 .webview-wrapper {
@@ -255,8 +280,9 @@ body.dark-mode .nav-button.opened::after {
   width: 100%;
   background-color: var(--card-bg);
   overflow: hidden;
-  border: var(--component-border);
-  border-radius: 8px;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 webview {
@@ -265,6 +291,7 @@ webview {
   height: 100%;
   width: 100%;
   border: none;
+  background: var(--background);
 }
 
 webview.active {
@@ -408,17 +435,15 @@ webview.active {
 
 /* Ajustes específicos para o modo escuro */
 body.dark-mode .nav-button {
-  color: var(--text-secondary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 body.dark-mode .nav-button:hover {
-  background: var(--hover-color);
-  color: var(--primary-color);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 body.dark-mode .nav-button.active {
-  background: var(--active-color);
-  color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
 }
 
 body.dark-mode .header-title {
@@ -436,10 +461,6 @@ body.dark-mode .context-menu-item {
 
 body.dark-mode .context-menu-item:hover {
   background: var(--hover-color);
-}
-
-body.dark-mode .context-menu-separator {
-  background: var(--component-border);
 }
 
 body.dark-mode .confirmation-content {
@@ -611,166 +632,135 @@ body.dark-mode .profile-menu-item:hover {
   background: var(--hover-color);
 }
 
-/* ===== Ajustes para modo escuro ===== */
+/* Ajustes para modo escuro */
 body.dark-mode .webview-container {
   background: var(--background);
 }
 
 body.dark-mode .webview-wrapper {
   background: var(--card-bg);
-  border: var(--component-border);
+  border: none;
+  box-shadow: none;
 }
 
 body.dark-mode webview {
   background: var(--background);
 }
 
-/* Ajustes específicos para modo escuro */
-body.dark-mode .nav-button img {
-  filter: brightness(1.1) contrast(1.25) saturate(1.15);
-}
+/* Ajustes para telas menores */
+@media (max-height: 700px) {
+  .home-container {
+    padding: 6px 0;
+  }
 
-body.dark-mode .nav-button:hover img,
-body.dark-mode .nav-button.active img {
-  filter: brightness(1.2) contrast(1.35) saturate(1.25);
-}
-
-body.dark-mode #home-button img {
-  filter: brightness(1.15) contrast(1.25) saturate(1.2);
-}
-
-body.dark-mode #home-button:hover img,
-body.dark-mode #home-button.active img {
-  filter: brightness(1.25) contrast(1.35) saturate(1.3);
-}
-
-/* Ajustes específicos para ícones vibrantes no modo escuro */
-body.dark-mode .nav-button img[alt*="LinkedIn"],
-body.dark-mode .nav-button img[alt*="WhatsApp"],
-body.dark-mode .nav-button img[alt*="Telegram"],
-body.dark-mode .nav-button img[alt*="Discord"] {
-  filter: brightness(1.15) contrast(1.3) saturate(1.25);
-}
-
-body.dark-mode .nav-button:hover img[alt*="LinkedIn"],
-body.dark-mode .nav-button:hover img[alt*="WhatsApp"],
-body.dark-mode .nav-button:hover img[alt*="Telegram"],
-body.dark-mode .nav-button:hover img[alt*="Discord"],
-body.dark-mode .nav-button.active img[alt*="LinkedIn"],
-body.dark-mode .nav-button.active img[alt*="WhatsApp"],
-body.dark-mode .nav-button.active img[alt*="Telegram"],
-body.dark-mode .nav-button.active img[alt*="Discord"] {
-  filter: brightness(1.25) contrast(1.4) saturate(1.35);
-}
-
-/* Ajustes específicos para ícones claros no modo escuro */
-body.dark-mode .nav-button img[alt*="Gmail"],
-body.dark-mode .nav-button img[alt*="Google"],
-body.dark-mode .nav-button img[alt*="Drive"],
-body.dark-mode .nav-button img[alt*="Calendar"] {
-  filter: brightness(1.2) contrast(1.3) saturate(1.2);
-}
-
-body.dark-mode .nav-button:hover img[alt*="Gmail"],
-body.dark-mode .nav-button:hover img[alt*="Google"],
-body.dark-mode .nav-button:hover img[alt*="Drive"],
-body.dark-mode .nav-button:hover img[alt*="Calendar"],
-body.dark-mode .nav-button.active img[alt*="Gmail"],
-body.dark-mode .nav-button.active img[alt*="Google"],
-body.dark-mode .nav-button.active img[alt*="Drive"],
-body.dark-mode .nav-button.active img[alt*="Calendar"] {
-  filter: brightness(1.3) contrast(1.4) saturate(1.3);
-}
-
-/* Ajuste para o ícone do SpaceHub */
-#home-button {
-  margin-bottom: 4px;
-}
-
-#home-button img {
-  width: 28px;
-  height: 28px;
-  min-width: 24px;
-  min-height: 24px;
-  max-width: 32px;
-  max-height: 32px;
-  filter: brightness(1.05) contrast(1.2) saturate(1.15);
-}
-
-body.dark-mode .nav-button img[alt="Home"] {
-  filter: brightness(1.2) contrast(1.2) saturate(1.2);
-}
-
-body.dark-mode .nav-button:hover img[alt="Home"],
-body.dark-mode .nav-button.active img[alt="Home"] {
-  filter: brightness(1.3) contrast(1.3) saturate(1.3);
-}
-
-/* Ajuste para ícones com fundo claro */
-.nav-button img[alt*="Gmail"],
-.nav-button img[alt*="Google"],
-.nav-button img[alt*="Drive"],
-.nav-button img[alt*="Calendar"] {
-  filter: brightness(0.98) contrast(1.15) saturate(1.1);
-}
-
-body.dark-mode .nav-button img[alt*="Gmail"],
-body.dark-mode .nav-button img[alt*="Google"],
-body.dark-mode .nav-button img[alt*="Drive"],
-body.dark-mode .nav-button img[alt*="Calendar"] {
-  filter: brightness(1.08) contrast(1.25) saturate(1.2);
-}
-
-body.dark-mode .nav-button:hover img[alt*="Gmail"],
-body.dark-mode .nav-button:hover img[alt*="Google"],
-body.dark-mode .nav-button:hover img[alt*="Drive"],
-body.dark-mode .nav-button:hover img[alt*="Calendar"],
-body.dark-mode .nav-button.active img[alt*="Gmail"],
-body.dark-mode .nav-button.active img[alt*="Google"],
-body.dark-mode .nav-button.active img[alt*="Drive"],
-body.dark-mode .nav-button.active img[alt*="Calendar"] {
-  filter: brightness(1.08) contrast(1.25) saturate(1.2);
-}
-
-/* Remover estilos do loading */
-.loading-indicator,
-.loading-spinner,
-.loading-text {
-  display: none;
-}
-
-/* Media query para ajustar em telas menores */
-@media (max-height: 600px) {
   .nav-section {
-    gap: 8px;
-    padding: 8px 6px;
+    gap: 6px;
+    padding: 6px 4px;
+  }
+
+  .nav-button {
+    min-width: 40px;
+    max-width: 48px;
+    min-height: 40px;
+    max-height: 48px;
+    padding: 8px;
+  }
+
+  .nav-button i,
+  .nav-button img {
+    width: 24px;
+    height: 24px;
+    min-width: 20px;
+    min-height: 20px;
+    max-width: 28px;
+    max-height: 28px;
+  }
+
+  #home-button {
+    margin-bottom: 6px;
+  }
+}
+
+@media (max-height: 600px) {
+  .home-container {
+    padding: 4px 0;
+  }
+
+  .nav-section {
+    gap: 4px;
+    padding: 4px 4px;
   }
 
   .nav-button {
     min-width: 36px;
+    max-width: 44px;
     min-height: 36px;
-    padding: 8px;
-  }
-
-  #home-button {
-    margin-bottom: 2px;
-  }
-}
-
-/* Media query para ajustar em telas muito pequenas */
-@media (max-height: 400px) {
-  .nav-section {
-    gap: 6px;
-    padding: 6px 6px;
-  }
-
-  .nav-button {
-    min-width: 32px;
-    min-height: 32px;
+    max-height: 44px;
     padding: 6px;
   }
 
-  #home-button {
-    margin-bottom: 0;
+  .nav-button i,
+  .nav-button img {
+    width: 22px;
+    height: 22px;
+    min-width: 18px;
+    min-height: 18px;
+    max-width: 26px;
+    max-height: 26px;
   }
+
+  #home-button {
+    margin-bottom: 4px;
+  }
+}
+
+/* Ajuste para quando houver muitos ícones */
+.nav-section.has-many-icons {
+  justify-content: flex-start;
+  gap: 6px;
+  padding-top: 8px;
+}
+
+.nav-section.has-many-icons .nav-button {
+  min-width: 40px;
+  max-width: 48px;
+  min-height: 40px;
+  max-height: 48px;
+  padding: 8px;
+}
+
+.nav-section.has-many-icons .nav-button i,
+.nav-section.has-many-icons .nav-button img {
+  width: 24px;
+  height: 24px;
+  min-width: 20px;
+  min-height: 20px;
+  max-width: 28px;
+  max-height: 28px;
+}
+
+.nav-section.has-many-icons #home-button {
+  margin-bottom: 6px;
+}
+
+/* Ajuste para o ícone do SpaceHub */
+#home-button {
+  margin-bottom: 8px;
+  background: var(--hover-color);
+  border-radius: 12px;
+  min-width: 44px;
+  max-width: 52px;
+  min-height: 44px;
+  max-height: 52px;
+  padding: 10px;
+}
+
+#home-button img {
+  width: 26px;
+  height: 26px;
+  min-width: 22px;
+  min-height: 22px;
+  max-width: 30px;
+  max-height: 30px;
+  filter: brightness(1.05) contrast(1.2) saturate(1.15);
 }
