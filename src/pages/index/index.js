@@ -778,10 +778,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (url && url.includes('linkedin.com')) {
         console.log('Iniciando exibição do LinkedIn...');
         
-        // Se já existe uma janela do LinkedIn
+        // Se já existe uma janela do LinkedIn, apenas reutilizá-la
         if (linkedInWindowInstance && linkedInWindowInstance.container) {
-          console.log('Mostrando janela do LinkedIn existente...');
+          console.log('Reutilizando janela do LinkedIn existente...');
           const container = linkedInWindowInstance.container;
+          
+          // Remover qualquer container duplicado que possa existir
+          document.querySelectorAll('.linkedin-window-container').forEach(existingContainer => {
+            if (existingContainer !== container) {
+              existingContainer.remove();
+            }
+          });
+          
           container.style.display = 'flex';
           container.style.opacity = '1';
           container.classList.add('active');
@@ -792,12 +800,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('Janela do LinkedIn exibida com sucesso');
           }).catch(error => {
             console.error('Erro ao exibir janela do LinkedIn:', error);
-            // Se houver erro ao mostrar a janela existente, criar uma nova
-            createNewLinkedInWindow(webviewId, wrapperBounds);
           });
         } else {
           // Se não existe, criar uma nova janela
           console.log('Criando nova janela do LinkedIn...');
+          // Remover qualquer container existente antes de criar um novo
+          document.querySelectorAll('.linkedin-window-container').forEach(container => container.remove());
           createNewLinkedInWindow(webviewId, wrapperBounds);
         }
       } else {
@@ -844,11 +852,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Função auxiliar para criar nova janela do LinkedIn
   const createNewLinkedInWindow = async (webviewId, wrapperBounds) => {
     try {
-      // Remover qualquer container existente do LinkedIn
-      const existingContainer = document.querySelector('.linkedin-window-container');
-      if (existingContainer) {
-        existingContainer.remove();
+      // Se já existe uma instância, não criar outra
+      if (linkedInWindowInstance && linkedInWindowInstance.container) {
+        console.log('Janela do LinkedIn já existe, reutilizando...');
+        return linkedInWindowInstance;
       }
+
+      // Remover qualquer container existente do LinkedIn
+      document.querySelectorAll('.linkedin-window-container').forEach(container => container.remove());
 
       // Criar nova janela
       const webview = await createLinkedInWindow(webviewId, wrapperBounds);
