@@ -21,16 +21,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     return name.charAt(0).toUpperCase() + name.slice(1);
   };
 
-  const webviewContainer = document.querySelector('.webview-wrapper');
+  // Ajustar o container principal
+  const webviewContainer = document.querySelector('.webview-container');
   if (webviewContainer) {
     webviewContainer.style.cssText = `
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    `;
+  }
+
+  const webviewWrapper = document.querySelector('.webview-wrapper');
+  if (webviewWrapper) {
+    webviewWrapper.style.cssText = `
       position: absolute;
-      top: 60px;   /* Altura do cabeçalho */
-      left: 80px;  /* Largura da sidebar */
+      top: 60px;
+      left: 80px;
       right: 0;
       bottom: 0;
       overflow: hidden;
-      background-color: transparent; /* Removendo cor de debug */
+      background-color: transparent;
       width: calc(100% - 80px);
       height: calc(100% - 60px);
     `;
@@ -56,31 +67,69 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       console.log('Iniciando criação da janela do LinkedIn...');
       
-      // Se já existe uma janela do LinkedIn, apenas retorná-la
+      // Verificar se já existe uma instância ativa
       if (linkedInWindowInstance && linkedInWindowInstance.container) {
         console.log('Janela do LinkedIn já existe, reutilizando...');
         const container = linkedInWindowInstance.container;
+        
+        // Garantir que o container esteja posicionado corretamente
+        const header = document.getElementById('header');
+        const sidebar = document.getElementById('sidebar');
+        const headerHeight = header ? header.offsetHeight : 60;
+        const sidebarWidth = sidebar ? sidebar.offsetWidth : 80;
+        const headerMargin = 4;
+        const bottomMargin = 4;
+
         container.style.cssText = `
-          position: absolute;
-          top: 60px;
-          left: 80px;
-          right: 0;
-          bottom: 0;
+          position: fixed;
+          top: ${headerHeight + headerMargin}px;
+          left: ${sidebarWidth}px;
+          width: calc(100% - ${sidebarWidth}px);
+          height: calc(100% - ${headerHeight + headerMargin + bottomMargin}px);
           background: transparent;
-          z-index: 999;
+          z-index: 1001;
           display: flex;
           flex-direction: column;
-          width: calc(100% - 80px);
-          height: calc(100% - 60px);
           opacity: 1;
           transition: all 0.3s ease-in-out;
-          border-radius: 8px;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          border: none;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
         `;
         container.style.display = 'flex';
         container.style.opacity = '1';
         return linkedInWindowInstance;
       }
+
+      // Remover qualquer container existente do LinkedIn antes de criar um novo
+      document.querySelectorAll('.linkedin-window-container').forEach(container => {
+        if (container !== linkedInWindowInstance?.container) {
+          console.log('Removendo container antigo do LinkedIn...');
+          container.remove();
+        }
+      });
+
+      // Obter as dimensões reais do header e sidebar
+      const header = document.getElementById('header');
+      const sidebar = document.getElementById('sidebar');
+      const headerHeight = header ? header.offsetHeight : 60;
+      const sidebarWidth = sidebar ? sidebar.offsetWidth : 80;
+      const headerMargin = 4;
+      const bottomMargin = 4;
+
+      // Obter as dimensões do webview-container
+      const webviewContainer = document.querySelector('.webview-container');
+      const containerBounds = webviewContainer ? webviewContainer.getBoundingClientRect().toJSON() : wrapperBounds;
+
+      // Ajustar as dimensões para respeitar header, sidebar e margens
+      const adjustedBounds = {
+        ...containerBounds,
+        top: headerHeight + headerMargin,
+        left: sidebarWidth,
+        width: window.innerWidth - sidebarWidth,
+        height: window.innerHeight - (headerHeight + headerMargin + bottomMargin)
+      };
 
       // Criar uma janela filha que se integra com a área de conteúdo
       const windowData = {
@@ -88,8 +137,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         parent: webviewId,
         url: 'https://www.linkedin.com/login',
         options: {
-          width: wrapperBounds.width,
-          height: wrapperBounds.height,
+          width: adjustedBounds.width,
+          height: adjustedBounds.height,
           modal: false,
           frame: false,
           transparent: true,
@@ -104,8 +153,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
 
       console.log('Solicitando criação da janela do LinkedIn...');
-      console.log('wrapperBounds ANTES de invocar:', wrapperBounds);
-      const linkedInWindow = await window.electronAPI.invoke('create-linkedin-window', windowData, wrapperBounds);
+      console.log('adjustedBounds:', adjustedBounds);
+      const linkedInWindow = await window.electronAPI.invoke('create-linkedin-window', windowData, adjustedBounds);
       
       if (linkedInWindow) {
         console.log('Janela do LinkedIn criada com sucesso:', linkedInWindow.id);
@@ -115,221 +164,62 @@ document.addEventListener('DOMContentLoaded', async () => {
         container.id = `${webviewId}-container`;
         container.className = 'linkedin-window-container webview';
         container.style.cssText = `
-          position: absolute;
-          top: 60px;
-          left: 80px;
-          right: 0;
-          bottom: 0;
+          position: fixed;
+          top: ${headerHeight + headerMargin}px;
+          left: ${sidebarWidth}px;
+          width: calc(100% - ${sidebarWidth}px);
+          height: calc(100% - ${headerHeight + headerMargin + bottomMargin}px);
           background: transparent;
-          z-index: 999;
+          z-index: 1001;
           display: flex;
           flex-direction: column;
-          width: calc(100% - 80px);
-          height: calc(100% - 60px);
           opacity: 1;
           transition: all 0.3s ease-in-out;
-          border-radius: 8px;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        `;
-
-        // Adicionar barra de título com controles
-        const titleBar = document.createElement('div');
-        titleBar.className = 'linkedin-window-titlebar';
-        titleBar.style.cssText = `
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 8px 12px;
-          background: #f3f2ef;
-          border-bottom: 1px solid #e0e0e0;
-          border-radius: 8px 8px 0 0;
-          cursor: move;
-          user-select: none;
-          height: 40px;
-          flex-shrink: 0;
-        `;
-
-        // Título
-        const title = document.createElement('div');
-        title.className = 'linkedin-window-title';
-        title.textContent = 'LinkedIn';
-        title.style.cssText = `
-          font-size: 14px;
-          font-weight: 500;
-          color: #333;
-        `;
-
-        // Container para os botões de controle
-        const controls = document.createElement('div');
-        controls.className = 'linkedin-window-controls';
-        controls.style.cssText = `
-          display: flex;
-          gap: 8px;
-        `;
-
-        // Botão minimizar
-        const minimizeBtn = document.createElement('button');
-        minimizeBtn.className = 'linkedin-window-control minimize';
-        minimizeBtn.innerHTML = '&#x2212;';
-        minimizeBtn.style.cssText = `
-          width: 24px;
-          height: 24px;
           border: none;
-          background: transparent;
-          color: #666;
-          font-size: 16px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 4px;
-          transition: background-color 0.2s;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
         `;
 
-        // Botão maximizar/restaurar
-        const maximizeBtn = document.createElement('button');
-        maximizeBtn.className = 'linkedin-window-control maximize';
-        maximizeBtn.innerHTML = '&#x2610;';
-        maximizeBtn.style.cssText = minimizeBtn.style.cssText;
-
-        // Botão fechar
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'linkedin-window-control close';
-        closeBtn.innerHTML = '&#x2715;';
-        closeBtn.style.cssText = minimizeBtn.style.cssText;
-
-        // Adicionar hover effects
-        [minimizeBtn, maximizeBtn, closeBtn].forEach(btn => {
-          btn.addEventListener('mouseover', () => {
-            btn.style.backgroundColor = btn.classList.contains('close') ? '#e81123' : '#e0e0e0';
-            btn.style.color = btn.classList.contains('close') ? '#fff' : '#333';
-          });
-          btn.addEventListener('mouseout', () => {
-            btn.style.backgroundColor = 'transparent';
-            btn.style.color = '#666';
-          });
-        });
-
-        // Adicionar eventos aos botões
-        let isMaximized = false;
-        let originalBounds = null;
-
-        minimizeBtn.addEventListener('click', () => {
-          if (container.style.height === '40px') {
-            // Restaurar
-            container.style.height = 'calc(100% - 60px)';
-            container.style.transform = 'none';
-            container.style.overflow = 'visible';
-          } else {
-            // Minimizar
-            container.style.height = '40px';
-            container.style.transform = 'translateY(calc(100% - 40px))';
-            container.style.overflow = 'hidden';
-          }
-        });
-
-        maximizeBtn.addEventListener('click', () => {
-          if (!isMaximized) {
-            // Salvar dimensões originais
-            originalBounds = {
-              width: container.style.width,
-              height: container.style.height,
-              top: container.style.top,
-              left: container.style.left
-            };
-            
-            // Maximizar para ocupar todo o espaço do content
-            container.style.width = 'calc(100% - 80px)';
-            container.style.height = 'calc(100% - 60px)';
-            container.style.top = '60px';
-            container.style.left = '80px';
-            container.style.borderRadius = '0';
-            maximizeBtn.innerHTML = '&#x2612;';
-          } else {
-            // Restaurar dimensões originais
-            container.style.width = originalBounds.width;
-            container.style.height = originalBounds.height;
-            container.style.top = originalBounds.top;
-            container.style.left = originalBounds.left;
-            container.style.borderRadius = '8px';
-            maximizeBtn.innerHTML = '&#x2610;';
-          }
-          isMaximized = !isMaximized;
-        });
-
-        closeBtn.addEventListener('click', () => {
-          if (linkedInWindowInstance) {
-            linkedInWindowInstance.remove();
-          }
-        });
-
-        // Adicionar elementos à barra de título
-        controls.appendChild(minimizeBtn);
-        controls.appendChild(maximizeBtn);
-        controls.appendChild(closeBtn);
-        titleBar.appendChild(title);
-        titleBar.appendChild(controls);
-        container.appendChild(titleBar);
-
-        // Adicionar ao DOM dentro do container principal
-        const webviewContainer = document.querySelector('.webview-wrapper');
+        // Adicionar ao DOM dentro do webview-container
         if (webviewContainer) {
-          // Remover qualquer container existente do LinkedIn
-          const existingContainer = document.querySelector('.linkedin-window-container');
-          if (existingContainer) {
-            existingContainer.remove();
-          }
-
           console.log('Adicionando container do LinkedIn ao DOM...');
           webviewContainer.appendChild(container);
           
           // Garantir que o container esteja visível
           container.style.display = 'flex';
           container.style.opacity = '1';
+
+          // Adicionar listener para redimensionamento da janela
+          window.addEventListener('resize', () => {
+            const newHeaderHeight = header ? header.offsetHeight : 60;
+            const newSidebarWidth = sidebar ? sidebar.offsetWidth : 80;
+            
+            container.style.top = `${newHeaderHeight + headerMargin}px`;
+            container.style.left = `${newSidebarWidth}px`;
+            container.style.width = `calc(100% - ${newSidebarWidth}px)`;
+            container.style.height = `calc(100% - ${newHeaderHeight + headerMargin + bottomMargin}px)`;
+
+            // Atualizar a janela do LinkedIn com as novas dimensões
+            if (linkedInWindowInstance && linkedInWindowInstance.id) {
+              const newBounds = {
+                x: newSidebarWidth,
+                y: newHeaderHeight + headerMargin,
+                width: window.innerWidth - newSidebarWidth,
+                height: window.innerHeight - (newHeaderHeight + headerMargin + bottomMargin)
+              };
+              window.electronAPI.invoke('update-linkedin-window-bounds', linkedInWindowInstance.id, newBounds);
+            }
+          });
         } else {
           console.error('Container da webview não encontrado');
           return null;
         }
 
-        // Configurar eventos
-        window.electronAPI.on('linkedin-window-ready', (data) => {
-          console.log('Evento linkedin-window-ready recebido:', data);
-          if (data.windowId === linkedInWindow.id) {
-            console.log('Mostrando container do LinkedIn...');
-            container.classList.add('active');
-            currentWebview = linkedInWindowInstance;
-            
-            // Forçar a exibição da janela, passando as dimensões do wrapper
-            window.electronAPI.invoke('show-linkedin-window', linkedInWindowInstance.id, wrapperBounds).then(() => {
-              console.log('Janela do LinkedIn exibida com sucesso');
-            }).catch(error => {
-              console.error('Erro ao exibir janela do LinkedIn:', error);
-            });
-          }
-        });
-
-        window.electronAPI.on('linkedin-window-closed', (data) => {
-          console.log('Evento linkedin-window-closed recebido:', data);
-          if (data.windowId === linkedInWindow.id) {
-            console.log('Escondendo container do LinkedIn...');
-            container.style.opacity = '0';
-            setTimeout(() => {
-              container.style.display = 'none';
-              linkedInWindowInstance = null; // Limpar a instância global ao fechar
-            }, 200);
-          }
-        });
-
         // Criar e armazenar a instância da janela
         const windowInstance = {
           id: linkedInWindow.id,
           container: container,
-          titleBar: titleBar,
-          minimizeBtn: minimizeBtn,
-          maximizeBtn: maximizeBtn,
-          closeBtn: closeBtn,
-          isMaximized: false,
-          originalBounds: null,
           addEventListener: (event, callback) => {
             if (event === 'dom-ready') {
               window.electronAPI.on('linkedin-window-ready', (data) => {
@@ -344,7 +234,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             container.style.opacity = '0';
             setTimeout(() => {
               window.electronAPI.invoke('close-linkedin-window', linkedInWindow.id);
-              container.remove(); // Remover o container do DOM
+              container.remove();
               linkedInWindowInstance = null;
             }, 200);
           },
@@ -398,7 +288,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Criar a webview
       const webview = document.createElement('webview');
       webview.id = webviewId;
-      webview.className = 'webview w-100 h-100 active';
+      webview.className = 'webview active';
       webview.style.cssText = `
         position: absolute;
         top: 0;
@@ -411,6 +301,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         display: flex;
         flex-direction: column;
         background: #ffffff;
+        border: none;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
       `;
       webview.src = url || '../../pages/home/home.html';
 
@@ -745,21 +639,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       console.log('Mostrando webview:', webviewId, buttonId);
       
-      // Obter as dimensões do webview-wrapper
-      const webviewWrapper = document.querySelector('.webview-wrapper');
-      let wrapperBounds = null;
-      if (webviewWrapper) {
-        wrapperBounds = webviewWrapper.getBoundingClientRect().toJSON();
-        console.log('Dimensões do webview-wrapper:', wrapperBounds);
+      // Obter as dimensões reais do header e sidebar
+      const header = document.getElementById('header');
+      const sidebar = document.getElementById('sidebar');
+      const headerHeight = header ? header.offsetHeight : 60;
+      const sidebarWidth = sidebar ? sidebar.offsetWidth : 80;
+      const headerMargin = 4;
+      const bottomMargin = 4;
+      
+      // Obter as dimensões do webview-container para a janela do LinkedIn
+      const webviewContainer = document.querySelector('.webview-container');
+      let containerBounds = null;
+      if (webviewContainer) {
+        containerBounds = webviewContainer.getBoundingClientRect().toJSON();
+        // Ajustar as dimensões para respeitar header, sidebar e margens
+        containerBounds = {
+          ...containerBounds,
+          top: headerHeight + headerMargin,
+          left: sidebarWidth,
+          width: window.innerWidth - sidebarWidth,
+          height: window.innerHeight - (headerHeight + headerMargin + bottomMargin)
+        };
+        console.log('Dimensões ajustadas do webview-container:', containerBounds);
       }
-
+      
       // Primeiro, esconder todas as webviews e remover classes active
-      document.querySelectorAll('.webview').forEach(w => {
+      document.querySelectorAll('.webview, .linkedin-window-container').forEach(w => {
         w.classList.remove('active');
-        if (w.id !== 'webview-home' && w.id !== 'webview-settings') {
-          w.style.display = 'none';
-          w.style.opacity = '0';
-        }
+        w.style.display = 'none';
+        w.style.opacity = '0';
       });
       document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
 
@@ -796,7 +704,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           currentWebview = linkedInWindowInstance;
           
           // Forçar a exibição da janela
-          window.electronAPI.invoke('show-linkedin-window', linkedInWindowInstance.id, wrapperBounds).then(() => {
+          window.electronAPI.invoke('show-linkedin-window', linkedInWindowInstance.id, containerBounds).then(() => {
             console.log('Janela do LinkedIn exibida com sucesso');
           }).catch(error => {
             console.error('Erro ao exibir janela do LinkedIn:', error);
@@ -806,7 +714,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           console.log('Criando nova janela do LinkedIn...');
           // Remover qualquer container existente antes de criar um novo
           document.querySelectorAll('.linkedin-window-container').forEach(container => container.remove());
-          createNewLinkedInWindow(webviewId, wrapperBounds);
+          createNewLinkedInWindow(webviewId, containerBounds);
         }
       } else {
         // Para outras webviews, esconder o LinkedIn completamente
@@ -1126,113 +1034,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     const headerHeight = 60;
     
     // Ajustar as coordenadas para considerar o offset
-    let posX = x - sidebarWidth;
-    let posY = y - headerHeight;
+    let posX = x;
+    let posY = y;
     
     // Garantir que o menu não ultrapasse os limites da área de conteúdo
-    posX = Math.min(Math.max(posX, 0), rect.width - sidebarWidth - menuWidth - 10);
-    posY = Math.min(Math.max(posY, 0), rect.height - headerHeight - menuHeight - 10);
+    posX = Math.min(Math.max(posX, sidebarWidth), rect.width - menuWidth - 10);
+    posY = Math.min(Math.max(posY, headerHeight), rect.height - menuHeight - 10);
     
-    menu.style.left = `${posX + sidebarWidth}px`;
-    menu.style.top = `${posY + headerHeight}px`;
+    menu.style.left = `${posX}px`;
+    menu.style.top = `${posY}px`;
   };
 
-  const setupMenuEvents = (menu, currentViewId) => {
-    menu.querySelectorAll('.context-menu-item').forEach(item => {
-      item.addEventListener('click', async () => {
-        const command = item.getAttribute('data-command');
-        menu.remove();
+  const showContextMenu = async (x, y, currentViewId) => {
+    if (!currentViewId) {
+      console.log('No currentViewId provided');
+      return;
+    }
 
-        const isLinkedIn = currentViewId.includes('linkedin');
-        console.log('Menu item clicked:', command, 'currentViewId:', currentViewId, 'isLinkedIn:', isLinkedIn);
-        console.log('linkedInWindowInstance:', linkedInWindowInstance);
+    const isLinkedIn = currentViewId.includes('linkedin');
+    const isActive = isLinkedIn ? 
+      (linkedInWindowInstance && linkedInWindowInstance.container && linkedInWindowInstance.container.classList.contains('active')) :
+      isWebviewActive(currentViewId);
 
-        switch (command) {
-          case 'reload-current':
-            if (isLinkedIn && linkedInWindowInstance) {
-              console.log('Chamando reload para LinkedIn.');
-              linkedInWindowInstance.reload();
-            } else {
-              const targetReload = document.getElementById(currentViewId);
-              if (targetReload?.reload && isWebviewActive(currentViewId)) {
-                console.log('Chamando reload para webview normal:', currentViewId);
-                targetReload.reload();
-              }
-            }
-            break;
-
-          case 'close-current':
-            if (isLinkedIn && linkedInWindowInstance) {
-              console.log('Chamando remove para LinkedIn.');
-              linkedInWindowInstance.remove();
-              const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
-              if (button) {
-                button.classList.remove('opened', 'active');
-              }
-              showWebview('webview-home', 'home-button');
-            } else {
-              const targetClose = document.getElementById(currentViewId);
-              if (targetClose && isWebviewActive(currentViewId)) {
-                console.log('Chamando remove para webview normal:', currentViewId);
-                const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
-                if (button) {
-                  button.classList.remove('opened', 'active');
-                }
-                targetClose.remove();
-                showWebview('webview-home', 'home-button');
-              }
-            }
-            break;
-
-          case 'reload-all':
-            console.log('Executando reload-all...');
-            document.querySelectorAll('webview').forEach(w => {
-              if (w.classList.contains('active') || w.classList.contains('opened')) {
-                console.log('Recarregando webview:', w.id);
-                w.reload();
-              }
-            });
-            break;
-
-          case 'close-all':
-            console.log('Executando close-all...');
-            const currentLanguage = await window.electronAPI.getLanguage();
-            const translations = {
-              'pt-BR': {
-                'close_all_confirmation': 'Tem certeza que deseja fechar todas as abas?'
-              },
-              'en-US': {
-                'close_all_confirmation': 'Are you sure you want to close all tabs?'
-              }
-            };
-            const t = translations[currentLanguage] || translations['en-US'];
-            showConfirmationDialog(t['close_all_confirmation'], () => {
-              document.querySelectorAll('webview').forEach(w => {
-                if (w.id !== 'webview-home' && (w.classList.contains('active') || w.classList.contains('opened'))) {
-                  console.log('Fechando webview:', w.id);
-                  w.remove();
-                  const button = document.querySelector(`.nav-button[data-id="${w.id}"]`);
-                  if (button) {
-                    button.classList.remove('active', 'opened');
-                  }
-                }
-              });
-              document.querySelectorAll('.nav-button').forEach(b => {
-                if (b.id !== 'home-button') {
-                  b.classList.remove('opened');
-                }
-              });
-              if (currentWebview && currentWebview.id !== 'webview-home') {
-                currentWebview = null;
-                document.getElementById('active-view-name').textContent = '';
-              }
-              showWebview('webview-home', 'home-button');
-            });
-            break;
-        }
-      });
+    console.log('showContextMenu called:', {
+      currentViewId,
+      isLinkedIn,
+      isActive,
+      linkedInInstance: linkedInWindowInstance
     });
 
+    if (!isActive) {
+      console.log('Context menu not shown because webview is not active');
+      return;
+    }
+
+    // Remover menu existente se houver
+    const existingMenu = document.querySelector('.context-menu');
+    if (existingMenu) {
+      existingMenu.remove();
+    }
+
+    // Criar novo menu
+    const menu = document.createElement('div');
+    menu.className = 'context-menu';
+    menu.innerHTML = await getMenuTemplate(currentViewId);
+    
+    // Posicionar o menu
+    setupMenuPosition(menu, x, y);
+    document.body.appendChild(menu);
+
+    // Configurar eventos do menu
+    setupMenuEvents(menu, currentViewId);
+
+    // Adicionar evento de clique para fechar o menu quando clicar fora
     const closeMenu = (e) => {
       if (!menu.contains(e.target)) {
         menu.remove();
@@ -1240,46 +1094,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     };
 
+    // Adicionar o listener com um pequeno delay para evitar que o menu feche imediatamente
     setTimeout(() => {
       document.addEventListener('click', closeMenu);
     }, 100);
   };
 
-  const isWebviewActive = (webviewId) => {
-    const webview = document.getElementById(webviewId);
-    return webview && (webview.classList.contains('active') || webview.classList.contains('opened'));
-  };
-
-  const showContextMenu = async (x, y, currentViewId) => {
-    if (!currentViewId) return;
-
-    const isLinkedIn = currentViewId.includes('linkedin');
-    const isActive = isLinkedIn ? 
-      (linkedInWindowInstance && linkedInWindowInstance.container) :
-      isWebviewActive(currentViewId);
-
-    console.log('showContextMenu called. currentViewId:', currentViewId, 'isLinkedIn:', isLinkedIn, 'isActive:', isActive);
-    if (!isActive) {
-      console.log('Context menu not shown because webview is not active.');
-      return;
-    }
-
-    const existingMenu = document.querySelector('.context-menu');
-    if (existingMenu) {
-      existingMenu.remove();
-    }
-
-    const menu = document.createElement('div');
-    menu.className = 'context-menu';
-    menu.innerHTML = await getMenuTemplate(currentViewId);
-    
-    setupMenuPosition(menu, x, y);
-    document.body.appendChild(menu);
-    setupMenuEvents(menu, currentViewId);
-  };
-
   // Context Menu e comunicação com main process
   const setupContextMenu = () => {
+    // Adicionar evento de contexto para a sidebar
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
       sidebar.addEventListener('contextmenu', (e) => {
@@ -1297,15 +1120,18 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        // Verificar se o botão está ativo ou tem uma webview aberta
-        const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
-        const isButtonActive = button && (button.classList.contains('active') || button.classList.contains('opened'));
-        const isLinkedIn = webviewId.includes('linkedin');
-        const isWebviewActive = isLinkedIn ? 
-          (linkedInWindowInstance && linkedInWindowInstance.container) :
-          (document.getElementById(webviewId) && document.getElementById(webviewId).classList.contains('active'));
+        // Verificar se é o botão do LinkedIn
+        const isLinkedInButton = webviewId.includes('linkedin');
+        const isButtonActive = target.classList.contains('active') || target.classList.contains('opened');
+        
+        // Se for o botão do LinkedIn, verificar se a janela está ativa
+        const isLinkedInActive = isLinkedInButton ? 
+          (linkedInWindowInstance && linkedInWindowInstance.container && linkedInWindowInstance.container.classList.contains('active')) :
+          false;
 
-        if (isButtonActive || isWebviewActive) {
+        // Se for o botão do LinkedIn e a janela estiver ativa, ou se for outro botão ativo
+        if ((isLinkedInButton && isLinkedInActive) || (!isLinkedInButton && isButtonActive)) {
+          console.log('Mostrando menu de contexto para:', webviewId, 'isLinkedIn:', isLinkedInButton);
           showContextMenu(e.clientX, e.clientY, webviewId);
         }
       });
@@ -1313,16 +1139,245 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Adicionar evento de contexto para a janela do LinkedIn
     document.addEventListener('contextmenu', (e) => {
-      if (e.target.closest('.linkedin-window-container')) {
+      const linkedInContainer = e.target.closest('.linkedin-window-container');
+      if (linkedInContainer && linkedInContainer.classList.contains('active')) {
         e.preventDefault();
         e.stopPropagation();
         
-        const container = e.target.closest('.linkedin-window-container');
-        const webviewId = container.id.replace('-container', '');
-        
-        showContextMenu(e.clientX, e.clientY, webviewId);
+        const webviewId = linkedInContainer.id.replace('-container', '');
+        console.log('Context menu on LinkedIn container:', webviewId, linkedInWindowInstance);
+        if (webviewId && linkedInWindowInstance && linkedInWindowInstance.container === linkedInContainer) {
+          showContextMenu(e.clientX, e.clientY, webviewId);
+        }
       }
     });
+
+    // Adicionar evento de contexto para webviews normais
+    document.addEventListener('contextmenu', (e) => {
+      const webview = e.target.closest('webview');
+      if (webview && webview.classList.contains('active')) {
+        e.preventDefault();
+        e.stopPropagation();
+        showContextMenu(e.clientX, e.clientY, webview.id);
+      }
+    });
+  };
+
+  const setupMenuEvents = (menu, currentViewId) => {
+    console.log('Setting up menu events for:', currentViewId);
+    
+    menu.querySelectorAll('.context-menu-item').forEach(item => {
+      item.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const command = item.getAttribute('data-command');
+        console.log('Menu item clicked:', command, 'currentViewId:', currentViewId);
+        
+        menu.remove();
+
+        const isLinkedIn = currentViewId.includes('linkedin');
+        const isHome = currentViewId === 'webview-home';
+        console.log('Menu context:', { isLinkedIn, isHome, currentViewId });
+
+        switch (command) {
+          case 'reload-current':
+            if (isLinkedIn) {
+              // Recarregar apenas a janela do LinkedIn
+              if (linkedInWindowInstance && linkedInWindowInstance.container) {
+                console.log('Recarregando janela do LinkedIn...');
+                try {
+                  linkedInWindowInstance.container.style.opacity = '0';
+                  await window.electronAPI.invoke('reload-linkedin-window', linkedInWindowInstance.id);
+                  setTimeout(() => {
+                    linkedInWindowInstance.container.style.opacity = '1';
+                  }, 200);
+                } catch (error) {
+                  console.error('Erro ao recarregar LinkedIn:', error);
+                  linkedInWindowInstance.container.style.opacity = '1';
+                }
+              }
+            } else {
+              // Recarregar webview normal
+              const webview = document.getElementById(currentViewId);
+              if (webview && isWebviewActive(currentViewId)) {
+                console.log('Recarregando webview:', currentViewId);
+                webview.reload();
+              }
+            }
+            break;
+
+          case 'close-current':
+            if (isLinkedIn) {
+              // Fechar apenas a janela do LinkedIn
+              if (linkedInWindowInstance && linkedInWindowInstance.container) {
+                console.log('Fechando janela do LinkedIn...');
+                try {
+                  linkedInWindowInstance.container.style.opacity = '0';
+                  await window.electronAPI.invoke('destroy-linkedin-window', linkedInWindowInstance.id);
+                  
+                  setTimeout(() => {
+                    if (linkedInWindowInstance && linkedInWindowInstance.container) {
+                      linkedInWindowInstance.container.remove();
+                    }
+                    linkedInWindowInstance = null;
+                    
+                    // Atualizar estado do botão
+                    const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+                    if (button) {
+                      button.classList.remove('opened', 'active');
+                    }
+                    
+                    // Mostrar home se não houver outras webviews ativas
+                    if (!hasOpenWebviews()) {
+                      showWebview('webview-home', 'home-button');
+                    }
+                  }, 200);
+                } catch (error) {
+                  console.error('Erro ao fechar LinkedIn:', error);
+                  if (linkedInWindowInstance && linkedInWindowInstance.container) {
+                    linkedInWindowInstance.container.remove();
+                  }
+                  linkedInWindowInstance = null;
+                  if (!hasOpenWebviews()) {
+                    showWebview('webview-home', 'home-button');
+                  }
+                }
+              }
+            } else {
+              // Fechar webview normal
+              const webview = document.getElementById(currentViewId);
+              if (webview && isWebviewActive(currentViewId)) {
+                console.log('Fechando webview:', currentViewId);
+                webview.style.opacity = '0';
+                
+                setTimeout(() => {
+                  // Atualizar estado do botão
+                  const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+                  if (button) {
+                    button.classList.remove('opened', 'active');
+                  }
+                  
+                  // Remover webview
+                  webview.remove();
+                  
+                  // Mostrar home se não houver outras webviews ativas
+                  if (!hasOpenWebviews()) {
+                    showWebview('webview-home', 'home-button');
+                  }
+                }, 200);
+              }
+            }
+            break;
+
+          case 'reload-all':
+            console.log('Recarregando todas as webviews...');
+            
+            // Recarregar todas as webviews normais ativas
+            document.querySelectorAll('webview').forEach(webview => {
+              if (webview.id !== 'webview-home' && 
+                  (webview.classList.contains('active') || webview.classList.contains('opened'))) {
+                console.log('Recarregando webview:', webview.id);
+                webview.reload();
+              }
+            });
+
+            // Recarregar LinkedIn se estiver ativo
+            if (linkedInWindowInstance && linkedInWindowInstance.container) {
+              console.log('Recarregando LinkedIn...');
+              try {
+                linkedInWindowInstance.container.style.opacity = '0';
+                await window.electronAPI.invoke('reload-linkedin-window', linkedInWindowInstance.id);
+                setTimeout(() => {
+                  linkedInWindowInstance.container.style.opacity = '1';
+                }, 200);
+              } catch (error) {
+                console.error('Erro ao recarregar LinkedIn:', error);
+                linkedInWindowInstance.container.style.opacity = '1';
+              }
+            }
+            break;
+
+          case 'close-all':
+            console.log('Fechando todas as webviews...');
+            const currentLanguage = await window.electronAPI.getLanguage();
+            const translations = {
+              'pt-BR': { 'close_all_confirmation': 'Tem certeza que deseja fechar todas as abas?' },
+              'en-US': { 'close_all_confirmation': 'Are you sure you want to close all tabs?' }
+            };
+            const t = translations[currentLanguage] || translations['en-US'];
+
+            showConfirmationDialog(t['close_all_confirmation'], async () => {
+              try {
+                // Fechar todas as webviews normais
+                document.querySelectorAll('webview').forEach(webview => {
+                  if (webview.id !== 'webview-home' && 
+                      (webview.classList.contains('active') || webview.classList.contains('opened'))) {
+                    console.log('Fechando webview:', webview.id);
+                    webview.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                      // Atualizar estado do botão
+                      const button = document.querySelector(`.nav-button[data-id="${webview.id}"]`);
+                      if (button) {
+                        button.classList.remove('opened', 'active');
+                      }
+                      webview.remove();
+                    }, 200);
+                  }
+                });
+
+                // Fechar LinkedIn se estiver ativo
+                if (linkedInWindowInstance && linkedInWindowInstance.container) {
+                  console.log('Fechando LinkedIn...');
+                  linkedInWindowInstance.container.style.opacity = '0';
+                  
+                  await window.electronAPI.invoke('destroy-linkedin-window', linkedInWindowInstance.id);
+                  
+                  setTimeout(() => {
+                    if (linkedInWindowInstance && linkedInWindowInstance.container) {
+                      linkedInWindowInstance.container.remove();
+                    }
+                    linkedInWindowInstance = null;
+                    
+                    // Atualizar estado do botão do LinkedIn
+                    const linkedInButton = document.querySelector(`.nav-button[data-id*="linkedin"]`);
+                    if (linkedInButton) {
+                      linkedInButton.classList.remove('opened', 'active');
+                    }
+                  }, 200);
+                }
+
+                // Atualizar todos os botões
+                document.querySelectorAll('.nav-button').forEach(button => {
+                  if (button.id !== 'home-button') {
+                    button.classList.remove('opened', 'active');
+                  }
+                });
+
+                // Limpar webview atual e mostrar home
+                currentWebview = null;
+                document.getElementById('active-view-name').textContent = '';
+                showWebview('webview-home', 'home-button');
+              } catch (error) {
+                console.error('Erro ao fechar todas as janelas:', error);
+                // Limpar tudo mesmo em caso de erro
+                if (linkedInWindowInstance && linkedInWindowInstance.container) {
+                  linkedInWindowInstance.container.remove();
+                }
+                linkedInWindowInstance = null;
+                showWebview('webview-home', 'home-button');
+              }
+            });
+            break;
+        }
+      });
+    });
+  };
+
+  const isWebviewActive = (webviewId) => {
+    const webview = document.getElementById(webviewId);
+    return webview && (webview.classList.contains('active') || webview.classList.contains('opened'));
   };
 
   const showConfirmationDialog = async (message, onConfirm) => {
