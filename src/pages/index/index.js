@@ -1178,24 +1178,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const isLinkedIn = currentViewId.includes('linkedin');
         const isHome = currentViewId === 'webview-home';
-        console.log('Menu context:', { isLinkedIn, isHome, currentViewId });
+        console.log('Menu context:', { isLinkedIn, isHome, currentViewId, linkedInInstance: linkedInWindowInstance });
 
         switch (command) {
           case 'reload-current':
             if (isLinkedIn) {
               // Recarregar apenas a janela do LinkedIn
-              if (linkedInWindowInstance && linkedInWindowInstance.container) {
-                console.log('Recarregando janela do LinkedIn...');
+              if (linkedInWindowInstance && linkedInWindowInstance.id) {
+                console.log('Recarregando janela do LinkedIn...', linkedInWindowInstance.id);
                 try {
-                  linkedInWindowInstance.container.style.opacity = '0';
+                  // Primeiro esconder com animação
+                  if (linkedInWindowInstance.container) {
+                    linkedInWindowInstance.container.style.opacity = '0';
+                  }
+                  
+                  // Recarregar a janela
                   await window.electronAPI.invoke('reload-linkedin-window', linkedInWindowInstance.id);
+                  console.log('Comando de recarregar LinkedIn enviado');
+                  
+                  // Mostrar novamente após um pequeno delay
                   setTimeout(() => {
-                    linkedInWindowInstance.container.style.opacity = '1';
+                    if (linkedInWindowInstance && linkedInWindowInstance.container) {
+                      linkedInWindowInstance.container.style.opacity = '1';
+                    }
                   }, 200);
                 } catch (error) {
                   console.error('Erro ao recarregar LinkedIn:', error);
-                  linkedInWindowInstance.container.style.opacity = '1';
+                  if (linkedInWindowInstance && linkedInWindowInstance.container) {
+                    linkedInWindowInstance.container.style.opacity = '1';
+                  }
                 }
+              } else {
+                console.log('LinkedIn não está ativo para recarregar');
               }
             } else {
               // Recarregar webview normal
@@ -1210,20 +1224,31 @@ document.addEventListener('DOMContentLoaded', async () => {
           case 'close-current':
             if (isLinkedIn) {
               // Fechar apenas a janela do LinkedIn
-              if (linkedInWindowInstance && linkedInWindowInstance.container) {
-                console.log('Fechando janela do LinkedIn...');
+              if (linkedInWindowInstance && linkedInWindowInstance.id) {
+                console.log('Fechando janela do LinkedIn...', linkedInWindowInstance.id);
                 try {
-                  linkedInWindowInstance.container.style.opacity = '0';
-                  await window.electronAPI.invoke('destroy-linkedin-window', linkedInWindowInstance.id);
+                  // Primeiro esconder com animação
+                  if (linkedInWindowInstance.container) {
+                    linkedInWindowInstance.container.style.opacity = '0';
+                  }
                   
+                  // Fechar a janela do Electron
+                  await window.electronAPI.invoke('close-linkedin-window', linkedInWindowInstance.id);
+                  console.log('Comando de fechar LinkedIn enviado');
+                  
+                  // Limpar recursos após um pequeno delay
                   setTimeout(() => {
+                    // Remover o container se ainda existir
                     if (linkedInWindowInstance && linkedInWindowInstance.container) {
                       linkedInWindowInstance.container.remove();
                     }
+                    
+                    // Limpar a instância
+                    const oldInstance = linkedInWindowInstance;
                     linkedInWindowInstance = null;
                     
                     // Atualizar estado do botão
-                    const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+                    const button = document.querySelector(`.nav-button[data-id*="linkedin"]`);
                     if (button) {
                       button.classList.remove('opened', 'active');
                     }
@@ -1232,17 +1257,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!hasOpenWebviews()) {
                       showWebview('webview-home', 'home-button');
                     }
+                    
+                    console.log('LinkedIn fechado e recursos limpos');
                   }, 200);
                 } catch (error) {
                   console.error('Erro ao fechar LinkedIn:', error);
+                  // Mesmo com erro, tentar limpar recursos
                   if (linkedInWindowInstance && linkedInWindowInstance.container) {
                     linkedInWindowInstance.container.remove();
                   }
                   linkedInWindowInstance = null;
+                  
+                  // Atualizar estado do botão mesmo em caso de erro
+                  const button = document.querySelector(`.nav-button[data-id*="linkedin"]`);
+                  if (button) {
+                    button.classList.remove('opened', 'active');
+                  }
+                  
                   if (!hasOpenWebviews()) {
                     showWebview('webview-home', 'home-button');
                   }
                 }
+              } else {
+                console.log('LinkedIn não está ativo para fechar');
               }
             } else {
               // Fechar webview normal
@@ -1328,11 +1365,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
 
                 // Fechar LinkedIn se estiver ativo
-                if (linkedInWindowInstance && linkedInWindowInstance.container) {
+                if (linkedInWindowInstance && linkedInWindowInstance.id) {
                   console.log('Fechando LinkedIn...');
-                  linkedInWindowInstance.container.style.opacity = '0';
+                  if (linkedInWindowInstance.container) {
+                    linkedInWindowInstance.container.style.opacity = '0';
+                  }
                   
-                  await window.electronAPI.invoke('destroy-linkedin-window', linkedInWindowInstance.id);
+                  await window.electronAPI.invoke('close-linkedin-window', linkedInWindowInstance.id);
+                  console.log('Comando de fechar LinkedIn enviado');
                   
                   setTimeout(() => {
                     if (linkedInWindowInstance && linkedInWindowInstance.container) {
