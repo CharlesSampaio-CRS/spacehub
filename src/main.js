@@ -4,6 +4,7 @@ const Store = require('electron-store');
 const axios = require('axios');
 const qs = require('querystring');
 const { autoUpdater } = require('electron-updater');
+const linkedInWindowManager = require('./main/linkedin-window');
 require('dotenv').config();
 
 const config = require(path.join(__dirname, '../config'));
@@ -129,7 +130,7 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
-  mainWindow.setMenu(null);
+  //mainWindow.setMenu(null);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url) && !url.includes('linkedin.com')) {
@@ -567,10 +568,24 @@ app.whenReady().then(() => {
 
   // Initial update check
   autoUpdater.checkForUpdates();
+
+  // Limpar janelas do LinkedIn quando o app for fechado
+  app.on('window-all-closed', () => {
+    linkedInWindowManager.cleanup();
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  });
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+app.on('before-quit', () => {
+  linkedInWindowManager.cleanup();
 });
 
 ipcMain.on('dark-mode-changed', (event, isDark) => {
@@ -823,4 +838,10 @@ ipcMain.on('create-webview', (event, webviewId, url) => {
     url,
     isLinkedIn: url.includes('linkedin.com')
   });
+});
+
+// Adicionar handler para get-current-window
+ipcMain.handle('get-current-window', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  return win ? win.id : null;
 });

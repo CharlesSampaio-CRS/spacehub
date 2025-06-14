@@ -62,7 +62,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   ...updateAPI,
   ...themeAPI,
   ...languageAPI,
-  ...ipcAPI
+  ...ipcAPI,
+  getCurrentWindow: () => ipcRenderer.invoke('get-current-window')
 });
 
 // Setup global event listeners
