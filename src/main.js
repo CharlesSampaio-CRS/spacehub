@@ -14,6 +14,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 
 let mainWindow, loginWindow, registerWindow, authWindow;
+let contextMenuWindow = null;
 let isUpdating = false;
 let updateAvailableWindow = null;
 let updateReadyWindow = null;
@@ -41,16 +42,16 @@ ipcMain.handle('update-user-info', (event, userInfo) => {
 ipcMain.handle('context-menu-command', async (event, command, targetId) => {
   switch (command) {
     case 'reload-applications':
-      event.sender.send('context-menu-command', 'reload-applications');
+      event.sender.send('reload-applications');
       break;
     case 'close-all-webviews':
-      event.sender.send('context-menu-command', 'close-all-webviews');
+      event.sender.send('close-all-webviews');
       break;
     case 'reload-current-webview':
-      event.sender.send('context-menu-command', 'reload-current-webview', targetId);
+      event.sender.send('reload-current-webview', targetId);
       break;
     case 'close-current-webview':
-      event.sender.send('context-menu-command', 'close-current-webview', targetId);
+      event.sender.send('close-current-webview', targetId);
       break;
   }
 });
@@ -844,4 +845,78 @@ ipcMain.on('create-webview', (event, webviewId, url) => {
 ipcMain.handle('get-current-window', (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   return win ? win.id : null;
+});
+
+// Novo handler para criar e mostrar o menu de contexto nativo
+ipcMain.handle('show-context-menu-window', async (event, menuTemplate, clientX, clientY, currentViewId) => {
+  if (contextMenuWindow && !contextMenuWindow.isDestroyed()) {
+    contextMenuWindow.close(); // Fechar qualquer menu existente
+  }
+
+  const mainWindow = BrowserWindow.fromWebContents(event.sender);
+  const [mainWindowX, mainWindowY] = mainWindow.getPosition();
+
+  // Ajustar as coordenadas do mouse para a posição na tela
+  const screenX = mainWindowX + clientX;
+  const screenY = mainWindowY + clientY;
+
+  console.log(`[main] Received context menu request: clientX=${clientX}, clientY=${clientY}`);
+  console.log(`[main] MainWindow position: x=${mainWindowX}, y=${mainWindowY}`);
+  console.log(`[main] Calculated screen position for menu: x=${screenX}, y=${screenY}`);
+
+  // Calcular as dimensões aproximadas do menu para definir o tamanho da janela
+  const menuWidth = 220; // Largura aproximada
+  // A altura será dinâmica baseada no número de itens. No HTML/JS do menu, ele se ajustará.
+  // Aqui, um valor inicial para a janela, ou podemos deixar o `show: false` e redimensionar depois.
+  const menuHeight = (menuTemplate.length * 32) + 16; // Altura aproximada (item height + padding)
+
+  contextMenuWindow = new BrowserWindow({
+    width: menuWidth,
+    height: menuHeight,
+    x: screenX,
+    y: screenY,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true, // Manter sempre no topo
+    show: false, // Mostrar após carregar o conteúdo e posicionar
+    webPreferences: {
+      nodeIntegration: true, // Habilitar nodeIntegration para o script do menu
+      contextIsolation: false, // Necessário para usar require no script do menu
+      preload: path.join(__dirname, 'preload.js') // Usar o mesmo preload ou um específico
+    }
+  });
+
+  contextMenuWindow.setAlwaysOnTop(true, 'pop-up-menu'); // Nível pop-up-menu para garantir prioridade
+  contextMenuWindow.setVisibleOnAllWorkspaces(true); // Garante que apareça em qualquer workspace
+
+  contextMenuWindow.loadFile(path.join(__dirname, 'pages/context-menu/context-menu.html'));
+
+  contextMenuWindow.webContents.on('did-finish-load', () => {
+    // Enviar o template do menu para a janela do menu de contexto
+    contextMenuWindow.webContents.send('show-context-menu', menuTemplate, currentViewId);
+    contextMenuWindow.show();
+    contextMenuWindow.focus(); // Forçar o foco na nova janela
+  });
+
+  // Fechar a janela do menu quando ela perder o foco
+  contextMenuWindow.on('blur', () => {
+    if (contextMenuWindow && !contextMenuWindow.isDestroyed()) {
+      contextMenuWindow.close();
+    }
+  });
+
+  contextMenuWindow.on('closed', () => {
+    contextMenuWindow = null;
+  });
+});
+
+// Listener para ações do menu de contexto vindas da janela do menu de contexto
+ipcMain.on('context-menu-action', (event, command, currentViewId) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    // Encaminhar o comando para a janela principal (renderer process)
+    mainWindow.webContents.send('execute-context-menu-command', command, currentViewId);
+  }
+  if (contextMenuWindow && !contextMenuWindow.isDestroyed()) {
+    contextMenuWindow.close(); // Fechar a janela do menu após a ação
+  }
 });

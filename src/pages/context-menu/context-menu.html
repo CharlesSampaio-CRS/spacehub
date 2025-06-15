@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Context Menu</title>
+    <link rel="stylesheet" href="../../pages/index/style.css">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: transparent;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .context-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            padding: 8px 0;
+            min-width: 200px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 10000; /* Alto z-index para garantir visibilidade */
+        }
+        .context-menu-item {
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: background-color 0.2s;
+        }
+        .context-menu-item:hover {
+            background-color: var(--hover-color);
+        }
+        .context-menu-separator {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 4px 0;
+        }
+        .context-menu-item svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+        /* Ajustes para o modo escuro */
+        body.dark-mode .context-menu {
+            background: var(--card-bg);
+            border: var(--component-border);
+        }
+        body.dark-mode .context-menu-item {
+            color: var(--text-primary);
+        }
+        body.dark-mode .context-menu-item:hover {
+            background: var(--hover-color);
+        }
+        body.dark-mode .context-menu-item svg {
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div id="context-menu-content" class="context-menu"></div>
+    <script src="./context-menu.js"></script>
+</body>
+</html> 

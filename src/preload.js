@@ -50,7 +50,7 @@ const languageAPI = {
 const ipcAPI = {
   invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
   send: (channel, data) => ipcRenderer.send(channel, data),
-  on: (channel, callback) => ipcRenderer.on(channel, callback),
+  on: (channel, callback) => ipcRenderer.on(channel, (event, ...args) => callback(...args)),
   handle: (channel, callback) => ipcRenderer.handle(channel, callback)
 };
 
