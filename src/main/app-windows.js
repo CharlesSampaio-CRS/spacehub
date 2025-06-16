@@ -374,18 +374,69 @@ class AppWindowManager {
 
       // Fechar janela
       ipcMain.handle(`close-${normalizedAppName}-window`, async (event, windowId) => {
-        console.log(`[main] Fechando janela do ${normalizedAppName}:`, {
+        console.log(`[main] Iniciando processo de fechamento da janela do ${normalizedAppName}:`, {
           windowId: windowId,
           hasWindow: this.windows.has(windowId),
-          windowExists: this.windows.get(windowId) ? !this.windows.get(windowId).isDestroyed() : false
+          windowExists: this.windows.get(windowId) ? !this.windows.get(windowId).isDestroyed() : false,
+          timestamp: new Date().toISOString(),
+          senderId: event.sender.id,
+          senderType: event.sender.getType(),
+          senderURL: event.sender.getURL()
         });
+
         const window = this.windows.get(windowId);
         if (window) {
           try {
+            // Verificar estado atual da janela
+            console.log(`[main] Estado atual da janela do ${normalizedAppName}:`, {
+              isVisible: window.isVisible(),
+              isDestroyed: window.isDestroyed(),
+              isFocused: window.isFocused(),
+              bounds: window.getBounds(),
+              id: window.id
+            });
+
+            // Tentar fechar a janela
             window.close();
-            console.log(`[main] Janela do ${normalizedAppName} fechada com sucesso`);
+            
+            // Verificar se a janela foi realmente fechada
+            setTimeout(() => {
+              console.log(`[main] Verificação pós-fechamento da janela do ${normalizedAppName}:`, {
+                windowId: windowId,
+                wasDestroyed: window.isDestroyed(),
+                stillInMap: this.windows.has(windowId),
+                timestamp: new Date().toISOString()
+              });
+
+              // Se a janela ainda não foi destruída, forçar a destruição
+              if (!window.isDestroyed()) {
+                console.log(`[main] Forçando destruição da janela do ${normalizedAppName}`);
+                window.destroy();
+              }
+
+              // Remover da lista de janelas se ainda estiver presente
+              if (this.windows.has(windowId)) {
+                console.log(`[main] Removendo janela do ${normalizedAppName} da lista de janelas`);
+                this.windows.delete(windowId);
+              }
+            }, 100);
+
+            console.log(`[main] Comando de fechamento da janela do ${normalizedAppName} enviado com sucesso`);
           } catch (error) {
             console.error(`[main] Erro ao fechar janela do ${normalizedAppName}:`, error);
+            
+            // Tentar limpar recursos mesmo em caso de erro
+            try {
+              if (!window.isDestroyed()) {
+                window.destroy();
+              }
+              if (this.windows.has(windowId)) {
+                this.windows.delete(windowId);
+              }
+              console.log(`[main] Recursos da janela do ${normalizedAppName} limpos após erro`);
+            } catch (cleanupError) {
+              console.error(`[main] Erro ao limpar recursos da janela do ${normalizedAppName}:`, cleanupError);
+            }
           }
         } else {
           console.error(`[main] Janela do ${normalizedAppName} não encontrada:`, windowId);
