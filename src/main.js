@@ -42,9 +42,6 @@ ipcMain.handle('update-user-info', (event, userInfo) => {
 
 ipcMain.handle('context-menu-command', async (event, command, targetId) => {
   switch (command) {
-    case 'reload-applications':
-      event.sender.send('reload-applications');
-      break;
     case 'close-all-webviews':
       event.sender.send('close-all-webviews');
       break;
