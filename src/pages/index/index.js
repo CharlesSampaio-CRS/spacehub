@@ -1,7 +1,13 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  // Constantes para otimização
+  const MAX_CACHED_WEBVIEWS = 5;
+  const CLEANUP_INTERVAL = 300000; // 5 minutos
+  const LAZY_LOAD_DELAY = 300; // ms
+
   let currentZoom = 1.0;
   let currentWebview = null;
   let webviewCache = new Map();
+  let webviewLastAccess = new Map();
   let linkedInWindowInstance = null;
   let teamsWindowInstance = null;
   let slackWindowInstance = null;
@@ -482,8 +488,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
+  // Função otimizada para gerenciar cache
+  const updateWebviewAccess = (webviewId) => {
+    webviewLastAccess.set(webviewId, Date.now());
+  };
+
+  const cleanupWebviewCache = () => {
+    const now = Date.now();
+    const entries = Array.from(webviewLastAccess.entries());
+    entries.sort((a, b) => a[1] - b[1]);
+    
+    while (entries.length > MAX_CACHED_WEBVIEWS) {
+      const [webviewId] = entries.shift();
+      const webview = webviewCache.get(webviewId);
+      if (webview && !webview.isDestroyed()) {
+        webview.remove();
+      }
+      webviewCache.delete(webviewId);
+      webviewLastAccess.delete(webviewId);
+    }
+  };
+
+  // Função otimizada para criar webview
   const createWebview = (webviewId, url) => {
     try {
+      if (webviewCache.has(webviewId)) {
+        const cachedWebview = webviewCache.get(webviewId);
+        if (!cachedWebview.isDestroyed()) {
+          updateWebviewAccess(webviewId);
+          return cachedWebview;
+        }
+        webviewCache.delete(webviewId);
+        webviewLastAccess.delete(webviewId);
+      }
+
       // Verificar se é uma janela especial
       const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram'];
       const isSpecialApp = specialApps.some(app => url && url.includes(`${app}.com`));
@@ -605,6 +643,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const webviewContainer = document.querySelector('.webview-container');
       if (webviewContainer) {
         webviewContainer.appendChild(webview);
+        webviewCache.set(webviewId, webview);
+        updateWebviewAccess(webviewId);
         return webview;
       } else {
         console.error('Container da webview não encontrado');
@@ -616,6 +656,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
+  // Função otimizada para mostrar webview com lazy loading
   const showWebview = async (webviewId, buttonId) => {
     try {
       console.log('Mostrando webview:', webviewId, buttonId);
@@ -810,6 +851,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           webview = createWebview(webviewId, url);
         }
         if (webview) {
+          updateWebviewAccess(webviewId);
           webview.style.display = 'flex';
           webview.style.opacity = '1';
           webview.classList.add('active');
@@ -1908,15 +1950,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
-  // Limpar cache periodicamente
-  setInterval(() => {
-    webviewCache.forEach((webview, id) => {
-      if (webview && !webview.isDestroyed() && !webview.classList.contains('active')) {
-        webview.remove();
-        webviewCache.delete(id);
-      }
-    });
-  }, 300000); // A cada 5 minutos
+  // Sistema de limpeza de memória
+  const setupMemoryManagement = () => {
+    // Limpar cache periodicamente
+    setInterval(cleanupWebviewCache, CLEANUP_INTERVAL);
+
+    // Limpeza geral de memória
+    setInterval(() => {
+      // Limpar listeners não utilizados
+      document.querySelectorAll('webview').forEach(webview => {
+        if (!webview.classList.contains('active')) {
+          webview.removeAllListeners();
+        }
+      });
+
+      // Limpar containers não utilizados
+      document.querySelectorAll('.window-container').forEach(container => {
+        if (!container.classList.contains('active')) {
+          container.remove();
+        }
+      });
+
+      // Limpar instâncias de janelas especiais não utilizadas
+      [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, 
+       skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, 
+       instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, 
+       discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, 
+       snapchatWindowInstance, threadsWindowInstance].forEach(instance => {
+        if (instance && instance.container && !instance.container.classList.contains('active')) {
+          instance.container.remove();
+          instance = null;
+        }
+      });
+    }, CLEANUP_INTERVAL);
+  };
 
   // Adicionar função para gerenciar sessão do usuário
   const setupUserSession = async () => {
@@ -2091,14 +2158,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     translatePage(language);
   });
 
-  // Inicialização
+  // Modificar a função init
   const init = async () => {
     try {
-      // Configurar idioma inicial
       const currentLanguage = await window.electronAPI.getLanguage();
       document.documentElement.lang = currentLanguage;
       translatePage(currentLanguage);
 
+      setupMemoryManagement(); // Adicionar gerenciamento de memória
       await setupUserSession();
       setupProfileMenu();
       setupButtonEvents();
@@ -2106,7 +2173,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       setupContextMenu();
       setupSidebarScroll();
       refreshApplications();
-      // Abrir a webview-home ao iniciar
       showWebview('webview-home', 'home-button');
     } catch (error) {
       console.error('Erro na inicialização:', error);
