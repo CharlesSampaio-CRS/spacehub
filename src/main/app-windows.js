@@ -11,7 +11,7 @@ class AppWindowManager {
     // Handler genérico para criar janelas de aplicativos
     const createAppWindowHandler = async (event, windowData, wrapperBounds, appName) => {
       try {
-        console.log(`Criando janela do ${appName}...`, windowData, wrapperBounds);
+        console.log(`Criando janela do ${appName}...`, { windowData, wrapperBounds });
         const { url, options } = windowData;
         const parentWindow = BrowserWindow.fromWebContents(event.sender);
         
@@ -28,9 +28,26 @@ class AppWindowManager {
         const width = wrapperBounds.width;
         const height = wrapperBounds.height;
 
+        // Configurações específicas para o Teams
+        const teamsOptions = appName.toLowerCase() === 'teams' ? {
+          webPreferences: {
+            ...options.webPreferences,
+            preload: path.join(__dirname, '../preload-teams.js'),
+            nodeIntegration: false,
+            contextIsolation: true,
+            sandbox: false,
+            webSecurity: true,
+            allowRunningInsecureContent: true,
+            backgroundThrottling: false,
+            enableRemoteModule: false,
+            nodeIntegrationInSubFrames: true
+          }
+        } : {};
+
         // Criar a janela como filha da janela principal
         const window = new BrowserWindow({
           ...options,
+          ...teamsOptions,
           parent: parentWindow,
           show: false,
           frame: false,
@@ -39,56 +56,63 @@ class AppWindowManager {
           width: width,
           height: height,
           x: parentWindow.getPosition()[0] + x,
-          y: parentWindow.getPosition()[1] + y,
-          webPreferences: {
-            ...options.webPreferences,
-            preload: path.join(__dirname, `../preload-${appName.toLowerCase()}.js`)
-          }
+          y: parentWindow.getPosition()[1] + y
         });
 
         console.log(`Janela do ${appName} criada com bounds iniciais:`, { x, y, width, height });
+        console.log('Configurações da janela:', window.getBounds());
 
         // Carregar a URL
         console.log('Carregando URL:', url);
-        await window.loadURL(url);
-        console.log('URL carregada com sucesso');
+        try {
+          await window.loadURL(url);
+          console.log('URL carregada com sucesso');
+        } catch (error) {
+          console.error(`Erro ao carregar URL do ${appName}:`, error);
+          throw error;
+        }
 
         // Configurar eventos da janela
         window.on('ready-to-show', () => {
           console.log(`Janela do ${appName} pronta para mostrar`);
-          window.setBounds({
-            x: parentWindow.getPosition()[0] + x,
-            y: parentWindow.getPosition()[1] + y,
-            width: width,
-            height: height
-          });
-          
-          // Configurações específicas para cada aplicativo
-          switch(appName.toLowerCase()) {
-            case 'teams':
-              window.setBackgroundColor('#ffffff');
-              break;
-            case 'slack':
-              window.setBackgroundColor('#ffffff');
-              break;
-            case 'skype':
-              window.setBackgroundColor('#ffffff');
-              break;
-            case 'twitter':
-              window.setBackgroundColor('#ffffff');
-              // Configurações específicas para o Twitter
-              window.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-              break;
-          }
-          
-          console.log(`Janela do ${appName} ajustada em ready-to-show:`, { x, y, width, height });
-          console.log('Bounds atuais:', window.getBounds());
-          console.log('Content Bounds atuais:', window.getContentBounds());
+          try {
+            window.setBounds({
+              x: parentWindow.getPosition()[0] + x,
+              y: parentWindow.getPosition()[1] + y,
+              width: width,
+              height: height
+            });
+            
+            // Configurações específicas para cada aplicativo
+            switch(appName.toLowerCase()) {
+              case 'teams':
+                window.setBackgroundColor('#ffffff');
+                window.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+                break;
+              case 'slack':
+                window.setBackgroundColor('#ffffff');
+                break;
+              case 'skype':
+                window.setBackgroundColor('#ffffff');
+                break;
+              case 'twitter':
+                window.setBackgroundColor('#ffffff');
+                // Configurações específicas para o Twitter
+                window.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+                break;
+            }
+            
+            console.log(`Janela do ${appName} ajustada em ready-to-show:`, { x, y, width, height });
+            console.log('Bounds atuais:', window.getBounds());
+            console.log('Content Bounds atuais:', window.getContentBounds());
 
-          window.show();
-          window.focus();
-          
-          event.sender.send(`${appName.toLowerCase()}-window-ready`, { windowId: window.id });
+            window.show();
+            window.focus();
+            
+            event.sender.send(`${appName.toLowerCase()}-window-ready`, { windowId: window.id });
+          } catch (error) {
+            console.error(`Erro ao configurar janela do ${appName} em ready-to-show:`, error);
+          }
         });
 
         window.on('closed', () => {

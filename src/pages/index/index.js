@@ -620,6 +620,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       console.log('Mostrando webview:', webviewId, buttonId);
       
+      // Verificar se os parâmetros são válidos
+      if (!webviewId || !buttonId) {
+        console.error('webviewId ou buttonId inválidos:', { webviewId, buttonId });
+        return;
+      }
+      
       // Obter as dimensões reais do header e sidebar
       const header = document.getElementById('header');
       const sidebar = document.getElementById('sidebar');
@@ -630,25 +636,37 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       // Obter as dimensões do webview-container
       const webviewContainer = document.querySelector('.webview-container');
-      let containerBounds = null;
-      if (webviewContainer) {
-        containerBounds = webviewContainer.getBoundingClientRect().toJSON();
-        containerBounds = {
-          ...containerBounds,
-          top: headerHeight + headerMargin,
-          left: sidebarWidth,
-          width: window.innerWidth - sidebarWidth,
-          height: window.innerHeight - (headerHeight + headerMargin + bottomMargin)
-        };
+      if (!webviewContainer) {
+        console.error('Container da webview não encontrado');
+        return;
       }
+
+      let containerBounds = webviewContainer.getBoundingClientRect().toJSON();
+      containerBounds = {
+        ...containerBounds,
+        top: headerHeight + headerMargin,
+        left: sidebarWidth,
+        width: window.innerWidth - sidebarWidth,
+        height: window.innerHeight - (headerHeight + headerMargin + bottomMargin)
+      };
       
       // Primeiro, esconder todas as webviews e janelas especiais
-      document.querySelectorAll('.webview, .linkedin-window-container, .teams-window-container, .slack-window-container, .skype-window-container, .twitter-window-container, .whatsapp-window-container, .instagram-window-container, .telegram-window-container, .facebookMessenger-window-container, .discord-window-container, .googleChat-window-container, .wechat-window-container, .snapchat-window-container, .threads-window-container').forEach(w => {
-        w.classList.remove('active');
-        w.style.display = 'none';
-        w.style.opacity = '0';
+      const allWebviews = document.querySelectorAll('.webview, .linkedin-window-container, .teams-window-container, .slack-window-container, .skype-window-container, .twitter-window-container, .whatsapp-window-container, .instagram-window-container, .telegram-window-container, .facebookMessenger-window-container, .discord-window-container, .googleChat-window-container, .wechat-window-container, .snapchat-window-container, .threads-window-container');
+      
+      allWebviews.forEach(w => {
+        if (w) {
+          w.classList.remove('active');
+          w.style.display = 'none';
+          w.style.opacity = '0';
+        }
       });
-      document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+
+      const allButtons = document.querySelectorAll('.nav-button');
+      allButtons.forEach(b => {
+        if (b) {
+          b.classList.remove('active');
+        }
+      });
 
       // Adicionar classes ao botão atual
       const button = document.getElementById(buttonId);
@@ -662,6 +680,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Verificar se é uma janela especial
       const url = serviceMap[webviewId];
+      if (!url) {
+        console.error('URL não encontrada para webviewId:', webviewId);
+        return;
+      }
+
       const isSpecialApp = specialApps.some(app => url && url.includes(specialAppsMap[app]));
       const appName = isSpecialApp ? specialApps.find(app => url && url.includes(specialAppsMap[app])) : null;
       
@@ -722,35 +745,46 @@ document.addEventListener('DOMContentLoaded', async () => {
           
           // Remover qualquer container duplicado
           document.querySelectorAll(`.${appName.toLowerCase()}-window-container`).forEach(existingContainer => {
-            if (existingContainer !== container) {
+            if (existingContainer && existingContainer !== container) {
               existingContainer.remove();
             }
           });
           
-          container.style.display = 'flex';
-          container.style.opacity = '1';
-          container.classList.add('active');
-          currentWebview = windowInstance;
-          
-          // Forçar a exibição da janela
-          if (containerBounds) {
-            window.electronAPI.invoke(`show-${appName.toLowerCase()}-window`, windowInstance.id, containerBounds).then(() => {
-              console.log(`Janela do ${appName} exibida com sucesso`);
-            }).catch(error => {
-              console.error(`Erro ao exibir janela do ${appName}:`, error);
-            });
+          if (container) {
+            container.style.display = 'flex';
+            container.style.opacity = '1';
+            container.classList.add('active');
+            currentWebview = windowInstance;
+            
+            // Forçar a exibição da janela
+            if (containerBounds && windowInstance.id) {
+              window.electronAPI.invoke(`show-${appName.toLowerCase()}-window`, windowInstance.id, containerBounds).then(() => {
+                console.log(`Janela do ${appName} exibida com sucesso`);
+              }).catch(error => {
+                console.error(`Erro ao exibir janela do ${appName}:`, error);
+              });
+            } else {
+              console.error(`Erro ao exibir janela do ${appName}: containerBounds ou windowInstance.id não definidos`);
+            }
           } else {
-            console.error(`Erro ao exibir janela do ${appName}: containerBounds não definido`);
+            console.error(`Container não encontrado para janela do ${appName}`);
           }
         } else {
           // Se não existe, criar uma nova janela
           console.log(`Criando nova janela do ${appName}...`);
-          document.querySelectorAll(`.${appName.toLowerCase()}-window-container`).forEach(container => container.remove());
+          const existingContainers = document.querySelectorAll(`.${appName.toLowerCase()}-window-container`);
+          existingContainers.forEach(container => {
+            if (container) {
+              container.remove();
+            }
+          });
           createAppWindow(webviewId, url, appName);
         }
       } else {
         // Para outras webviews, esconder todas as janelas especiais
-        [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance].forEach(instance => {
+        const specialInstances = [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance];
+        
+        specialInstances.forEach(instance => {
           if (instance && instance.container) {
             console.log('Escondendo janela especial...');
             instance.container.style.display = 'none';
@@ -780,6 +814,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           webview.style.opacity = '1';
           webview.classList.add('active');
           currentWebview = webview;
+        } else {
+          console.error(`Não foi possível criar ou obter webview para ${webviewId}`);
         }
       }
 

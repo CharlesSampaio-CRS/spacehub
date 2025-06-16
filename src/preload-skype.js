@@ -1,5 +1,3 @@
-const { contextBridge, ipcRenderer } = require('electron');
-
 contextBridge.exposeInMainWorld('skypeAPI', {
   // Funções específicas para o Skype
   handleAuth: (callback) => {
@@ -34,3 +32,15 @@ contextBridge.exposeInMainWorld('skypeAPI', {
     }
   }
 }); 
+
+// Em vez de criar todas as janelas de uma vez, podemos criar apenas quando necessário
+const createAppWindow = async (webviewId, url, appName) => {
+  // Verificar se já existe uma instância ativa
+  let windowInstance = getWindowInstance(appName);
+  if (windowInstance?.container) {
+    // Reutilizar a janela existente
+    return windowInstance;
+  }
+  // Criar nova janela apenas se não existir
+  // ...
+}; 
