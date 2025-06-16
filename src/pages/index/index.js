@@ -1262,6 +1262,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    // Verificar se é a home
+    if (currentViewId === 'webview-home') {
+      const menuTemplate = await getMenuTemplate(currentViewId);
+      console.log(`[showContextMenu] Enviando requisição de menu de contexto para home em clientX: ${x}, clientY: ${y}`);
+      window.electronAPI.invoke('show-context-menu-window', menuTemplate, x, y, currentViewId);
+      return;
+    }
+
     // Verificar se é um aplicativo especial
     const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook-messenger'];
     const isSpecialApp = specialApps.some(app => {
@@ -1384,6 +1392,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const webviewId = target.getAttribute('data-id');
         if (!webviewId) {
+          return;
+        }
+
+        // Verificar se é a home
+        if (webviewId === 'webview-home') {
+          const isButtonActive = target.classList.contains('active') || target.classList.contains('opened');
+          if (isButtonActive) {
+            console.log('Mostrando menu de contexto para home:', {
+              webviewId,
+              isButtonActive,
+              buttonClasses: target.className,
+              buttonDataId: target.getAttribute('data-id')
+            });
+            showContextMenu(e.clientX, e.clientY, webviewId);
+          }
           return;
         }
 
@@ -1538,6 +1561,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isActive = webview.classList.contains('active') || 
                         webview.style.display === 'flex';
         
+        // Verificar se é a home
+        if (webview.id === 'webview-home') {
+          if (isActive) {
+            e.preventDefault();
+            e.stopPropagation();
+            showContextMenu(e.clientX, e.clientY, webview.id);
+          }
+          return;
+        }
+        
         console.log('Verificando menu de contexto para webview normal:', {
           webviewId: webview.id,
           webviewClasses: webview.className,
@@ -1570,7 +1603,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       timestamp: new Date().toISOString()
     });
 
-    // Verificar se é um aplicativo especial
+    // Lista de todas as instâncias especiais
+    const allSpecialInstances = [
+      linkedInWindowInstance,
+      teamsWindowInstance,
+      slackWindowInstance,
+      skypeWindowInstance,
+      twitterWindowInstance,
+      whatsappWindowInstance,
+      instagramWindowInstance,
+      telegramWindowInstance,
+      facebookMessengerWindowInstance,
+      discordWindowInstance,
+      googleChatWindowInstance,
+      wechatWindowInstance,
+      snapchatWindowInstance,
+      threadsWindowInstance
+    ];
+
+    // Verificar se é um aplicativo especial (necessário para close-current)
     const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook-messenger'];
     const isSpecialApp = specialApps.some(app => {
       // Tratamento especial para o Google Chat e Facebook Messenger
@@ -1588,7 +1639,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       (currentViewId === 'webview-google' ? 'google-chat' : 
        currentViewId === 'webview-facebook' ? 'facebook-messenger' : 
        specialApps.find(app => currentViewId.includes(app))) : null;
-    
+
     console.log('[execute-context-menu-command] Menu context:', { 
       isSpecialApp, 
       appName, 
@@ -1610,6 +1661,166 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     switch (command) {
+      case 'reload-all':
+        console.log('[execute-context-menu-command] Executando reload-all...');
+        
+        // Recarregar cada janela especial ativa
+        for (const instance of allSpecialInstances) {
+          if (instance && instance.container && instance.container.classList.contains('active')) {
+            try {
+              const appName = instance.container.className.split('-')[0];
+              console.log(`[execute-context-menu-command] Recarregando janela do ${appName}...`);
+              
+              // Recarregar a janela via IPC
+              if (instance.id) {
+                await window.electronAPI.invoke(`reload-${appName}-window`, instance.id);
+                console.log(`[execute-context-menu-command] Janela do ${appName} recarregada com sucesso`);
+              }
+            } catch (error) {
+              console.error(`[execute-context-menu-command] Erro ao recarregar janela do ${appName}:`, error);
+            }
+          }
+        }
+
+        // Recarregar todas as webviews normais ativas
+        const activeWebviews = document.querySelectorAll('webview.active');
+        activeWebviews.forEach(webview => {
+          if (webview.id !== 'webview-home' && webview.id !== 'webview-settings') {
+            try {
+              console.log(`[execute-context-menu-command] Recarregando webview ${webview.id}...`);
+              webview.reload();
+              console.log(`[execute-context-menu-command] Webview ${webview.id} recarregada com sucesso`);
+            } catch (error) {
+              console.error(`[execute-context-menu-command] Erro ao recarregar webview ${webview.id}:`, error);
+            }
+          }
+        });
+
+        // Recarregar a home se estiver ativa
+        const homeWebview = document.getElementById('webview-home');
+        if (homeWebview && homeWebview.classList.contains('active')) {
+          try {
+            console.log('[execute-context-menu-command] Recarregando home...');
+            homeWebview.reload();
+            console.log('[execute-context-menu-command] Home recarregada com sucesso');
+          } catch (error) {
+            console.error('[execute-context-menu-command] Erro ao recarregar home:', error);
+          }
+        }
+
+        // Recarregar as configurações se estiverem ativas
+        const settingsWebview = document.getElementById('webview-settings');
+        if (settingsWebview && settingsWebview.classList.contains('active')) {
+          try {
+            console.log('[execute-context-menu-command] Recarregando configurações...');
+            settingsWebview.reload();
+            console.log('[execute-context-menu-command] Configurações recarregadas com sucesso');
+          } catch (error) {
+            console.error('[execute-context-menu-command] Erro ao recarregar configurações:', error);
+          }
+        }
+        break;
+
+      case 'close-all':
+        console.log('[execute-context-menu-command] Executando close-all...');
+        
+        // Fechar cada janela especial ativa
+        for (const instance of allSpecialInstances) {
+          if (instance && instance.container) {
+            try {
+              const appName = instance.container.className.split('-')[0];
+              console.log(`[execute-context-menu-command] Fechando janela do ${appName}...`);
+              
+              // Esconder o container visualmente
+              instance.container.style.opacity = '0';
+              instance.container.style.display = 'none';
+              instance.container.classList.remove('active');
+
+              // Fechar a janela via IPC
+              if (instance.id) {
+                await window.electronAPI.invoke(`close-${appName}-window`, instance.id);
+              }
+
+              // Remover o container
+              instance.container.remove();
+
+              // Limpar a instância global
+              switch(appName) {
+                case 'linkedin':
+                  linkedInWindowInstance = null;
+                  break;
+                case 'teams':
+                  teamsWindowInstance = null;
+                  break;
+                case 'slack':
+                  slackWindowInstance = null;
+                  break;
+                case 'skype':
+                  skypeWindowInstance = null;
+                  break;
+                case 'twitter':
+                  twitterWindowInstance = null;
+                  break;
+                case 'whatsapp':
+                  whatsappWindowInstance = null;
+                  break;
+                case 'instagram':
+                  instagramWindowInstance = null;
+                  break;
+                case 'telegram':
+                  telegramWindowInstance = null;
+                  break;
+                case 'facebook-messenger':
+                  facebookMessengerWindowInstance = null;
+                  break;
+                case 'discord':
+                  discordWindowInstance = null;
+                  break;
+                case 'google-chat':
+                  googleChatWindowInstance = null;
+                  break;
+                case 'wechat':
+                  wechatWindowInstance = null;
+                  break;
+                case 'snapchat':
+                  snapchatWindowInstance = null;
+                  break;
+                case 'threads':
+                  threadsWindowInstance = null;
+                  break;
+              }
+            } catch (error) {
+              console.error(`[execute-context-menu-command] Erro ao fechar janela especial:`, error);
+            }
+          }
+        }
+
+        // Fechar todas as webviews normais exceto a home
+        const allWebviews = document.querySelectorAll('webview');
+        allWebviews.forEach(webview => {
+          if (webview.id !== 'webview-home' && webview.id !== 'webview-settings') {
+            try {
+              webview.remove();
+              webviewCache.delete(webview.id);
+              webviewLastAccess.delete(webview.id);
+            } catch (error) {
+              console.error(`[execute-context-menu-command] Erro ao remover webview ${webview.id}:`, error);
+            }
+          }
+        });
+
+        // Atualizar todos os botões na sidebar
+        const buttons = document.querySelectorAll('.nav-button');
+        buttons.forEach(button => {
+          if (button.id !== 'home-button' && button.id !== 'settings-button') {
+            button.classList.remove('active', 'opened');
+          }
+        });
+
+        // Mostrar a home
+        showWebview('webview-home', 'home-button');
+        break;
+
       case 'close-current':
         console.log(`[execute-context-menu-command] Executando close-current para: ${currentViewId}`);
         if (isSpecialApp) {
