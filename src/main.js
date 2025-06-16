@@ -5,6 +5,7 @@ const axios = require('axios');
 const qs = require('querystring');
 const { autoUpdater } = require('electron-updater');
 const linkedInWindowManager = require('./main/linkedin-window');
+const appWindowManager = require('./main/app-windows');
 require('dotenv').config();
 
 const config = require(path.join(__dirname, '../config'));
@@ -570,9 +571,10 @@ app.whenReady().then(() => {
   // Initial update check
   autoUpdater.checkForUpdates();
 
-  // Limpar janelas do LinkedIn quando o app for fechado
+  // Limpar janelas quando o app for fechado
   app.on('window-all-closed', () => {
     linkedInWindowManager.cleanup();
+    appWindowManager.cleanup();
     if (process.platform !== 'darwin') {
       app.quit();
     }
@@ -587,6 +589,7 @@ app.whenReady().then(() => {
 
 app.on('before-quit', () => {
   linkedInWindowManager.cleanup();
+  appWindowManager.cleanup();
 });
 
 ipcMain.on('dark-mode-changed', (event, isDark) => {

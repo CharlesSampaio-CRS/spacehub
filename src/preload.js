@@ -21,7 +21,17 @@ const sessionAPI = {
 const windowAPI = {
   openExternal: (url) => ipcRenderer.send('open-external', url),
   setZoomFactor: (factor) => ipcRenderer.send('set-zoom-factor', factor),
-  restartApp: () => ipcRenderer.invoke('restart-app')
+  restartApp: () => ipcRenderer.invoke('restart-app'),
+  // Funções para gerenciar janelas de aplicativos
+  createAppWindow: (appName, windowData, bounds) => ipcRenderer.invoke(`create-${appName}-window`, windowData, bounds),
+  showAppWindow: (appName, windowId, bounds) => ipcRenderer.invoke(`show-${appName}-window`, windowId, bounds),
+  hideAppWindow: (appName, windowId) => ipcRenderer.invoke(`hide-${appName}-window`, windowId),
+  closeAppWindow: (appName, windowId) => ipcRenderer.invoke(`close-${appName}-window`, windowId),
+  reloadAppWindow: (appName, windowId) => ipcRenderer.invoke(`reload-${appName}-window`, windowId),
+  onAppWindowReady: (appName, callback) => ipcRenderer.on(`${appName}-window-ready`, (_, data) => callback(data)),
+  onAppWindowClosed: (appName, callback) => ipcRenderer.on(`${appName}-window-closed`, (_, data) => callback(data)),
+  onAppNavigation: (appName, callback) => ipcRenderer.on(`${appName}-navigation`, (_, data) => callback(data)),
+  sendAppNavigation: (appName, url) => ipcRenderer.send(`${appName}-navigation`, { url })
 };
 
 const updateAPI = {
