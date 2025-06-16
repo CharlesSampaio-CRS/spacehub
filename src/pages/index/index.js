@@ -1661,12 +1661,95 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     switch (command) {
+      case 'reload-current':
+        console.log(`[execute-context-menu-command] Executando reload-current para: ${currentViewId}`);
+        
+        if (isSpecialApp) {
+          let windowInstance = null;
+          switch(appName) {
+            case 'google-chat':
+              windowInstance = googleChatWindowInstance;
+              break;
+            case 'facebook-messenger':
+              windowInstance = facebookMessengerWindowInstance;
+              break;
+            case 'teams':
+              windowInstance = teamsWindowInstance;
+              break;
+            case 'slack':
+              windowInstance = slackWindowInstance;
+              break;
+            case 'skype':
+              windowInstance = skypeWindowInstance;
+              break;
+            case 'linkedin':
+              windowInstance = linkedInWindowInstance;
+              break;
+            case 'twitter':
+              windowInstance = twitterWindowInstance;
+              break;
+            case 'whatsapp':
+              windowInstance = whatsappWindowInstance;
+              break;
+            case 'instagram':
+              windowInstance = instagramWindowInstance;
+              break;
+          }
+
+          if (windowInstance && windowInstance.id) {
+            try {
+              console.log(`[execute-context-menu-command] Recarregando janela do ${appName}...`);
+              await window.electronAPI.invoke(`reload-${appName}-window`, windowInstance.id);
+              console.log(`[execute-context-menu-command] Janela do ${appName} recarregada com sucesso`);
+            } catch (error) {
+              console.error(`[execute-context-menu-command] Erro ao recarregar janela do ${appName}:`, error);
+            }
+          }
+        } else {
+          // Para webviews normais
+          const webview = document.getElementById(currentViewId);
+          if (webview) {
+            try {
+              console.log(`[execute-context-menu-command] Recarregando webview ${currentViewId}...`);
+              
+              // Verificar se é home ou settings
+              if (currentViewId === 'webview-home') {
+                webview.src = '../../pages/home/home.html';
+                updateActiveViewTitle(webview);
+                refreshApplications();
+              } else if (currentViewId === 'webview-settings') {
+                webview.src = '../../pages/settings/settings.html';
+              } else {
+                webview.reload();
+              }
+              
+              console.log(`[execute-context-menu-command] Webview ${currentViewId} recarregada com sucesso`);
+            } catch (error) {
+              console.error(`[execute-context-menu-command] Erro ao recarregar webview ${currentViewId}:`, error);
+            }
+          } else {
+            console.log(`[execute-context-menu-command] Webview ${currentViewId} não encontrada, tentando recriar...`);
+            try {
+              const url = serviceMap[currentViewId];
+              if (url) {
+                showWebview(currentViewId, `${currentViewId.replace('webview-', '')}-button`);
+              }
+            } catch (error) {
+              console.error(`[execute-context-menu-command] Erro ao recriar webview ${currentViewId}:`, error);
+            }
+          }
+        }
+        break;
+
       case 'reload-all':
         console.log('[execute-context-menu-command] Executando reload-all...');
         
-        // Recarregar cada janela especial ativa
+        // Recarregar cada janela especial que está aberta
         for (const instance of allSpecialInstances) {
-          if (instance && instance.container && instance.container.classList.contains('active')) {
+          if (instance && instance.container && 
+              (instance.container.style.display === 'flex' || 
+               instance.container.style.display === 'block' || 
+               instance.container.style.opacity === '1')) {
             try {
               const appName = instance.container.className.split('-')[0];
               console.log(`[execute-context-menu-command] Recarregando janela do ${appName}...`);
@@ -1682,41 +1765,73 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }
 
-        // Recarregar todas as webviews normais ativas
-        const activeWebviews = document.querySelectorAll('webview.active');
-        activeWebviews.forEach(webview => {
+        // Recarregar todas as webviews que estão abertas
+        const openWebviews = document.querySelectorAll('webview');
+        openWebviews.forEach(webview => {
           if (webview.id !== 'webview-home' && webview.id !== 'webview-settings') {
-            try {
-              console.log(`[execute-context-menu-command] Recarregando webview ${webview.id}...`);
-              webview.reload();
-              console.log(`[execute-context-menu-command] Webview ${webview.id} recarregada com sucesso`);
-            } catch (error) {
-              console.error(`[execute-context-menu-command] Erro ao recarregar webview ${webview.id}:`, error);
+            // Verificar se a webview está visível
+            const isVisible = webview.style.display === 'flex' || 
+                            webview.style.display === 'block' || 
+                            webview.style.opacity === '1' ||
+                            window.getComputedStyle(webview).display !== 'none';
+            
+            if (isVisible) {
+              try {
+                console.log(`[execute-context-menu-command] Recarregando webview ${webview.id}...`);
+                webview.reload();
+                console.log(`[execute-context-menu-command] Webview ${webview.id} recarregada com sucesso`);
+              } catch (error) {
+                console.error(`[execute-context-menu-command] Erro ao recarregar webview ${webview.id}:`, error);
+              }
             }
           }
         });
 
-        // Recarregar a home se estiver ativa
-        const homeWebview = document.getElementById('webview-home');
-        if (homeWebview && homeWebview.classList.contains('active')) {
-          try {
-            console.log('[execute-context-menu-command] Recarregando home...');
-            homeWebview.reload();
+        // Recarregar a home
+        try {
+          console.log('[execute-context-menu-command] Iniciando recarregamento da home...');
+          const homeWebview = document.getElementById('webview-home');
+          
+          if (homeWebview) {
+            // Forçar recarregamento da home
+            homeWebview.src = '../../pages/home/home.html';
             console.log('[execute-context-menu-command] Home recarregada com sucesso');
-          } catch (error) {
-            console.error('[execute-context-menu-command] Erro ao recarregar home:', error);
+            
+            // Atualizar o título
+            updateActiveViewTitle(homeWebview);
+            
+            // Recarregar aplicações
+            refreshApplications();
+          } else {
+            console.log('[execute-context-menu-command] Home não encontrada, criando nova instância...');
+            showWebview('webview-home', 'home-button');
+          }
+        } catch (error) {
+          console.error('[execute-context-menu-command] Erro ao recarregar home:', error);
+          // Tentar recriar a home em caso de erro
+          try {
+            showWebview('webview-home', 'home-button');
+          } catch (retryError) {
+            console.error('[execute-context-menu-command] Erro ao tentar recriar home:', retryError);
           }
         }
 
-        // Recarregar as configurações se estiverem ativas
+        // Recarregar as configurações se estiverem abertas
         const settingsWebview = document.getElementById('webview-settings');
-        if (settingsWebview && settingsWebview.classList.contains('active')) {
-          try {
-            console.log('[execute-context-menu-command] Recarregando configurações...');
-            settingsWebview.reload();
-            console.log('[execute-context-menu-command] Configurações recarregadas com sucesso');
-          } catch (error) {
-            console.error('[execute-context-menu-command] Erro ao recarregar configurações:', error);
+        if (settingsWebview) {
+          const isSettingsVisible = settingsWebview.style.display === 'flex' || 
+                                  settingsWebview.style.display === 'block' || 
+                                  settingsWebview.style.opacity === '1' ||
+                                  window.getComputedStyle(settingsWebview).display !== 'none';
+          
+          if (isSettingsVisible) {
+            try {
+              console.log('[execute-context-menu-command] Recarregando configurações...');
+              settingsWebview.src = '../../pages/settings/settings.html';
+              console.log('[execute-context-menu-command] Configurações recarregadas com sucesso');
+            } catch (error) {
+              console.error('[execute-context-menu-command] Erro ao recarregar configurações:', error);
+            }
           }
         }
         break;
