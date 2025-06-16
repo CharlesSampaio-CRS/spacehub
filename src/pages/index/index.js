@@ -1224,14 +1224,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (currentViewId === 'webview-home') {
       return [
         {
-          command: 'reload-all',
-          label: t['Atualizar Todos'],
-          icon_svg: '<path d="M23 4v6h-6M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke-linecap="round" stroke-linejoin="round"/>'
-        },
-        {
-          type: 'separator'
-        },
-        {
           command: 'close-all',
           label: t['Fechar Todos'],
           icon_svg: '<path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>'
