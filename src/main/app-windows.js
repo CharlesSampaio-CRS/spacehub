@@ -63,6 +63,24 @@ class AppWindowManager {
             height: height
           });
           
+          // Configurações específicas para cada aplicativo
+          switch(appName.toLowerCase()) {
+            case 'teams':
+              window.setBackgroundColor('#ffffff');
+              break;
+            case 'slack':
+              window.setBackgroundColor('#ffffff');
+              break;
+            case 'skype':
+              window.setBackgroundColor('#ffffff');
+              break;
+            case 'twitter':
+              window.setBackgroundColor('#ffffff');
+              // Configurações específicas para o Twitter
+              window.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+              break;
+          }
+          
           console.log(`Janela do ${appName} ajustada em ready-to-show:`, { x, y, width, height });
           console.log('Bounds atuais:', window.getBounds());
           console.log('Content Bounds atuais:', window.getContentBounds());
@@ -132,7 +150,7 @@ class AppWindowManager {
     };
 
     // Handlers específicos para cada aplicativo
-    const apps = ['teams', 'slack', 'skype'];
+    const apps = ['teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'telegram', 'facebook-messenger', 'discord', 'google-chat', 'wechat', 'snapchat', 'threads'];
     apps.forEach(appName => {
       // Criar janela
       ipcMain.handle(`create-${appName}-window`, async (event, windowData, wrapperBounds) => {

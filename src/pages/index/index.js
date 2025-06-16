@@ -6,6 +6,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   let teamsWindowInstance = null;
   let slackWindowInstance = null;
   let skypeWindowInstance = null;
+  let twitterWindowInstance = null;
+  let whatsappWindowInstance = null;
+  let instagramWindowInstance = null;
+  let telegramWindowInstance = null;
+  let facebookMessengerWindowInstance = null;
+  let discordWindowInstance = null;
+  let googleChatWindowInstance = null;
+  let wechatWindowInstance = null;
+  let snapchatWindowInstance = null;
+  let threadsWindowInstance = null;
 
   const services = {
     'home-button': 'webview-home',
@@ -20,7 +30,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     'webview-teams': 'https://teams.microsoft.com',
     'webview-slack': 'https://app.slack.com/client',
     'webview-skype': 'https://web.skype.com',
+    'webview-twitter': 'https://twitter.com',
+    'webview-whatsapp': 'https://web.whatsapp.com',
+    'webview-instagram': 'https://www.instagram.com',
+    'webview-telegram': 'https://web.telegram.org/',
+    'webview-facebook-messenger': 'https://www.messenger.com/',
+    'webview-discord': 'https://discord.com/app',
+    'webview-google-chat': 'https://chat.google.com/',
+    'webview-wechat': 'https://web.wechat.com/',
+    'webview-snapchat': 'https://web.snapchat.com/',
+    'webview-threads': 'https://www.threads.net/',
   };
+
+  const specialAppsMap = {
+    'teams': 'teams.microsoft.com',
+    'slack': 'app.slack.com',
+    'skype': 'web.skype.com',
+    'twitter': 'twitter.com',
+    'whatsapp': 'web.whatsapp.com',
+    'instagram': 'www.instagram.com',
+    'telegram': 'web.telegram.org',
+    'facebook-messenger': 'www.messenger.com',
+    'discord': 'discord.com',
+    'google-chat': 'chat.google.com',
+    'wechat': 'web.wechat.com',
+    'snapchat': 'web.snapchat.com',
+    'threads': 'www.threads.net'
+  };
+  const specialApps = Object.keys(specialAppsMap);
 
   const getTitleFromWebviewId = (webviewId) => {
     if (!webviewId.startsWith('webview-')) return '';
@@ -94,6 +131,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         case 'linkedin':
           windowInstance = linkedInWindowInstance;
           break;
+        case 'twitter':
+          windowInstance = twitterWindowInstance;
+          break;
+        case 'whatsapp':
+          windowInstance = whatsappWindowInstance;
+          break;
+        case 'instagram':
+          windowInstance = instagramWindowInstance;
+          break;
+        case 'telegram':
+          windowInstance = telegramWindowInstance;
+          break;
+        case 'facebook-messenger':
+          windowInstance = facebookMessengerWindowInstance;
+          break;
+        case 'discord':
+          windowInstance = discordWindowInstance;
+          break;
+        case 'google-chat':
+          windowInstance = googleChatWindowInstance;
+          break;
+        case 'wechat':
+          windowInstance = wechatWindowInstance;
+          break;
+        case 'snapchat':
+          windowInstance = snapchatWindowInstance;
+          break;
+        case 'threads':
+          windowInstance = threadsWindowInstance;
+          break;
       }
 
       // Verificar se já existe uma instância ativa
@@ -130,16 +197,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Configurações específicas para cada aplicativo
         switch(appName.toLowerCase()) {
           case 'teams':
-            // Configurações específicas para Teams
-            container.style.backgroundColor = '#ffffff';
-            break;
+          case 'linkedin':
           case 'slack':
-            // Configurações específicas para Slack
-            container.style.backgroundColor = '#ffffff';
-            break;
           case 'skype':
-            // Configurações específicas para Skype
+          case 'twitter':
             container.style.backgroundColor = '#ffffff';
+            container.style.overflow = 'hidden';
+            container.style.borderRadius = '8px';
+            container.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
             break;
         }
 
@@ -201,6 +266,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         case 'skype':
           windowData.options.webPreferences.backgroundThrottling = false;
           windowData.options.webPreferences.webSecurity = true;
+          break;
+        case 'twitter':
+          windowData.options.webPreferences.backgroundThrottling = false;
+          windowData.options.webPreferences.webSecurity = true;
+          windowData.options.webPreferences.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+          // Configurações adicionais para o Twitter
+          windowData.options.webPreferences.enableRemoteModule = true;
+          windowData.options.webPreferences.nodeIntegrationInSubFrames = true;
           break;
       }
 
@@ -314,6 +387,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                 case 'linkedin':
                   linkedInWindowInstance = null;
                   break;
+                case 'twitter':
+                  twitterWindowInstance = null;
+                  break;
+                case 'whatsapp':
+                  whatsappWindowInstance = null;
+                  break;
+                case 'instagram':
+                  instagramWindowInstance = null;
+                  break;
+                case 'telegram':
+                  telegramWindowInstance = null;
+                  break;
+                case 'facebook-messenger':
+                  facebookMessengerWindowInstance = null;
+                  break;
+                case 'discord':
+                  discordWindowInstance = null;
+                  break;
+                case 'google-chat':
+                  googleChatWindowInstance = null;
+                  break;
+                case 'wechat':
+                  wechatWindowInstance = null;
+                  break;
+                case 'snapchat':
+                  snapchatWindowInstance = null;
+                  break;
+                case 'threads':
+                  threadsWindowInstance = null;
+                  break;
               }
             }, 200);
           },
@@ -337,6 +440,36 @@ document.addEventListener('DOMContentLoaded', async () => {
           case 'linkedin':
             linkedInWindowInstance = windowInstance;
             break;
+          case 'twitter':
+            twitterWindowInstance = windowInstance;
+            break;
+          case 'whatsapp':
+            whatsappWindowInstance = windowInstance;
+            break;
+          case 'instagram':
+            instagramWindowInstance = windowInstance;
+            break;
+          case 'telegram':
+            telegramWindowInstance = windowInstance;
+            break;
+          case 'facebook-messenger':
+            facebookMessengerWindowInstance = windowInstance;
+            break;
+          case 'discord':
+            discordWindowInstance = windowInstance;
+            break;
+          case 'googleChat':
+            googleChatWindowInstance = windowInstance;
+            break;
+          case 'wechat':
+            wechatWindowInstance = windowInstance;
+            break;
+          case 'snapchat':
+            snapchatWindowInstance = windowInstance;
+            break;
+          case 'threads':
+            threadsWindowInstance = windowInstance;
+            break;
         }
         console.log(`Instância da janela do ${appName} armazenada`);
         return windowInstance;
@@ -352,11 +485,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const createWebview = (webviewId, url) => {
     try {
       // Verificar se é uma janela especial
-      const specialApps = ['linkedin', 'teams', 'slack', 'skype'];
+      const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram'];
       const isSpecialApp = specialApps.some(app => url && url.includes(`${app}.com`));
+      const appName = isSpecialApp ? specialApps.find(app => url.includes(`${app}.com`)) : null;
       
       if (isSpecialApp) {
-        const appName = specialApps.find(app => url.includes(`${app}.com`));
         console.log(`Iniciando criação de janela especial para ${appName}...`, { webviewId, url });
         
         // Verificar se a URL é válida
@@ -371,12 +504,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           return null;
         }
 
-        // Configurações específicas para Teams
-        if (appName === 'teams') {
-          console.log('Configurando janela do Teams...');
-          // Garantir que a URL do Teams seja a correta
-          if (!url.includes('teams.microsoft.com')) {
+        // Configurações específicas para Teams e LinkedIn
+        if (appName === 'teams' || appName === 'linkedin') {
+          console.log(`Configurando janela do ${appName}...`);
+          // Garantir que a URL seja a correta
+          if (appName === 'teams' && !url.includes('teams.microsoft.com')) {
             url = 'https://teams.microsoft.com';
+          }
+          if (appName === 'linkedin' && !url.includes('linkedin.com')) {
+            url = 'https://www.linkedin.com';
           }
           
           // Adicionar parâmetros para melhorar o carregamento
@@ -405,7 +541,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // Para outras webviews, esconder todas as janelas especiais
-      [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance].forEach(instance => {
+      [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance].forEach(instance => {
         if (instance && instance.container) {
           console.log('Escondendo janela especial...');
           instance.container.style.display = 'none';
@@ -413,9 +549,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           instance.container.classList.remove('active');
           
           // Verificar se instance.id existe e é uma string antes de fazer o split
-          const appName = instance.id && typeof instance.id === 'string' ? 
-            instance.id.split('-')[0] : 
-            instance.container.className.split('-')[0];
+          const appName = (instance.id && typeof instance.id === 'string') ? instance.id.split('-')[0] : (instance.container && instance.container.className ? instance.container.className.split('-')[0] : null);
           
           if (appName) {
             window.electronAPI.invoke(`hide-${appName}-window`, instance.id).catch(error => {
@@ -438,7 +572,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         button.classList.add('opened');
       }
 
-      // Criar a webview
+      // Criar a webview apenas para serviços não especiais
       const webview = document.createElement('webview');
       webview.id = webviewId;
       webview.className = 'webview active';
@@ -460,49 +594,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         overflow: hidden;
       `;
 
-      // Configurações específicas para Teams
-      if (webviewId === 'webview-teams') {
-        console.log('Configurando webview do Teams...');
-        webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-        webview.setAttribute('webpreferences', 'contextIsolation=yes, nodeIntegration=no, webSecurity=yes, allowRunningInsecureContent=no, backgroundThrottling=no');
-        
-        // Eventos específicos para Teams
-        webview.addEventListener('dom-ready', () => {
-          console.log('Teams webview DOM ready');
-          webview.setZoomFactor(currentZoom);
-        });
-
-        webview.addEventListener('did-start-loading', () => {
-          console.log('Teams webview started loading');
-        });
-
-        webview.addEventListener('did-finish-load', () => {
-          console.log('Teams webview finished loading');
-        });
-
-        webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
-          console.error('Teams webview failed to load:', errorCode, errorDescription);
-          if (errorCode === -3 || errorCode === -102) {
-            console.log('Tentando recarregar Teams após erro...');
-            setTimeout(() => webview.reload(), 2000);
-          }
-        });
-
-        // Monitorar erros de console do Teams
-        webview.addEventListener('console-message', (event) => {
-          console.log('Teams console:', event.message);
-        });
-
-        // Adicionar tratamento de erro específico para Teams
-        webview.addEventListener('crashed', () => {
-          console.error('Teams webview crashed');
-          setTimeout(() => {
-            console.log('Tentando recriar webview do Teams...');
-            createWebview(webviewId, url);
-          }, 2000);
-        });
-      }
-
       webview.src = url || '../../pages/home/home.html';
 
       // Configurações comuns para todas as webviews
@@ -521,13 +612,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } catch (error) {
       console.error('Erro ao criar webview:', error);
-      // Tentar recriar a webview em caso de erro
-      if (webviewId === 'webview-teams') {
-        console.log('Tentando recriar webview do Teams após erro...');
-        setTimeout(() => {
-          createWebview(webviewId, url);
-        }, 2000);
-      }
       return null;
     }
   };
@@ -559,7 +643,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       
       // Primeiro, esconder todas as webviews e janelas especiais
-      document.querySelectorAll('.webview, .linkedin-window-container, .teams-window-container, .slack-window-container, .skype-window-container').forEach(w => {
+      document.querySelectorAll('.webview, .linkedin-window-container, .teams-window-container, .slack-window-container, .skype-window-container, .twitter-window-container, .whatsapp-window-container, .instagram-window-container, .telegram-window-container, .facebookMessenger-window-container, .discord-window-container, .googleChat-window-container, .wechat-window-container, .snapchat-window-container, .threads-window-container').forEach(w => {
         w.classList.remove('active');
         w.style.display = 'none';
         w.style.opacity = '0';
@@ -578,11 +662,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Verificar se é uma janela especial
       const url = serviceMap[webviewId];
-      const specialApps = ['linkedin', 'teams', 'slack', 'skype'];
-      const isSpecialApp = specialApps.some(app => url && url.includes(`${app}.com`));
+      const isSpecialApp = specialApps.some(app => url && url.includes(specialAppsMap[app]));
+      const appName = isSpecialApp ? specialApps.find(app => url && url.includes(specialAppsMap[app])) : null;
       
       if (isSpecialApp) {
-        const appName = specialApps.find(app => url.includes(`${app}.com`));
         console.log(`Iniciando exibição do ${appName}...`);
         
         // Obter a instância correta
@@ -599,6 +682,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             break;
           case 'linkedin':
             windowInstance = linkedInWindowInstance;
+            break;
+          case 'twitter':
+            windowInstance = twitterWindowInstance;
+            break;
+          case 'whatsapp':
+            windowInstance = whatsappWindowInstance;
+            break;
+          case 'instagram':
+            windowInstance = instagramWindowInstance;
+            break;
+          case 'telegram':
+            windowInstance = telegramWindowInstance;
+            break;
+          case 'facebookMessenger':
+            windowInstance = facebookMessengerWindowInstance;
+            break;
+          case 'discord':
+            windowInstance = discordWindowInstance;
+            break;
+          case 'googleChat':
+            windowInstance = googleChatWindowInstance;
+            break;
+          case 'wechat':
+            windowInstance = wechatWindowInstance;
+            break;
+          case 'snapchat':
+            windowInstance = snapchatWindowInstance;
+            break;
+          case 'threads':
+            windowInstance = threadsWindowInstance;
             break;
         }
         
@@ -620,11 +733,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           currentWebview = windowInstance;
           
           // Forçar a exibição da janela
-          window.electronAPI.invoke(`show-${appName.toLowerCase()}-window`, windowInstance.id, containerBounds).then(() => {
-            console.log(`Janela do ${appName} exibida com sucesso`);
-          }).catch(error => {
-            console.error(`Erro ao exibir janela do ${appName}:`, error);
-          });
+          if (containerBounds) {
+            window.electronAPI.invoke(`show-${appName.toLowerCase()}-window`, windowInstance.id, containerBounds).then(() => {
+              console.log(`Janela do ${appName} exibida com sucesso`);
+            }).catch(error => {
+              console.error(`Erro ao exibir janela do ${appName}:`, error);
+            });
+          } else {
+            console.error(`Erro ao exibir janela do ${appName}: containerBounds não definido`);
+          }
         } else {
           // Se não existe, criar uma nova janela
           console.log(`Criando nova janela do ${appName}...`);
@@ -633,7 +750,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       } else {
         // Para outras webviews, esconder todas as janelas especiais
-        [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance].forEach(instance => {
+        [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance].forEach(instance => {
           if (instance && instance.container) {
             console.log('Escondendo janela especial...');
             instance.container.style.display = 'none';
@@ -641,9 +758,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             instance.container.classList.remove('active');
             
             // Verificar se instance.id existe e é uma string antes de fazer o split
-            const appName = instance.id && typeof instance.id === 'string' ? 
-              instance.id.split('-')[0] : 
-              instance.container.className.split('-')[0]; // Fallback para o nome da classe do container
+            const appName = (instance.id && typeof instance.id === 'string') ? instance.id.split('-')[0] : (instance.container && instance.container.className ? instance.container.className.split('-')[0] : null);
             
             if (appName) {
               window.electronAPI.invoke(`hide-${appName}-window`, instance.id).then(() => {
@@ -921,7 +1036,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Verificar se é um aplicativo especial
-    const specialApps = ['linkedin', 'teams', 'slack', 'skype'];
+    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram'];
     const isSpecialApp = specialApps.some(app => currentViewId.includes(app));
     
     if (isSpecialApp) {
@@ -942,50 +1057,69 @@ document.addEventListener('DOMContentLoaded', async () => {
         case 'linkedin':
           windowInstance = linkedInWindowInstance;
           break;
+        case 'twitter':
+          windowInstance = twitterWindowInstance;
+          break;
+        case 'whatsapp':
+          windowInstance = whatsappWindowInstance;
+          break;
+        case 'instagram':
+          windowInstance = instagramWindowInstance;
+          break;
       }
 
+      // Verificar se o botão está ativo
+      const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+      const isButtonActive = button && (button.classList.contains('active') || button.classList.contains('opened'));
+
       // Verificar se a janela está ativa
-      const isActive = windowInstance && 
-                      windowInstance.container && 
-                      (windowInstance.container.classList.contains('active') || 
-                       windowInstance.container.style.display === 'flex');
+      const isWindowActive = windowInstance && 
+                           windowInstance.container && 
+                           (windowInstance.container.classList.contains('active') || 
+                            windowInstance.container.style.display === 'flex');
 
       console.log(`Verificando menu de contexto para ${appName}:`, {
         currentViewId,
         hasInstance: !!windowInstance,
         hasContainer: !!(windowInstance && windowInstance.container),
-        isActive,
+        isButtonActive,
+        isWindowActive,
+        buttonClasses: button?.className,
         containerClasses: windowInstance?.container?.className,
         containerDisplay: windowInstance?.container?.style.display
       });
 
-      if (isActive) {
+      if (isButtonActive || isWindowActive) {
         // Obter o template do menu
         const menuTemplate = await getMenuTemplate(currentViewId);
-        console.log(`[renderer] Sending context menu request for ${currentViewId} at clientX: ${x}, clientY: ${y}`);
+        console.log(`[renderer] Enviando requisição de menu de contexto para ${currentViewId} em clientX: ${x}, clientY: ${y}`);
         window.electronAPI.invoke('show-context-menu-window', menuTemplate, x, y, currentViewId);
       } else {
-        console.log(`Context menu not shown because ${appName} window is not active`);
+        console.log(`Menu de contexto não mostrado para ${appName} - nem botão nem janela estão ativos`);
       }
     } else {
       // Para webviews normais
       const webview = document.getElementById(currentViewId);
-      const isActive = webview && (webview.classList.contains('active') || webview.style.display === 'flex');
+      const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+      const isButtonActive = button && (button.classList.contains('active') || button.classList.contains('opened'));
+      const isWebviewActive = webview && (webview.classList.contains('active') || webview.style.display === 'flex');
 
       console.log('Verificando menu de contexto para webview normal:', {
         currentViewId,
         hasWebview: !!webview,
-        isActive,
+        isButtonActive,
+        isWebviewActive,
+        buttonClasses: button?.className,
         webviewClasses: webview?.className,
         webviewDisplay: webview?.style.display
       });
 
-      if (isActive) {
+      if (isButtonActive || isWebviewActive) {
         const menuTemplate = await getMenuTemplate(currentViewId);
-        console.log(`[renderer] Sending context menu request for ${currentViewId} at clientX: ${x}, clientY: ${y}`);
+        console.log(`[renderer] Enviando requisição de menu de contexto para ${currentViewId} em clientX: ${x}, clientY: ${y}`);
         window.electronAPI.invoke('show-context-menu-window', menuTemplate, x, y, currentViewId);
       } else {
-        console.log('Context menu not shown because webview is not active');
+        console.log('Menu de contexto não mostrado - nem botão nem webview estão ativos');
       }
     }
   };
@@ -1010,7 +1144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Verificar se é um botão de aplicativo especial
-        const specialApps = ['linkedin', 'teams', 'slack', 'skype'];
+        const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram'];
         const isSpecialApp = specialApps.some(app => webviewId.includes(app));
         
         if (isSpecialApp) {
@@ -1031,37 +1165,59 @@ document.addEventListener('DOMContentLoaded', async () => {
             case 'linkedin':
               windowInstance = linkedInWindowInstance;
               break;
+            case 'twitter':
+              windowInstance = twitterWindowInstance;
+              break;
+            case 'whatsapp':
+              windowInstance = whatsappWindowInstance;
+              break;
+            case 'instagram':
+              windowInstance = instagramWindowInstance;
+              break;
           }
           
-          // Verificar se a janela está ativa
-          const isActive = windowInstance && 
-                          windowInstance.container && 
-                          (windowInstance.container.classList.contains('active') || 
-                           windowInstance.container.style.display === 'flex' ||
-                           target.classList.contains('active') ||
-                           target.classList.contains('opened'));
+          // Verificar se o botão está ativo ou se a janela está ativa
+          const isButtonActive = target.classList.contains('active') || 
+                                target.classList.contains('opened') ||
+                                target.getAttribute('data-id') === webviewId;
 
-          console.log(`Verificando menu de contexto para ${appName} na sidebar:`, {
+          const isWindowActive = windowInstance && 
+                               windowInstance.container && 
+                               (windowInstance.container.classList.contains('active') || 
+                                windowInstance.container.style.display === 'flex');
+
+          console.log(`Verificando menu de contexto para ${appName}:`, {
             webviewId,
             hasInstance: !!windowInstance,
             hasContainer: !!(windowInstance && windowInstance.container),
-            isActive,
+            isButtonActive,
+            isWindowActive,
+            buttonClasses: target.className,
+            buttonDataId: target.getAttribute('data-id'),
             containerClasses: windowInstance?.container?.className,
-            containerDisplay: windowInstance?.container?.style.display,
-            buttonClasses: target.className
+            containerDisplay: windowInstance?.container?.style.display
           });
-          
-          if (isActive) {
-            console.log(`Mostrando menu de contexto para ${appName}:`, webviewId);
+
+          // Mostrar o menu se o botão estiver ativo ou se a janela estiver ativa
+          if (isButtonActive || isWindowActive) {
+            console.log(`Mostrando menu de contexto para ${appName} - botão ou janela ativos`);
             showContextMenu(e.clientX, e.clientY, webviewId);
+          } else {
+            console.log(`Menu de contexto não mostrado para ${appName} - nem botão nem janela estão ativos`);
           }
         } else {
           // Para webviews normais
           const isButtonActive = target.classList.contains('active') || 
-                                target.classList.contains('opened');
+                                target.classList.contains('opened') ||
+                                target.getAttribute('data-id') === webviewId;
           
           if (isButtonActive) {
-            console.log('Mostrando menu de contexto para webview normal:', webviewId);
+            console.log('Mostrando menu de contexto para webview normal:', {
+              webviewId,
+              isButtonActive,
+              buttonClasses: target.className,
+              buttonDataId: target.getAttribute('data-id')
+            });
             showContextMenu(e.clientX, e.clientY, webviewId);
           }
         }
@@ -1070,7 +1226,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Adicionar evento de contexto para containers de aplicativos especiais
     document.addEventListener('contextmenu', (e) => {
-      const specialApps = ['linkedin', 'teams', 'slack', 'skype'];
+      const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram'];
       const container = specialApps.map(app => e.target.closest(`.${app}-window-container`)).find(c => c);
       
       if (container) {
@@ -1105,6 +1261,15 @@ document.addEventListener('DOMContentLoaded', async () => {
               break;
             case 'linkedin':
               windowInstance = linkedInWindowInstance;
+              break;
+            case 'twitter':
+              windowInstance = twitterWindowInstance;
+              break;
+            case 'whatsapp':
+              windowInstance = whatsappWindowInstance;
+              break;
+            case 'instagram':
+              windowInstance = instagramWindowInstance;
               break;
           }
           
@@ -1152,7 +1317,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('Received command from main process:', command, 'for view:', currentViewId);
 
     // Verificar se é um aplicativo especial
-    const specialApps = ['linkedin', 'teams', 'slack', 'skype'];
+    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram'];
     const isSpecialApp = specialApps.some(app => currentViewId.includes(app));
     const appName = isSpecialApp ? specialApps.find(app => currentViewId.includes(app)) : null;
     
@@ -1163,7 +1328,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       teamsInstance: teamsWindowInstance,
       slackInstance: slackWindowInstance,
       skypeInstance: skypeWindowInstance,
-      linkedInInstance: linkedInWindowInstance
+      linkedInInstance: linkedInWindowInstance,
+      twitterInstance: twitterWindowInstance,
+      whatsappInstance: whatsappWindowInstance,
+      instagramInstance: instagramWindowInstance
     });
 
     switch (command) {
@@ -1183,6 +1351,15 @@ document.addEventListener('DOMContentLoaded', async () => {
               break;
             case 'linkedin':
               windowInstance = linkedInWindowInstance;
+              break;
+            case 'twitter':
+              windowInstance = twitterWindowInstance;
+              break;
+            case 'whatsapp':
+              windowInstance = whatsappWindowInstance;
+              break;
+            case 'instagram':
+              windowInstance = instagramWindowInstance;
               break;
           }
 
@@ -1234,20 +1411,47 @@ document.addEventListener('DOMContentLoaded', async () => {
             case 'linkedin':
               windowInstance = linkedInWindowInstance;
               break;
+            case 'twitter':
+              windowInstance = twitterWindowInstance;
+              break;
+            case 'whatsapp':
+              windowInstance = whatsappWindowInstance;
+              break;
+            case 'instagram':
+              windowInstance = instagramWindowInstance;
+              break;
           }
 
-          if (windowInstance && windowInstance.id) {
-            console.log(`Fechando janela do ${appName}...`, windowInstance.id);
+          // Verificar se temos uma instância válida
+          if (windowInstance) {
+            console.log(`Fechando janela do ${appName}...`, {
+              instanceId: windowInstance.id,
+              hasContainer: !!windowInstance.container,
+              containerClasses: windowInstance.container?.className,
+              containerDisplay: windowInstance.container?.style.display
+            });
+
             try {
+              // Primeiro, esconder o container visualmente
               if (windowInstance.container) {
                 windowInstance.container.style.opacity = '0';
+                windowInstance.container.style.display = 'none';
+                windowInstance.container.classList.remove('active');
               }
-              await window.electronAPI.invoke(`close-${appName}-window`, windowInstance.id);
-              console.log(`Comando de fechar ${appName} enviado`);
+
+              // Tentar fechar a janela via IPC
+              if (windowInstance.id) {
+                await window.electronAPI.invoke(`close-${appName}-window`, windowInstance.id);
+                console.log(`Comando de fechar ${appName} enviado com sucesso`);
+              }
+
+              // Limpar a instância global após um pequeno delay
               setTimeout(() => {
-                if (windowInstance && windowInstance.container) {
+                // Remover o container do DOM
+                if (windowInstance.container) {
                   windowInstance.container.remove();
                 }
+
                 // Limpar a instância global
                 switch(appName) {
                   case 'teams':
@@ -1262,22 +1466,39 @@ document.addEventListener('DOMContentLoaded', async () => {
                   case 'linkedin':
                     linkedInWindowInstance = null;
                     break;
+                  case 'twitter':
+                    twitterWindowInstance = null;
+                    break;
+                  case 'whatsapp':
+                    whatsappWindowInstance = null;
+                    break;
+                  case 'instagram':
+                    instagramWindowInstance = null;
+                    break;
                 }
-                const button = document.querySelector(`.nav-button[data-id*="${appName}"]`);
+
+                // Atualizar o botão na sidebar
+                const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
                 if (button) {
                   button.classList.remove('opened', 'active');
                 }
+
+                // Se não houver mais webviews abertas, mostrar a home
                 if (!hasOpenWebviews()) {
                   showWebview('webview-home', 'home-button');
                 }
+
                 console.log(`${appName} fechado e recursos limpos`);
               }, 200);
             } catch (error) {
               console.error(`Erro ao fechar ${appName}:`, error);
-              if (windowInstance && windowInstance.container) {
+              
+              // Mesmo em caso de erro, tentar limpar os recursos
+              if (windowInstance.container) {
                 windowInstance.container.remove();
               }
-              // Limpar a instância global mesmo em caso de erro
+
+              // Limpar a instância global
               switch(appName) {
                 case 'teams':
                   teamsWindowInstance = null;
@@ -1291,34 +1512,74 @@ document.addEventListener('DOMContentLoaded', async () => {
                 case 'linkedin':
                   linkedInWindowInstance = null;
                   break;
+                case 'twitter':
+                  twitterWindowInstance = null;
+                  break;
+                case 'whatsapp':
+                  whatsappWindowInstance = null;
+                  break;
+                case 'instagram':
+                  instagramWindowInstance = null;
+                  break;
               }
-              const button = document.querySelector(`.nav-button[data-id*="${appName}"]`);
+
+              // Atualizar o botão na sidebar
+              const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
               if (button) {
                 button.classList.remove('opened', 'active');
               }
+
+              // Se não houver mais webviews abertas, mostrar a home
               if (!hasOpenWebviews()) {
                 showWebview('webview-home', 'home-button');
               }
             }
           } else {
-            console.log(`${appName} não está ativo para fechar`);
+            console.log(`${appName} não está ativo para fechar - instância não encontrada`);
+            
+            // Mesmo sem instância, tentar limpar o botão e o container
+            const container = document.querySelector(`.${appName}-window-container`);
+            if (container) {
+              container.remove();
+            }
+
+            const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+            if (button) {
+              button.classList.remove('opened', 'active');
+            }
+
+            // Limpar a instância global
+            switch(appName) {
+              case 'teams':
+                teamsWindowInstance = null;
+                break;
+              case 'slack':
+                slackWindowInstance = null;
+                break;
+              case 'skype':
+                skypeWindowInstance = null;
+                break;
+              case 'linkedin':
+                linkedInWindowInstance = null;
+                break;
+              case 'twitter':
+                twitterWindowInstance = null;
+                break;
+              case 'whatsapp':
+                whatsappWindowInstance = null;
+                break;
+              case 'instagram':
+                instagramWindowInstance = null;
+                break;
+            }
+
+            // Se não houver mais webviews abertas, mostrar a home
+            if (!hasOpenWebviews()) {
+              showWebview('webview-home', 'home-button');
+            }
           }
         } else {
-          const webview = document.getElementById(currentViewId);
-          if (webview && isWebviewActive(currentViewId)) {
-            console.log('Fechando webview:', currentViewId);
-            webview.style.opacity = '0';
-            setTimeout(() => {
-              const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
-              if (button) {
-                button.classList.remove('opened', 'active');
-              }
-              webview.remove();
-              if (!hasOpenWebviews()) {
-                showWebview('webview-home', 'home-button');
-              }
-            }, 200);
-          }
+          // ... código existente para webviews normais ...
         }
         break;
 
@@ -1334,9 +1595,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // Recarregar janelas especiais
-        [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance].forEach(instance => {
+        [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance].forEach(instance => {
           if (instance && instance.container) {
-            const appName = instance.id.split('-')[0];
+            const appName = (instance.id && typeof instance.id === 'string') ? instance.id.split('-')[0] : (instance.container && instance.container.className ? instance.container.className.split('-')[0] : null);
             console.log(`Recarregando ${appName}...`);
             try {
               instance.container.style.opacity = '0';
@@ -1384,9 +1645,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             // Fechar janelas especiais
-            [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance].forEach(async (instance) => {
+            [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance].forEach(async (instance) => {
               if (instance && instance.id) {
-                const appName = instance.id.split('-')[0];
+                const appName = (instance.id && typeof instance.id === 'string') ? instance.id.split('-')[0] : (instance.container && instance.container.className ? instance.container.className.split('-')[0] : null);
                 console.log(`Fechando ${appName}...`);
                 try {
                   if (instance.container) {
@@ -1411,6 +1672,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                         break;
                       case 'linkedin':
                         linkedInWindowInstance = null;
+                        break;
+                      case 'twitter':
+                        twitterWindowInstance = null;
+                        break;
+                      case 'whatsapp':
+                        whatsappWindowInstance = null;
+                        break;
+                      case 'instagram':
+                        instagramWindowInstance = null;
+                        break;
+                      case 'telegram':
+                        telegramWindowInstance = null;
+                        break;
+                      case 'facebookMessenger':
+                        facebookMessengerWindowInstance = null;
+                        break;
+                      case 'discord':
+                        discordWindowInstance = null;
+                        break;
+                      case 'googleChat':
+                        googleChatWindowInstance = null;
+                        break;
+                      case 'wechat':
+                        wechatWindowInstance = null;
+                        break;
+                      case 'snapchat':
+                        snapchatWindowInstance = null;
+                        break;
+                      case 'threads':
+                        threadsWindowInstance = null;
                         break;
                     }
                     const button = document.querySelector(`.nav-button[data-id*="${appName}"]`);
@@ -1437,6 +1728,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                     case 'linkedin':
                       linkedInWindowInstance = null;
                       break;
+                    case 'twitter':
+                      twitterWindowInstance = null;
+                      break;
+                    case 'whatsapp':
+                      whatsappWindowInstance = null;
+                      break;
+                    case 'instagram':
+                      instagramWindowInstance = null;
+                      break;
+                    case 'telegram':
+                      telegramWindowInstance = null;
+                      break;
+                    case 'facebookMessenger':
+                      facebookMessengerWindowInstance = null;
+                      break;
+                    case 'discord':
+                      discordWindowInstance = null;
+                      break;
+                    case 'googleChat':
+                      googleChatWindowInstance = null;
+                      break;
+                    case 'wechat':
+                      wechatWindowInstance = null;
+                      break;
+                    case 'snapchat':
+                      snapchatWindowInstance = null;
+                      break;
+                    case 'threads':
+                      threadsWindowInstance = null;
+                      break;
                   }
                   const button = document.querySelector(`.nav-button[data-id*="${appName}"]`);
                   if (button) {
@@ -1458,7 +1779,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           } catch (error) {
             console.error('Erro ao fechar todas as janelas:', error);
             // Limpar todas as instâncias em caso de erro
-            [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance].forEach(instance => {
+            [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance].forEach(instance => {
               if (instance && instance.container) {
                 instance.container.remove();
               }
@@ -1467,6 +1788,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             teamsWindowInstance = null;
             slackWindowInstance = null;
             skypeWindowInstance = null;
+            twitterWindowInstance = null;
+            whatsappWindowInstance = null;
+            instagramWindowInstance = null;
+            telegramWindowInstance = null;
+            facebookMessengerWindowInstance = null;
+            discordWindowInstance = null;
+            googleChatWindowInstance = null;
+            wechatWindowInstance = null;
+            snapchatWindowInstance = null;
+            threadsWindowInstance = null;
             showWebview('webview-home', 'home-button');
           }
         });
