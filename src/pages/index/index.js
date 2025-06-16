@@ -1683,20 +1683,87 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Fechar janelas especiais
             [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance].forEach(async (instance) => {
               if (instance && instance.id) {
-                const appName = (instance.id && typeof instance.id === 'string') ? instance.id.split('-')[0] : (instance.container && instance.container.className ? instance.container.className.split('-')[0] : null);
-                console.log(`Fechando ${appName}...`);
-                try {
-                  if (instance.container) {
-                    instance.container.style.opacity = '0';
-                  }
-                  await window.electronAPI.invoke(`close-${appName}-window`, instance.id);
-                  console.log(`Comando de fechar ${appName} enviado`);
-                  setTimeout(() => {
+                let appName = (instance.id && typeof instance.id === 'string') ? 
+                  instance.id.split('-')[0] : 
+                  (instance.container && instance.container.className ? 
+                    instance.container.className.split('-')[0] : 
+                    null);
+                
+                // Tratamento especial para o Facebook Messenger
+                if (appName === 'facebook' || appName === 'facebookMessenger' || appName === 'facebook-messenger') {
+                  appName = 'facebook-messenger';
+                }
+                
+                if (appName) {
+                  const normalizedAppName = appName.toLowerCase().replace(/-/g, '-');
+                  console.log(`Fechando ${normalizedAppName}...`);
+                  try {
+                    if (instance.container) {
+                      instance.container.style.opacity = '0';
+                    }
+                    await window.electronAPI.invoke(`hide-${normalizedAppName}-window`, instance.id);
+                    console.log(`Comando de fechar ${normalizedAppName} enviado`);
+                    setTimeout(() => {
+                      if (instance.container) {
+                        instance.container.remove();
+                      }
+                      // Limpar a instância global
+                      switch(normalizedAppName) {
+                        case 'teams':
+                          teamsWindowInstance = null;
+                          break;
+                        case 'slack':
+                          slackWindowInstance = null;
+                          break;
+                        case 'skype':
+                          skypeWindowInstance = null;
+                          break;
+                        case 'linkedin':
+                          linkedInWindowInstance = null;
+                          break;
+                        case 'twitter':
+                          twitterWindowInstance = null;
+                          break;
+                        case 'whatsapp':
+                          whatsappWindowInstance = null;
+                          break;
+                        case 'instagram':
+                          instagramWindowInstance = null;
+                          break;
+                        case 'telegram':
+                          telegramWindowInstance = null;
+                          break;
+                        case 'facebook-messenger':
+                          facebookMessengerWindowInstance = null;
+                          break;
+                        case 'discord':
+                          discordWindowInstance = null;
+                          break;
+                        case 'google-chat':
+                          googleChatWindowInstance = null;
+                          break;
+                        case 'wechat':
+                          wechatWindowInstance = null;
+                          break;
+                        case 'snapchat':
+                          snapchatWindowInstance = null;
+                          break;
+                        case 'threads':
+                          threadsWindowInstance = null;
+                          break;
+                      }
+                      const button = document.querySelector(`.nav-button[data-id*="${normalizedAppName}"]`);
+                      if (button) {
+                        button.classList.remove('opened', 'active');
+                      }
+                    }, 200);
+                  } catch (error) {
+                    console.error(`Erro ao fechar ${normalizedAppName}:`, error);
                     if (instance.container) {
                       instance.container.remove();
                     }
-                    // Limpar a instância global
-                    switch(appName) {
+                    // Limpar a instância global mesmo em caso de erro
+                    switch(normalizedAppName) {
                       case 'teams':
                         teamsWindowInstance = null;
                         break;
@@ -1721,13 +1788,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                       case 'telegram':
                         telegramWindowInstance = null;
                         break;
-                      case 'facebookMessenger':
+                      case 'facebook-messenger':
                         facebookMessengerWindowInstance = null;
                         break;
                       case 'discord':
                         discordWindowInstance = null;
                         break;
-                      case 'googleChat':
+                      case 'google-chat':
                         googleChatWindowInstance = null;
                         break;
                       case 'wechat':
@@ -1740,64 +1807,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         threadsWindowInstance = null;
                         break;
                     }
-                    const button = document.querySelector(`.nav-button[data-id*="${appName}"]`);
+                    const button = document.querySelector(`.nav-button[data-id*="${normalizedAppName}"]`);
                     if (button) {
                       button.classList.remove('opened', 'active');
                     }
-                  }, 200);
-                } catch (error) {
-                  console.error(`Erro ao fechar ${appName}:`, error);
-                  if (instance.container) {
-                    instance.container.remove();
-                  }
-                  // Limpar a instância global mesmo em caso de erro
-                  switch(appName) {
-                    case 'teams':
-                      teamsWindowInstance = null;
-                      break;
-                    case 'slack':
-                      slackWindowInstance = null;
-                      break;
-                    case 'skype':
-                      skypeWindowInstance = null;
-                      break;
-                    case 'linkedin':
-                      linkedInWindowInstance = null;
-                      break;
-                    case 'twitter':
-                      twitterWindowInstance = null;
-                      break;
-                    case 'whatsapp':
-                      whatsappWindowInstance = null;
-                      break;
-                    case 'instagram':
-                      instagramWindowInstance = null;
-                      break;
-                    case 'telegram':
-                      telegramWindowInstance = null;
-                      break;
-                    case 'facebookMessenger':
-                      facebookMessengerWindowInstance = null;
-                      break;
-                    case 'discord':
-                      discordWindowInstance = null;
-                      break;
-                    case 'googleChat':
-                      googleChatWindowInstance = null;
-                      break;
-                    case 'wechat':
-                      wechatWindowInstance = null;
-                      break;
-                    case 'snapchat':
-                      snapchatWindowInstance = null;
-                      break;
-                    case 'threads':
-                      threadsWindowInstance = null;
-                      break;
-                  }
-                  const button = document.querySelector(`.nav-button[data-id*="${appName}"]`);
-                  if (button) {
-                    button.classList.remove('opened', 'active');
                   }
                 }
               }
