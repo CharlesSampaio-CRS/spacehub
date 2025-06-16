@@ -374,12 +374,21 @@ class AppWindowManager {
 
       // Fechar janela
       ipcMain.handle(`close-${normalizedAppName}-window`, async (event, windowId) => {
-        console.log(`Fechando janela do ${normalizedAppName}:`, windowId);
+        console.log(`[main] Fechando janela do ${normalizedAppName}:`, {
+          windowId: windowId,
+          hasWindow: this.windows.has(windowId),
+          windowExists: this.windows.get(windowId) ? !this.windows.get(windowId).isDestroyed() : false
+        });
         const window = this.windows.get(windowId);
         if (window) {
-          window.close();
+          try {
+            window.close();
+            console.log(`[main] Janela do ${normalizedAppName} fechada com sucesso`);
+          } catch (error) {
+            console.error(`[main] Erro ao fechar janela do ${normalizedAppName}:`, error);
+          }
         } else {
-          console.error(`Janela do ${normalizedAppName} não encontrada:`, windowId);
+          console.error(`[main] Janela do ${normalizedAppName} não encontrada:`, windowId);
         }
       });
 

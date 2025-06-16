@@ -638,20 +638,30 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // Para outras webviews, esconder todas as janelas especiais
-      [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance].forEach(instance => {
+      const specialInstances = [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance];
+      
+      specialInstances.forEach(instance => {
         if (instance && instance.container) {
-          console.log('Escondendo janela especial...');
-          instance.container.style.display = 'none';
-          instance.container.style.opacity = '0';
-          instance.container.classList.remove('active');
-          
-          // Verificar se instance.id existe e é uma string antes de fazer o split
-          const appName = (instance.id && typeof instance.id === 'string') ? instance.id.split('-')[0] : (instance.container && instance.container.className ? instance.container.className.split('-')[0] : null);
-          
-          if (appName) {
-            window.electronAPI.invoke(`hide-${appName}-window`, instance.id).catch(error => {
-              console.error(`Erro ao ocultar janela do ${appName}:`, error);
-            });
+          try {
+            console.log('Escondendo janela especial...');
+            instance.container.style.display = 'none';
+            instance.container.style.opacity = '0';
+            instance.container.classList.remove('active');
+            
+            // Verificar se instance.id existe e é uma string antes de fazer o split
+            const appName = (instance.id && typeof instance.id === 'string') ? instance.id.split('-')[0] : (instance.container && instance.container.className ? instance.container.className.split('-')[0] : null);
+            
+            if (appName) {
+              // Lista de aplicações que têm handlers IPC registrados
+              const appsWithHandlers = ['slack', 'linkedin', 'teams', 'skype', 'twitter', 'whatsapp', 'instagram', 'telegram', 'facebook-messenger', 'discord', 'wechat', 'snapchat', 'threads', 'google-chat'];
+              
+              // Só tentar chamar o IPC se a aplicação tiver um handler registrado
+              if (appsWithHandlers.includes(appName.toLowerCase())) {
+                window.electronAPI.invoke(`hide-${appName.toLowerCase()}-window`, instance.id).catch(() => {});
+              }
+            }
+          } catch (err) {
+            // Ignorar erros silenciosamente para manter o comportamento atual
           }
         }
       });
@@ -788,7 +798,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const isSpecialApp = specialApps.some(app => url && url.includes(specialAppsMap[app]));
       const appName = isSpecialApp ? specialApps.find(app => url && url.includes(specialAppsMap[app])) : null;
       
-      if (isSpecialApp) {
+      if (isSpecialApp && appName) {
         console.log(`Iniciando exibição do ${appName}...`);
         
         // Obter a instância correta
@@ -855,54 +865,83 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
           
           if (windowInstance.container) {
-            windowInstance.container.style.display = 'flex';
-            windowInstance.container.style.opacity = '1';
-            windowInstance.container.classList.add('active');
-            currentWebview = windowInstance;
-            
-            // Forçar a exibição da janela
-            if (containerBounds && windowInstance.id) {
-              try {
-                await window.electronAPI.invoke(`show-${appName.toLowerCase()}-window`, windowInstance.id, containerBounds);
-                console.log(`Janela do ${appName} exibida com sucesso`);
-              } catch (error) {
-                console.error(`Erro ao exibir janela do ${appName}:`, error);
-                // Tentar recriar a janela em caso de erro
-                windowInstance = await createAppWindow(webviewId, url, appName);
-                if (windowInstance && windowInstance.container) {
-                  windowInstance.container.style.display = 'flex';
-                  windowInstance.container.style.opacity = '1';
-                  windowInstance.container.classList.add('active');
-                  currentWebview = windowInstance;
+            try {
+              windowInstance.container.style.display = 'flex';
+              windowInstance.container.style.opacity = '1';
+              windowInstance.container.classList.add('active');
+              currentWebview = windowInstance;
+              
+              // Forçar a exibição da janela
+              if (containerBounds && windowInstance.id) {
+                try {
+                  await window.electronAPI.invoke(`show-${appName.toLowerCase()}-window`, windowInstance.id, containerBounds);
+                  console.log(`Janela do ${appName} exibida com sucesso`);
+                } catch (error) {
+                  console.error(`Erro ao exibir janela do ${appName}:`, error);
+                  // Tentar recriar a janela em caso de erro
+                  const newInstance = await createAppWindow(webviewId, url, appName);
+                  if (newInstance && newInstance.container) {
+                    newInstance.container.style.display = 'flex';
+                    newInstance.container.style.opacity = '1';
+                    newInstance.container.classList.add('active');
+                    currentWebview = newInstance;
+                  } else {
+                    console.error(`Não foi possível criar nova janela para ${appName}`);
+                  }
                 }
+              }
+            } catch (err) {
+              console.error(`Erro ao manipular container do ${appName}:`, err);
+              // Tentar recriar a janela
+              try {
+                const newInstance = await createAppWindow(webviewId, url, appName);
+                if (newInstance && newInstance.container) {
+                  newInstance.container.style.display = 'flex';
+                  newInstance.container.style.opacity = '1';
+                  newInstance.container.classList.add('active');
+                  currentWebview = newInstance;
+                }
+              } catch (createErr) {
+                console.error(`Erro ao tentar recriar janela do ${appName}:`, createErr);
               }
             }
           } else {
             console.error(`Container não encontrado para janela do ${appName}`);
             // Tentar criar uma nova janela
-            windowInstance = await createAppWindow(webviewId, url, appName);
-            if (windowInstance && windowInstance.container) {
-              windowInstance.container.style.display = 'flex';
-              windowInstance.container.style.opacity = '1';
-              windowInstance.container.classList.add('active');
-              currentWebview = windowInstance;
+            try {
+              const newInstance = await createAppWindow(webviewId, url, appName);
+              if (newInstance && newInstance.container) {
+                newInstance.container.style.display = 'flex';
+                newInstance.container.style.opacity = '1';
+                newInstance.container.classList.add('active');
+                currentWebview = newInstance;
+              }
+            } catch (createErr) {
+              console.error(`Erro ao criar nova janela do ${appName}:`, createErr);
             }
           }
         } else {
           // Se não existe, criar uma nova janela
           console.log(`Criando nova janela do ${appName}...`);
-          const existingContainers = document.querySelectorAll(`.${appName.toLowerCase()}-window-container`);
-          existingContainers.forEach(container => {
-            if (container) {
-              container.remove();
+          try {
+            // Remover containers existentes
+            document.querySelectorAll(`.${appName.toLowerCase()}-window-container`).forEach(container => {
+              if (container) {
+                container.remove();
+              }
+            });
+            
+            const newInstance = await createAppWindow(webviewId, url, appName);
+            if (newInstance && newInstance.container) {
+              newInstance.container.style.display = 'flex';
+              newInstance.container.style.opacity = '1';
+              newInstance.container.classList.add('active');
+              currentWebview = newInstance;
+            } else {
+              console.error(`Falha ao criar janela do ${appName}: container não encontrado`);
             }
-          });
-          windowInstance = await createAppWindow(webviewId, url, appName);
-          if (windowInstance && windowInstance.container) {
-            windowInstance.container.style.display = 'flex';
-            windowInstance.container.style.opacity = '1';
-            windowInstance.container.classList.add('active');
-            currentWebview = windowInstance;
+          } catch (err) {
+            console.error(`Erro ao criar janela do ${appName}:`, err);
           }
         }
       } else {
@@ -911,48 +950,63 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         specialInstances.forEach(instance => {
           if (instance && instance.container) {
-            console.log('Escondendo janela especial...');
-            instance.container.style.display = 'none';
-            instance.container.style.opacity = '0';
-            instance.container.classList.remove('active');
-            
-            // Verificar se instance.id existe e é uma string antes de fazer o split
-            const appName = (instance.id && typeof instance.id === 'string') ? instance.id.split('-')[0] : (instance.container && instance.container.className ? instance.container.className.split('-')[0] : null);
-            
-            if (appName) {
-              window.electronAPI.invoke(`hide-${appName}-window`, instance.id).then(() => {
-                console.log('Janela especial ocultada com sucesso');
-              }).catch(error => {
-                console.error('Erro ao ocultar janela especial:', error);
-              });
+            try {
+              console.log('Escondendo janela especial...');
+              instance.container.style.display = 'none';
+              instance.container.style.opacity = '0';
+              instance.container.classList.remove('active');
+              
+              // Verificar se instance.id existe e é uma string antes de fazer o split
+              const appName = (instance.id && typeof instance.id === 'string') ? instance.id.split('-')[0] : (instance.container && instance.container.className ? instance.container.className.split('-')[0] : null);
+              
+              if (appName) {
+                // Lista de aplicações que têm handlers IPC registrados
+                const appsWithHandlers = ['slack', 'linkedin', 'teams', 'skype', 'twitter', 'whatsapp', 'instagram', 'telegram', 'facebook-messenger', 'discord', 'wechat', 'snapchat', 'threads', 'google-chat'];
+                
+                // Só tentar chamar o IPC se a aplicação tiver um handler registrado
+                if (appsWithHandlers.includes(appName.toLowerCase())) {
+                  window.electronAPI.invoke(`hide-${appName.toLowerCase()}-window`, instance.id).catch(() => {});
+                }
+              }
+            } catch (err) {
+              // Ignorar erros silenciosamente para manter o comportamento atual
             }
           }
         });
 
         // Criar ou obter webview normal
-        let webview = document.getElementById(webviewId);
-        if (!webview) {
-          webview = createWebview(webviewId, url);
-        }
-        if (webview) {
-          updateWebviewAccess(webviewId);
-          webview.style.display = 'flex';
-          webview.style.opacity = '1';
-          webview.classList.add('active');
-          currentWebview = webview;
-        } else {
-          console.error(`Não foi possível criar ou obter webview para ${webviewId}`);
-          // Tentar criar novamente com um pequeno delay
-          setTimeout(async () => {
+        try {
+          let webview = document.getElementById(webviewId);
+          if (!webview) {
             webview = createWebview(webviewId, url);
-            if (webview) {
-              updateWebviewAccess(webviewId);
-              webview.style.display = 'flex';
-              webview.style.opacity = '1';
-              webview.classList.add('active');
-              currentWebview = webview;
-            }
-          }, 100);
+          }
+          
+          if (webview) {
+            updateWebviewAccess(webviewId);
+            webview.style.display = 'flex';
+            webview.style.opacity = '1';
+            webview.classList.add('active');
+            currentWebview = webview;
+          } else {
+            console.error(`Não foi possível criar ou obter webview para ${webviewId}`);
+            // Tentar criar novamente com um pequeno delay
+            setTimeout(async () => {
+              try {
+                const newWebview = createWebview(webviewId, url);
+                if (newWebview) {
+                  updateWebviewAccess(webviewId);
+                  newWebview.style.display = 'flex';
+                  newWebview.style.opacity = '1';
+                  newWebview.classList.add('active');
+                  currentWebview = newWebview;
+                }
+              } catch (err) {
+                console.error(`Erro ao tentar recriar webview:`, err);
+              }
+            }, 100);
+          }
+        } catch (err) {
+          console.error(`Erro ao manipular webview normal:`, err);
         }
       }
 
@@ -966,37 +1020,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } catch (error) {
       console.error('Erro ao mostrar webview:', error);
-      // Tentar recriar a webview em caso de erro
-      try {
-        if (webviewId && buttonId) {
-          const url = serviceMap[webviewId];
-          if (url) {
-            const isSpecialApp = specialApps.some(app => url && url.includes(specialAppsMap[app]));
-            const appName = isSpecialApp ? specialApps.find(app => url && url.includes(specialAppsMap[app])) : null;
-            
-            if (isSpecialApp && appName) {
-              const windowInstance = await createAppWindow(webviewId, url, appName);
-              if (windowInstance && windowInstance.container) {
-                windowInstance.container.style.display = 'flex';
-                windowInstance.container.style.opacity = '1';
-                windowInstance.container.classList.add('active');
-                currentWebview = windowInstance;
-              }
-            } else {
-              const webview = createWebview(webviewId, url);
-              if (webview) {
-                updateWebviewAccess(webviewId);
-                webview.style.display = 'flex';
-                webview.style.opacity = '1';
-                webview.classList.add('active');
-                currentWebview = webview;
-              }
-            }
-          }
-        }
-      } catch (retryError) {
-        console.error('Erro ao tentar recriar webview:', retryError);
-      }
     }
   };
 
@@ -1240,7 +1263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Verificar se é um aplicativo especial
-    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram'];
+    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat'];
     const isSpecialApp = specialApps.some(app => currentViewId.includes(app));
     
     if (isSpecialApp) {
@@ -1269,6 +1292,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           break;
         case 'instagram':
           windowInstance = instagramWindowInstance;
+          break;
+        case 'google-chat':
+          windowInstance = googleChatWindowInstance;
           break;
       }
 
@@ -1348,7 +1374,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Verificar se é um botão de aplicativo especial
-        const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram'];
+        const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat'];
         const isSpecialApp = specialApps.some(app => webviewId.includes(app));
         
         if (isSpecialApp) {
@@ -1377,6 +1403,9 @@ document.addEventListener('DOMContentLoaded', async () => {
               break;
             case 'instagram':
               windowInstance = instagramWindowInstance;
+              break;
+            case 'google-chat':
+              windowInstance = googleChatWindowInstance;
               break;
           }
           
@@ -1430,7 +1459,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Adicionar evento de contexto para containers de aplicativos especiais
     document.addEventListener('contextmenu', (e) => {
-      const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram'];
+      const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat'];
       const container = specialApps.map(app => e.target.closest(`.${app}-window-container`)).find(c => c);
       
       if (container) {
@@ -1474,6 +1503,9 @@ document.addEventListener('DOMContentLoaded', async () => {
               break;
             case 'instagram':
               windowInstance = instagramWindowInstance;
+              break;
+            case 'google-chat':
+              windowInstance = googleChatWindowInstance;
               break;
           }
           
@@ -1521,9 +1553,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('Received command from main process:', command, 'for view:', currentViewId);
 
     // Verificar se é um aplicativo especial
-    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram'];
-    const isSpecialApp = specialApps.some(app => currentViewId.includes(app));
-    const appName = isSpecialApp ? specialApps.find(app => currentViewId.includes(app)) : null;
+    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat'];
+    const isSpecialApp = specialApps.some(app => {
+      // Tratamento especial para o Google Chat
+      if (app === 'google-chat' && currentViewId === 'webview-google') {
+        return true;
+      }
+      return currentViewId.includes(app);
+    });
+    const appName = isSpecialApp ? (currentViewId === 'webview-google' ? 'google-chat' : specialApps.find(app => currentViewId.includes(app))) : null;
     
     console.log('Menu context:', { 
       isSpecialApp, 
@@ -1535,7 +1573,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       linkedInInstance: linkedInWindowInstance,
       twitterInstance: twitterWindowInstance,
       whatsappInstance: whatsappWindowInstance,
-      instagramInstance: instagramWindowInstance
+      instagramInstance: instagramWindowInstance,
+      googleChatInstance: googleChatWindowInstance
     });
 
     switch (command) {
@@ -1565,16 +1604,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             case 'instagram':
               windowInstance = instagramWindowInstance;
               break;
+            case 'google-chat':
+              windowInstance = googleChatWindowInstance;
+              break;
           }
 
-          if (windowInstance && windowInstance.id) {
-            console.log(`Recarregando janela do ${appName}...`, windowInstance.id);
+          if (windowInstance && windowInstance.container) {
             try {
-              if (windowInstance.container) {
-                windowInstance.container.style.opacity = '0';
+              console.log(`Recarregando janela do ${appName}...`);
+              windowInstance.container.style.opacity = '0.5';
+              
+              // Tentar recarregar a janela via IPC
+              if (windowInstance.id) {
+                await window.electronAPI.invoke(`reload-${appName}-window`, windowInstance.id);
+                console.log(`Comando de recarregar ${appName} enviado com sucesso`);
               }
-              await window.electronAPI.invoke(`reload-${appName}-window`, windowInstance.id);
-              console.log(`Comando de recarregar ${appName} enviado`);
+
+              // Restaurar opacidade após um pequeno delay
               setTimeout(() => {
                 if (windowInstance && windowInstance.container) {
                   windowInstance.container.style.opacity = '1';
@@ -1624,6 +1670,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             case 'instagram':
               windowInstance = instagramWindowInstance;
               break;
+            case 'google-chat':
+              windowInstance = googleChatWindowInstance;
+              break;
           }
 
           // Verificar se temos uma instância válida
@@ -1632,12 +1681,16 @@ document.addEventListener('DOMContentLoaded', async () => {
               instanceId: windowInstance.id,
               hasContainer: !!windowInstance.container,
               containerClasses: windowInstance.container?.className,
-              containerDisplay: windowInstance.container?.style.display
+              containerDisplay: windowInstance.container?.style.display,
+              containerId: windowInstance.container?.id,
+              appName: appName,
+              currentViewId: currentViewId
             });
 
             try {
               // Primeiro, esconder o container visualmente
               if (windowInstance.container) {
+                console.log(`Escondendo container do ${appName}...`);
                 windowInstance.container.style.opacity = '0';
                 windowInstance.container.style.display = 'none';
                 windowInstance.container.classList.remove('active');
@@ -1645,8 +1698,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
               // Tentar fechar a janela via IPC
               if (windowInstance.id) {
+                console.log(`Enviando comando close-${appName}-window para janela ${windowInstance.id}`);
                 await window.electronAPI.invoke(`close-${appName}-window`, windowInstance.id);
                 console.log(`Comando de fechar ${appName} enviado com sucesso`);
+              } else {
+                console.error(`ID da janela do ${appName} não encontrado`);
               }
 
               // Limpar a instância global após um pequeno delay
@@ -1678,6 +1734,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     break;
                   case 'instagram':
                     instagramWindowInstance = null;
+                    break;
+                  case 'google-chat':
+                    googleChatWindowInstance = null;
                     break;
                 }
 
@@ -1724,6 +1783,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                   break;
                 case 'instagram':
                   instagramWindowInstance = null;
+                  break;
+                case 'google-chat':
+                  googleChatWindowInstance = null;
                   break;
               }
 
@@ -1774,6 +1836,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 break;
               case 'instagram':
                 instagramWindowInstance = null;
+                break;
+              case 'google-chat':
+                googleChatWindowInstance = null;
                 break;
             }
 
