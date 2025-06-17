@@ -16,12 +16,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   let whatsappWindowInstance = null;
   let instagramWindowInstance = null;
   let telegramWindowInstance = null;
-  let facebookMessengerWindowInstance = null;
   let discordWindowInstance = null;
   let googleChatWindowInstance = null;
   let wechatWindowInstance = null;
   let snapchatWindowInstance = null;
   let threadsWindowInstance = null;
+  let facebookWindowInstance = null;
 
   const services = {
     'home-button': 'webview-home',
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'webview-whatsapp': 'https://web.whatsapp.com',
     'webview-instagram': 'https://www.instagram.com',
     'webview-telegram': 'https://web.telegram.org/',
-    'webview-facebook-messenger': 'https://www.messenger.com/',
+    'webview-facebook': 'https://www.messenger.com/',
     'webview-discord': 'https://discord.com/app',
     'webview-google-chat': 'https://chat.google.com/',
     'webview-wechat': 'https://web.wechat.com/',
@@ -56,12 +56,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     'whatsapp': 'web.whatsapp.com',
     'instagram': 'www.instagram.com',
     'telegram': 'web.telegram.org',
-    'facebook-messenger': 'www.messenger.com',
+    'facebook': 'www.messenger.com',
     'discord': 'discord.com',
     'google-chat': 'chat.google.com',
     'wechat': 'web.wechat.com',
     'snapchat': 'web.snapchat.com',
-    'threads': 'www.threads.net'
+    'threads': 'www.threads.net',
   };
   const specialApps = Object.keys(specialAppsMap);
 
@@ -164,9 +164,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           case 'telegram':
             windowInstance = telegramWindowInstance;
             break;
-          case 'facebook-messenger':
-            windowInstance = facebookMessengerWindowInstance;
-            break;
           case 'discord':
             windowInstance = discordWindowInstance;
             break;
@@ -181,6 +178,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             break;
           case 'threads':
             windowInstance = threadsWindowInstance;
+            break;
+          case 'facebook':
+            windowInstance = facebookWindowInstance;
             break;
         }
 
@@ -475,8 +475,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                   case 'telegram':
                     telegramWindowInstance = null;
                     break;
-                  case 'facebook-messenger':
-                    facebookMessengerWindowInstance = null;
+                  case 'facebook':
+                    facebookWindowInstance = null;
                     break;
                   case 'discord':
                     discordWindowInstance = null;
@@ -529,8 +529,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             case 'telegram':
               telegramWindowInstance = windowInstance;
               break;
-            case 'facebook-messenger':
-              facebookMessengerWindowInstance = windowInstance;
+            case 'facebook':
+              facebookWindowInstance = windowInstance;
               break;
             case 'discord':
               discordWindowInstance = windowInstance;
@@ -592,7 +592,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // Verificar se é uma janela especial
-      const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook-messenger', 'telegram', 'discord'];
+      const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook', 'telegram', 'discord'];
       const isSpecialApp = specialApps.some(app => url && url.includes(`${app}.com`));
       const appName = isSpecialApp ? specialApps.find(app => url.includes(`${app}.com`)) : null;
       
@@ -642,7 +642,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // Para outras webviews, esconder todas as janelas especiais
-      const specialInstances = [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance];
+      const specialInstances = [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance];
       
       specialInstances.forEach(instance => {
         if (instance && instance.container) {
@@ -656,7 +656,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             if (appName) {
               // Lista de aplicações que têm handlers IPC registrados
-              const appsWithHandlers = ['slack', 'linkedin', 'teams', 'skype', 'twitter', 'whatsapp', 'instagram', 'telegram', 'facebook-messenger', 'discord', 'wechat', 'snapchat', 'threads', 'google-chat'];
+              const appsWithHandlers = ['slack', 'linkedin', 'teams', 'skype', 'twitter', 'whatsapp', 'instagram', 'telegram', 'facebook', 'discord', 'wechat', 'snapchat', 'threads', 'google-chat'];
               
               // Só tentar chamar o IPC se a aplicação tiver um handler registrado
               if (appsWithHandlers.includes(appName.toLowerCase())) {
@@ -766,7 +766,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
       
       // Primeiro, esconder todas as webviews e janelas especiais EXCETO a atual
-      const allWebviews = document.querySelectorAll('.webview, .linkedin-window-container, .teams-window-container, .slack-window-container, .skype-window-container, .twitter-window-container, .whatsapp-window-container, .instagram-window-container, .telegram-window-container, .facebook-messenger-window-container, .discord-window-container, .google-chat-window-container, .wechat-window-container, .snapchat-window-container, .threads-window-container');
+      const allWebviews = document.querySelectorAll('.webview, .linkedin-window-container, .teams-window-container, .slack-window-container, .skype-window-container, .twitter-window-container, .whatsapp-window-container, .instagram-window-container, .telegram-window-container, .facebook-window-container, .discord-window-container, .google-chat-window-container, .wechat-window-container, .snapchat-window-container, .threads-window-container');
       
       allWebviews.forEach(w => {
         if (w && w.style && w.id !== webviewId && !w.id.includes(webviewId.replace('webview-', ''))) {
@@ -832,8 +832,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           case 'telegram':
             windowInstance = telegramWindowInstance;
             break;
-          case 'facebook-messenger':
-            windowInstance = facebookMessengerWindowInstance;
+          case 'facebook':
+            windowInstance = facebookWindowInstance;
             break;
           case 'discord':
             windowInstance = discordWindowInstance;
@@ -974,7 +974,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       } else {
         // Para outras webviews, esconder todas as janelas especiais
-        const specialInstances = [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance];
+        const specialInstances = [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, instagramWindowInstance, telegramWindowInstance, facebookWindowInstance, discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, snapchatWindowInstance, threadsWindowInstance];
         
         specialInstances.forEach(instance => {
           if (instance && instance.container) {
@@ -988,7 +988,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               
               if (appName) {
                 // Lista de aplicações que têm handlers IPC registrados
-                const appsWithHandlers = ['slack', 'linkedin', 'teams', 'skype', 'twitter', 'whatsapp', 'instagram', 'telegram', 'facebook-messenger', 'discord', 'wechat', 'snapchat', 'threads', 'google-chat'];
+                const appsWithHandlers = ['slack', 'linkedin', 'teams', 'skype', 'twitter', 'whatsapp', 'instagram', 'telegram', 'facebook', 'discord', 'wechat', 'snapchat', 'threads', 'google-chat'];
                 
                 // Só tentar chamar o IPC se a aplicação tiver um handler registrado
                 if (appsWithHandlers.includes(appName.toLowerCase())) {
@@ -1387,13 +1387,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Verificar se é um aplicativo especial
-    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook-messenger', 'telegram', 'discord'];
+    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook', 'telegram', 'discord'];
     const isSpecialApp = specialApps.some(app => {
       // Tratamento especial para o Google Chat e Facebook Messenger
       if (app === 'google-chat' && currentViewId === 'webview-google') {
         return true;
       }
-      if (app === 'facebook-messenger' && currentViewId === 'webview-facebook') {
+      if (app === 'facebook' && currentViewId === 'webview-facebook') {
         return true;
       }
       return currentViewId.includes(app);
@@ -1404,7 +1404,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (app === 'google-chat' && currentViewId === 'webview-google') {
           return true;
         }
-        if (app === 'facebook-messenger' && currentViewId === 'webview-facebook') {
+        if (app === 'facebook' && currentViewId === 'webview-facebook') {
           return true;
         }
         return currentViewId.includes(app);
@@ -1416,8 +1416,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         case 'google-chat':
           windowInstance = googleChatWindowInstance;
           break;
-        case 'facebook-messenger':
-          windowInstance = facebookMessengerWindowInstance;
+        case 'facebook':
+          windowInstance = facebookWindowInstance;
           break;
         case 'teams':
           windowInstance = teamsWindowInstance;
@@ -1645,7 +1645,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       whatsappWindowInstance,
       instagramWindowInstance,
       telegramWindowInstance,
-      facebookMessengerWindowInstance,
+      facebookWindowInstance,
       discordWindowInstance,
       googleChatWindowInstance,
       wechatWindowInstance,
@@ -1654,21 +1654,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     ];
 
     // Verificar se é um aplicativo especial (necessário para close-current)
-    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook-messenger', 'telegram', 'discord'];
+    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook', 'telegram', 'discord'];
     const isSpecialApp = specialApps.some(app => {
       // Tratamento especial para o Google Chat e Facebook Messenger
       if (app === 'google-chat' && currentViewId === 'webview-google') {
 
         return true;
       }
-      if (app === 'facebook-messenger' && currentViewId === 'webview-facebook') {
+      if (app === 'facebook' && currentViewId === 'webview-facebook') {
         return true;
       }
       return currentViewId.includes(app);
     });
     const appName = isSpecialApp ? 
       (currentViewId === 'webview-google' ? 'google-chat' : 
-       currentViewId === 'webview-facebook' ? 'facebook-messenger' : 
+       currentViewId === 'webview-facebook' ? 'facebook' : 
        specialApps.find(app => currentViewId.includes(app))) : null;
     switch (command) {
       case 'reload-current':
@@ -1678,8 +1678,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             case 'google-chat':
               windowInstance = googleChatWindowInstance;
               break;
-            case 'facebook-messenger':
-              windowInstance = facebookMessengerWindowInstance;
+            case 'facebook':
+              windowInstance = facebookWindowInstance;
               break;
             case 'teams':
               windowInstance = teamsWindowInstance;
@@ -1796,8 +1796,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 case 'telegram':
                   telegramWindowInstance = null;
                   break;
-                case 'facebook-messenger':
-                  facebookMessengerWindowInstance = null;
+                case 'facebook':
+                  facebookWindowInstance = null;
                   break;
                 case 'discord':
                   discordWindowInstance = null;
@@ -1854,8 +1854,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             case 'google-chat':
               windowInstance = googleChatWindowInstance;
               break;
-            case 'facebook-messenger':
-              windowInstance = facebookMessengerWindowInstance;
+            case 'facebook':
+              windowInstance = facebookWindowInstance;
               break;
             case 'teams':
               windowInstance = teamsWindowInstance;
@@ -1916,8 +1916,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                   case 'google-chat':
                     googleChatWindowInstance = null;
                     break;
-                  case 'facebook-messenger':
-                    facebookMessengerWindowInstance = null;
+                  case 'facebook':
+                    facebookWindowInstance = null;
                     break;
                   case 'teams':
                     teamsWindowInstance = null;
@@ -1967,8 +1967,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 case 'google-chat':
                   googleChatWindowInstance = null;
                   break;
-                case 'facebook-messenger':
-                  facebookMessengerWindowInstance = null;
+                case 'facebook':
+                  facebookWindowInstance = null;
                   break;
                 case 'teams':
                   teamsWindowInstance = null;
@@ -2091,7 +2091,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Limpar instâncias de janelas especiais não utilizadas
       [linkedInWindowInstance, teamsWindowInstance, slackWindowInstance, 
        skypeWindowInstance, twitterWindowInstance, whatsappWindowInstance, 
-       instagramWindowInstance, telegramWindowInstance, facebookMessengerWindowInstance, 
+       instagramWindowInstance, telegramWindowInstance, facebookWindowInstance, 
        discordWindowInstance, googleChatWindowInstance, wechatWindowInstance, 
        snapchatWindowInstance, threadsWindowInstance].forEach(instance => {
         if (instance && instance.container && !instance.container.classList.contains('active')) {

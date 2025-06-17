@@ -249,7 +249,7 @@ class AppWindowManager {
       'whatsapp', 
       'instagram', 
       'telegram', 
-      'facebook-messenger',
+      'facebook',
       'discord', 
       'google-chat', 
       'wechat', 
@@ -259,12 +259,7 @@ class AppWindowManager {
 
     // Registrar handlers para cada aplicativo
     apps.forEach(appName => {
-      let normalizedAppName = appName.toLowerCase().replace(/-/g, '-');
-      
-      // Tratamento especial para o Facebook Messenger
-      if (normalizedAppName === 'facebook' || normalizedAppName === 'facebookmessenger' || normalizedAppName === 'facebook-messenger') {
-        normalizedAppName = 'facebook-messenger';
-      }
+      let normalizedAppName = appName.toLowerCase();
       
       // Criar janela
       ipcMain.handle(`create-${normalizedAppName}-window`, async (event, windowData, wrapperBounds) => {
