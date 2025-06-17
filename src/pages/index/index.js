@@ -582,7 +582,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // Verificar se é uma janela especial
-      const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'telegram'];
+      const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook-messenger', 'telegram', 'discord'];
       const isSpecialApp = specialApps.some(app => url && url.includes(`${app}.com`));
       const appName = isSpecialApp ? specialApps.find(app => url.includes(`${app}.com`)) : null;
       
@@ -1263,7 +1263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Verificar se é um aplicativo especial
-    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook-messenger', 'telegram'];
+    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook-messenger', 'telegram', 'discord'];
     const isSpecialApp = specialApps.some(app => {
       // Tratamento especial para o Google Chat e Facebook Messenger
       if (app === 'google-chat' && currentViewId === 'webview-google') {
@@ -1614,7 +1614,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     ];
 
     // Verificar se é um aplicativo especial (necessário para close-current)
-    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook-messenger', 'telegram'];
+    const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook-messenger', 'telegram', 'discord'];
     const isSpecialApp = specialApps.some(app => {
       // Tratamento especial para o Google Chat e Facebook Messenger
       if (app === 'google-chat' && currentViewId === 'webview-google') {
@@ -1688,6 +1688,9 @@ document.addEventListener('DOMContentLoaded', async () => {
               break;
             case 'telegram':
               windowInstance = telegramWindowInstance;
+              break;
+            case 'discord':
+              windowInstance = discordWindowInstance;
               break;
           }
 
@@ -1981,6 +1984,9 @@ document.addEventListener('DOMContentLoaded', async () => {
               break;
             case 'telegram':
               windowInstance = telegramWindowInstance;
+              break;
+            case 'discord':
+              windowInstance = discordWindowInstance;
               break;
           }
 
