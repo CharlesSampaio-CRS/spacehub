@@ -45,8 +45,6 @@ class LinkedInWindowManager {
 
         // Configurar eventos da janela
         window.on('ready-to-show', () => {
-          console.log('Janela do LinkedIn pronta para mostrar');
-          // Posicionar a janela dentro da área de conteúdo com base no wrapperBounds
           window.setBounds({
             x: parentWindow.getPosition()[0] + x,
             y: parentWindow.getPosition()[1] + y,
@@ -54,10 +52,6 @@ class LinkedInWindowManager {
             height: height
           });
           
-          console.log('Janela do LinkedIn ajustada em ready-to-show: x=', x, 'y=', y, 'width=', width, 'height=', height);
-          console.log('Bounds atuais da janela do LinkedIn (getBounds): ', window.getBounds());
-          console.log('Content Bounds atuais da janela do LinkedIn (getContentBounds): ', window.getContentBounds());
-
           // Garantir que a janela esteja visível
           window.show();
           window.focus();
@@ -66,29 +60,18 @@ class LinkedInWindowManager {
         });
 
         window.on('closed', () => {
-          console.log('Janela do LinkedIn fechada:', window.id);
           this.windows.delete(window.id);
           event.sender.send('linkedin-window-closed', { windowId: window.id });
         });
 
-        window.on('show', () => {
-          console.log('Janela do LinkedIn mostrada:', window.id);
-        });
-
-        window.on('hide', () => {
-          console.log('Janela do LinkedIn escondida:', window.id);
-        });
-
         // Manter a janela filha sempre visível quando a janela principal estiver visível
         parentWindow.on('show', () => {
-          console.log('Janela principal mostrada, mostrando janela do LinkedIn');
           if (window && !window.isDestroyed()) {
             window.show();
           }
         });
 
         parentWindow.on('hide', () => {
-          console.log('Janela principal escondida, escondendo janela do LinkedIn');
           if (window && !window.isDestroyed()) {
             window.hide();
           }
@@ -105,7 +88,6 @@ class LinkedInWindowManager {
             // Nota: Para um ajuste preciso, o renderer precisaria enviar o novo wrapperBounds
             // aqui, ou este lado precisaria calcular baseado em uma geometria conhecida do HTML
             // Por enquanto, apenas logamos o que está acontecendo.
-            console.log('Bounds da janela do LinkedIn antes do resize:', window.getBounds());
 
             // Vamos tentar buscar as bounds atualizadas do wrapper do renderer
             event.sender.send('request-wrapper-bounds');
@@ -115,19 +97,13 @@ class LinkedInWindowManager {
         // Ajustar a posição da janela filha quando a janela principal for movida
         parentWindow.on('move', () => {
           const newParentBounds = parentWindow.getBounds();
-          // Similar ao resize, para depuração
-          console.log('Move da janela principal. Tentando ajustar LinkedIn.');
           if (window && !window.isDestroyed()) {
-            console.log('Bounds da janela do LinkedIn antes do move:', window.getBounds());
-
-            // Vamos tentar buscar as bounds atualizadas do wrapper do renderer
             event.sender.send('request-wrapper-bounds');
           }
         });
 
         // Armazenar referência da janela
         this.windows.set(window.id, window);
-        console.log('Janela do LinkedIn armazenada:', window.id);
 
         return { id: window.id };
       } catch (error) {
@@ -138,7 +114,6 @@ class LinkedInWindowManager {
 
     // Novo handler para receber as bounds atualizadas do wrapper do renderer
     ipcMain.handle('update-linkedin-window-bounds', async (event, windowId, newWrapperBounds) => {
-      console.log('Recebido update-linkedin-window-bounds para janela:', windowId, newWrapperBounds);
       const window = this.windows.get(windowId);
       if (window && !window.isDestroyed() && newWrapperBounds) {
         const parentWindow = BrowserWindow.fromWebContents(event.sender);
@@ -155,7 +130,6 @@ class LinkedInWindowManager {
     });
 
     ipcMain.handle('show-linkedin-window', async (event, windowId, wrapperBounds) => {
-      console.log('Mostrando janela do LinkedIn:', windowId, wrapperBounds);
       const window = this.windows.get(windowId);
       if (window) {
         try {
@@ -169,10 +143,6 @@ class LinkedInWindowManager {
               width: wrapperBounds.width,
               height: wrapperBounds.height
             });
-
-            console.log('Janela do LinkedIn ajustada em show-linkedin-window: x=', wrapperBounds.x, 'y=', wrapperBounds.y, 'width=', wrapperBounds.width, 'height=', wrapperBounds.height);
-            console.log('Bounds atuais da janela do LinkedIn (getBounds): ', window.getBounds());
-            console.log('Content Bounds atuais da janela do LinkedIn (getContentBounds): ', window.getContentBounds());
 
             // Garantir que a janela esteja visível
             if (!window.isVisible()) {
@@ -219,7 +189,6 @@ class LinkedInWindowManager {
     });
 
     ipcMain.handle('close-linkedin-window', async (event, windowId) => {
-      console.log('Fechando janela do LinkedIn:', windowId);
       const window = this.windows.get(windowId);
       if (window) {
         window.close();
@@ -229,7 +198,6 @@ class LinkedInWindowManager {
     });
 
     ipcMain.handle('reload-linkedin-window', async (event, windowId) => {
-      console.log('Recarregando janela do LinkedIn:', windowId);
       const window = this.windows.get(windowId);
       if (window) {
         await window.reload();
@@ -240,7 +208,6 @@ class LinkedInWindowManager {
 
     // Manipular navegação
     ipcMain.on('linkedin-navigation', (event, { windowId, url }) => {
-      console.log('Navegando na janela do LinkedIn:', windowId, url);
       const window = this.windows.get(windowId);
       if (window) {
         window.loadURL(url);
@@ -251,7 +218,6 @@ class LinkedInWindowManager {
 
     // Manipular autenticação
     ipcMain.on('linkedin-auth-success', (event, { windowId, data }) => {
-      console.log('Autenticação do LinkedIn bem-sucedida:', windowId);
       const window = this.windows.get(windowId);
       if (window) {
         event.sender.send('linkedin-auth-complete', { windowId, data });
@@ -263,7 +229,6 @@ class LinkedInWindowManager {
   }
 
   cleanup() {
-    console.log('Limpando todas as janelas do LinkedIn');
     this.windows.forEach(window => {
       if (!window.isDestroyed()) {
         window.close();
