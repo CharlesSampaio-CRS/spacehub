@@ -1384,6 +1384,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const t = translations[currentLanguage] || translations['en-US'];
 
+    // Verificar se é uma janela do Google
+    if (currentViewId === 'webview-google') {
+      return [
+        {
+          command: 'reload-current',
+          label: t['Atualizar'],
+          icon_svg: '<path d="M23 4v6h-6M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke-linecap="round" stroke-linejoin="round"/>'
+        },
+        {
+          type: 'separator'
+        },
+        {
+          command: 'close-google-window',
+          label: t['Fechar'],
+          icon_svg: '<path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>'
+        }
+      ];
+    }
+
     if (currentViewId === 'webview-home') {
       return [
         {
@@ -2223,6 +2242,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const profileMenu = document.getElementById('profile-menu');
     const profileSettings = document.getElementById('profile-settings');
     const profileLogout = document.getElementById('profile-logout');
+    const profileName = document.getElementById('profile-name');
+    const profileMenuName = document.getElementById('profile-menu-name');
+    const profileMenuEmail = document.getElementById('profile-menu-email');
+    const profileAvatar = document.getElementById('profile-avatar');
+    const profileMenuAvatar = document.getElementById('profile-menu-avatar');
+
+    // Verificar se os elementos necessários existem
+    if (!profileButton || !profileMenu || !profileSettings || !profileLogout) {
+      console.warn('Elementos do menu de perfil não encontrados');
+      return;
+    }
 
     try {
       // Buscar informações do usuário da API
@@ -2244,15 +2274,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Pegar apenas o primeiro nome
           const firstName = userData.name ? userData.name.split(' ')[0] : 'Usuário';
           
-          // Atualizar informações no menu
-          document.getElementById('profile-name').textContent = firstName;
-          document.getElementById('profile-menu-name').textContent = userData.name || 'Usuário';
-          document.getElementById('profile-menu-email').textContent = userData.email || 'usuario@email.com';
+          // Atualizar informações no menu apenas se os elementos existirem
+          if (profileName) profileName.textContent = firstName;
+          if (profileMenuName) profileMenuName.textContent = userData.name || 'Usuário';
+          if (profileMenuEmail) profileMenuEmail.textContent = userData.email || 'usuario@email.com';
           
-          // Atualizar avatares se houver
+          // Atualizar avatares se houver e se os elementos existirem
           if (userData.avatar) {
-            document.getElementById('profile-avatar').src = userData.avatar;
-            document.getElementById('profile-menu-avatar').src = userData.avatar;
+            if (profileAvatar) profileAvatar.src = userData.avatar;
+            if (profileMenuAvatar) profileMenuAvatar.src = userData.avatar;
           }
 
           // Salvar dados do usuário no localStorage
@@ -2264,7 +2294,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Toggle do menu
-    profileButton?.addEventListener('click', (e) => {
+    profileButton.addEventListener('click', (e) => {
       e.stopPropagation();
       profileMenu.classList.toggle('show');
     });
@@ -2277,12 +2307,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Configurar ações dos botões
-    profileSettings?.addEventListener('click', () => {
+    profileSettings.addEventListener('click', () => {
       showWebview('webview-settings', 'settings-button');
       profileMenu.classList.remove('show');
     });
 
-    profileLogout?.addEventListener('click', async () => {
+    profileLogout.addEventListener('click', async () => {
       profileMenu.classList.remove('show');
       const currentLanguage = await window.electronAPI.getLanguage();
       showConfirmationDialog(translations[currentLanguage]['logout_confirmation'], async () => {
@@ -2380,4 +2410,56 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   init();
+
+  // Adicionar listener para fechar janela do Google
+  window.electronAPI.on('close-google-window', async (targetId) => {
+    try {
+      const webview = document.querySelector(`webview[id="${targetId}"]`);
+      if (webview) {
+        // Remover o webview do DOM
+        webview.remove();
+        
+        // Atualizar o estado do botão
+        const button = document.querySelector(`.nav-button[data-id="${targetId}"]`);
+        if (button) {
+          button.classList.remove('active', 'opened');
+        }
+        
+        // Limpar qualquer estado relacionado
+        if (googleChatWindowInstance) {
+          googleChatWindowInstance.cleanup();
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao fechar janela do Google:', error);
+    }
+  });
+
+  // ... existing code ...
+  window.electronAPI.on('close-all-webviews', async () => {
+    try {
+      const webviews = document.querySelectorAll('webview');
+      for (const webview of webviews) {
+        const webviewId = webview.getAttribute('id');
+        if (webviewId) {
+          // Remover o webview do DOM
+          webview.remove();
+          
+          // Atualizar o estado do botão
+          const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
+          if (button) {
+            button.classList.remove('active', 'opened');
+          }
+          
+          // Limpar qualquer estado relacionado
+          if (googleChatWindowInstance && webviewId.includes('google')) {
+            googleChatWindowInstance.cleanup();
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao fechar todas as janelas:', error);
+    }
+  });
+  // ... existing code ...
 });

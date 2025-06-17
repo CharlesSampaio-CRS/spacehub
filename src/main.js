@@ -51,6 +51,13 @@ ipcMain.handle('context-menu-command', async (event, command, targetId) => {
     case 'close-current-webview':
       event.sender.send('close-current-webview', targetId);
       break;
+    case 'close-google-window':
+      try {
+        await ipcMain.invoke('close-google-window', targetId);
+      } catch (error) {
+        console.error('Erro ao fechar janela do Google:', error);
+      }
+      break;
   }
 });
 
@@ -899,5 +906,20 @@ ipcMain.on('context-menu-action', (event, command, currentViewId) => {
   }
   if (contextMenuWindow && !contextMenuWindow.isDestroyed()) {
     contextMenuWindow.close(); // Fechar a janela do menu após a ação
+  }
+});
+
+// Adicionar handler para fechar janela do Google
+ipcMain.handle('close-google-window', async (event, targetId) => {
+  try {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      // Enviar comando para o renderer process fechar a janela do Google
+      mainWindow.webContents.send('close-google-window', targetId);
+      return { success: true };
+    }
+    return { success: false, error: 'Main window not found' };
+  } catch (error) {
+    console.error('Erro ao fechar janela do Google:', error);
+    return { success: false, error: error.message };
   }
 });
