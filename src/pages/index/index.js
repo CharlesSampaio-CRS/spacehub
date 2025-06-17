@@ -190,8 +190,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Garantir que o container esteja posicionado corretamente
           const header = document.getElementById('header');
           const sidebar = document.getElementById('sidebar');
-          const headerHeight = header ? header.offsetHeight : 60;
-          const sidebarWidth = sidebar ? sidebar.offsetWidth : 80;
+          // Utilizar valores fixos para altura do cabeçalho e largura da sidebar
+          const headerHeight = 40; // Altura base do cabeçalho
+          const sidebarWidth = 64; // Largura base da sidebar
           const headerMargin = 4;
           const bottomMargin = 4;
 
@@ -264,10 +265,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // Obter as dimensões reais do header e sidebar
-        const header = document.getElementById('header');
-        const sidebar = document.getElementById('sidebar');
-        const headerHeight = header ? header.offsetHeight : 60;
-        const sidebarWidth = sidebar ? sidebar.offsetWidth : 80;
+        // Utilizar valores fixos para altura do cabeçalho e largura da sidebar
+        const headerHeight = 40; // Altura base do cabeçalho
+        const sidebarWidth = 64; // Largura base da sidebar
         const headerMargin = 4;
         const bottomMargin = 4;
 
@@ -395,8 +395,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Adicionar listener para redimensionamento da janela
             const resizeHandler = () => {
-              const newHeaderHeight = header ? header.offsetHeight : 60;
-              const newSidebarWidth = sidebar ? sidebar.offsetWidth : 80;
+              const newHeaderHeight = 40; // Altura base do cabeçalho
+              const newSidebarWidth = 64; // Largura base da sidebar
               
               container.style.top = `${newHeaderHeight + headerMargin}px`;
               container.style.left = `${newSidebarWidth}px`;
@@ -742,10 +742,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       
       // Obter as dimensões reais do header e sidebar
-      const header = document.getElementById('header');
-      const sidebar = document.getElementById('sidebar');
-      const headerHeight = header ? header.offsetHeight : 60;
-      const sidebarWidth = sidebar ? sidebar.offsetWidth : 80;
+      // Utilizar valores fixos para altura do cabeçalho e largura da sidebar
+      const headerHeight = 40; // Altura base do cabeçalho
+      const sidebarWidth = 64; // Largura base da sidebar
       const headerMargin = 4;
       const bottomMargin = 4;
       
