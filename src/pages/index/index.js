@@ -135,8 +135,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Função genérica para criar janelas de aplicativos
   const createAppWindow = async (webviewId, url, appName) => {
     try {
-      console.log(`Iniciando criação da janela do ${appName}...`, { webviewId, url });
-      
+     
       // Verificar qual instância usar baseado no appName
       let windowInstance = null;
       switch(appName.toLowerCase()) {
@@ -186,12 +185,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Verificar se já existe uma instância ativa
       if (windowInstance && windowInstance.container) {
-        console.log(`Janela do ${appName} já existe, reutilizando...`, {
-          instanceId: windowInstance.id,
-          hasContainer: !!windowInstance.container,
-          containerClasses: windowInstance.container.className,
-          containerDisplay: windowInstance.container.style.display
-        });
         
         // Garantir que o container esteja posicionado corretamente
         const header = document.getElementById('header');
@@ -203,7 +196,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Configurações específicas para Slack e LinkedIn
         if (appName.toLowerCase() === 'slack' || appName.toLowerCase() === 'linkedin') {
-          console.log(`Configurando container para ${appName}...`);
           windowInstance.container.style.cssText = `
             position: fixed;
             top: ${headerHeight + headerMargin}px;
@@ -266,7 +258,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Remover qualquer container existente antes de criar um novo
       document.querySelectorAll(`.${appName.toLowerCase()}-window-container`).forEach(container => {
         if (container !== windowInstance?.container) {
-          console.log(`Removendo container antigo do ${appName}...`);
           container.remove();
         }
       });
@@ -305,7 +296,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Configurações específicas para Slack e LinkedIn
       if (appName.toLowerCase() === 'slack' || appName.toLowerCase() === 'linkedin') {
-        console.log(`Configurando opções específicas para ${appName}...`);
         windowData.options.webPreferences.backgroundThrottling = false;
         windowData.options.webPreferences.webSecurity = true;
         windowData.options.webPreferences.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
@@ -327,7 +317,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         windowData.url = url;
       }
 
-      console.log(`Solicitando criação da janela do ${appName}...`, windowData);
       const appWindow = await window.electronAPI.invoke(`create-${appName.toLowerCase()}-window`, windowData, {
         x: sidebarWidth,
         y: headerHeight + headerMargin,
@@ -336,7 +325,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       
       if (appWindow) {
-        console.log(`Janela do ${appName} criada com sucesso:`, appWindow.id);
         
         // Criar um container para a janela
         const container = document.createElement('div');
@@ -387,7 +375,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Adicionar ao DOM dentro do webview-container
         const webviewContainer = document.querySelector('.webview-container');
         if (webviewContainer) {
-          console.log(`Adicionando container do ${appName} ao DOM...`);
           webviewContainer.appendChild(container);
           
           // Garantir que o container esteja visível
@@ -445,7 +432,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           },
           remove: () => {
-            console.log(`Removendo janela do ${appName} (instância):`, appWindow.id);
             container.style.opacity = '0';
             setTimeout(() => {
               window.electronAPI.invoke(`close-${appName.toLowerCase()}-window`, appWindow.id).catch(error => {
@@ -499,7 +485,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }, 200);
           },
           reload: () => {
-            console.log(`Recarregando janela do ${appName} (instância):`, appWindow.id);
             window.electronAPI.invoke(`reload-${appName.toLowerCase()}-window`, appWindow.id).catch(error => {
               console.error(`Erro ao recarregar janela do ${appName}:`, error);
             });
@@ -551,7 +536,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             threadsWindowInstance = windowInstance;
             break;
         }
-        console.log(`Instância da janela do ${appName} armazenada`);
         return windowInstance;
       }
       console.error(`Falha ao criar janela do ${appName}`);
@@ -602,8 +586,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const appName = isSpecialApp ? specialApps.find(app => url.includes(`${app}.com`)) : null;
       
       if (isSpecialApp) {
-        console.log(`Iniciando criação de janela especial para ${appName}...`, { webviewId, url });
-        
+       
         // Verificar se a URL é válida
         if (!url || typeof url !== 'string') {
           console.error(`URL inválida para ${appName}:`, url);
@@ -618,7 +601,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Configurações específicas para Teams e LinkedIn
         if (appName === 'teams' || appName === 'linkedin') {
-          console.log(`Configurando janela do ${appName}...`);
           // Garantir que a URL seja a correta
           if (appName === 'teams' && !url.includes('teams.microsoft.com')) {
             url = 'https://teams.microsoft.com';
@@ -636,16 +618,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
           const windowInstance = createAppWindow(webviewId, url, appName);
           if (!windowInstance) {
-            console.error(`Falha ao criar janela do ${appName}`);
             return null;
           }
-          console.log(`Janela do ${appName} criada com sucesso`);
           return windowInstance;
         } catch (error) {
-          console.error(`Erro ao criar janela do ${appName}:`, error);
           // Tentar recriar a janela em caso de erro
           setTimeout(() => {
-            console.log(`Tentando recriar janela do ${appName}...`);
             createAppWindow(webviewId, url, appName);
           }, 1000);
           return null;
@@ -658,7 +636,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       specialInstances.forEach(instance => {
         if (instance && instance.container) {
           try {
-            console.log('Escondendo janela especial...');
             instance.container.style.display = 'none';
             instance.container.style.opacity = '0';
             instance.container.classList.remove('active');
@@ -743,8 +720,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Função otimizada para mostrar webview com lazy loading
   const showWebview = async (webviewId, buttonId) => {
     try {
-      console.log('Mostrando webview:', { webviewId, buttonId });
-      
       // Mostrar loading imediatamente ao clicar
       showLoading();
       
@@ -766,7 +741,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Obter as dimensões do webview-container
       const webviewContainer = document.querySelector('.webview-container');
       if (!webviewContainer) {
-        console.error('Container da webview não encontrado');
         hideLoading();
         return;
       }
@@ -820,8 +794,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const appName = isSpecialApp ? specialApps.find(app => url && url.includes(specialAppsMap[app])) : null;
       
       if (isSpecialApp && appName) {
-        console.log(`Iniciando exibição do ${appName}...`);
-        
         // Obter a instância correta
         let windowInstance = null;
         switch(appName.toLowerCase()) {
@@ -871,12 +843,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Se já existe uma janela, apenas reutilizá-la
         if (windowInstance && windowInstance.container) {
-          console.log(`Reutilizando janela do ${appName} existente...`, {
-            instanceId: windowInstance.id,
-            hasContainer: !!windowInstance.container,
-            containerClasses: windowInstance.container.className,
-            containerDisplay: windowInstance.container.style.display
-          });
           
           // Remover qualquer container duplicado
           document.querySelectorAll(`.${appName.toLowerCase()}-window-container`).forEach(existingContainer => {
@@ -896,7 +862,6 @@ document.addEventListener('DOMContentLoaded', async () => {
               if (containerBounds && windowInstance.id) {
                 try {
                   await window.electronAPI.invoke(`show-${appName.toLowerCase()}-window`, windowInstance.id, containerBounds);
-                  console.log(`Janela do ${appName} exibida com sucesso`);
                   
                   // Aguardar evento de janela pronta antes de exibir o container e esconder o loading
                   window.electronAPI.on(`${appName.toLowerCase()}-window-ready`, (data) => {
@@ -967,8 +932,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           }
         } else {
-          // Se não existe, criar uma nova janela
-          console.log(`Criando nova janela do ${appName}...`);
+
           try {
             // Remover containers existentes
             document.querySelectorAll(`.${appName.toLowerCase()}-window-container`).forEach(container => {
@@ -1004,7 +968,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         specialInstances.forEach(instance => {
           if (instance && instance.container) {
             try {
-              console.log('Escondendo janela especial...');
               instance.container.style.display = 'none';
               instance.container.style.opacity = '0';
               instance.container.classList.remove('active');
@@ -1030,16 +993,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Criar ou obter webview normal
         try {
           let webview = document.getElementById(webviewId);
-          console.log(`[DEBUG] Webview existente para ${webviewId}:`, webview);
           
           if (!webview) {
-            console.log(`[DEBUG] Criando nova webview para ${webviewId}`);
             webview = createWebview(webviewId, url);
-            console.log(`[DEBUG] Nova webview criada:`, webview);
           }
           
           if (webview) {
-            console.log(`[DEBUG] Configurando webview ${webviewId} para exibição`);
             updateWebviewAccess(webviewId);
             webview.style.display = 'flex';
             webview.style.opacity = '1';
@@ -1050,17 +1009,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             webview.style.visibility = 'visible';
             webview.style.zIndex = '1000';
             
-            console.log(`[DEBUG] Webview ${webviewId} configurada:`, {
-              display: webview.style.display,
-              opacity: webview.style.opacity,
-              visibility: webview.style.visibility,
-              zIndex: webview.style.zIndex,
-              classes: webview.className
-            });
             
             // Adicionar listeners para detectar quando a webview termina de carregar
             const hideLoadingWhenReady = () => {
-              console.log(`[DEBUG] Webview ${webviewId} carregada, escondendo loading`);
               // Garantir que a webview esteja visível antes de esconder o loading
               webview.style.display = 'flex';
               webview.style.opacity = '1';
@@ -1070,7 +1021,6 @@ document.addEventListener('DOMContentLoaded', async () => {
               // Pequeno delay para garantir que a webview seja renderizada
               setTimeout(() => {
                 hideLoading();
-                console.log(`[DEBUG] Loading escondido para ${webviewId}`);
               }, 100);
               
               // Remover os listeners após usar
@@ -1080,7 +1030,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Para webviews locais (home, settings), esconder loading imediatamente
             if (webviewId === 'webview-home' || webviewId === 'webview-settings') {
-              console.log(`[DEBUG] Webview local ${webviewId}, escondendo loading imediatamente`);
               // Garantir que a webview esteja visível
               webview.style.display = 'flex';
               webview.style.opacity = '1';
@@ -1089,17 +1038,14 @@ document.addEventListener('DOMContentLoaded', async () => {
               
               setTimeout(() => {
                 hideLoading();
-                console.log(`[DEBUG] Loading escondido para webview local ${webviewId}`);
               }, 100);
             } else {
-              console.log(`[DEBUG] Webview externa ${webviewId}, adicionando listeners de carregamento`);
               // Para webviews externas, adicionar listeners para quando terminar de carregar
               webview.addEventListener('did-finish-load', hideLoadingWhenReady);
               webview.addEventListener('dom-ready', hideLoadingWhenReady);
               
               // Fallback: esconder loading após um tempo máximo
               setTimeout(() => {
-                console.log(`[DEBUG] Fallback: escondendo loading para ${webviewId} após timeout`);
                 // Garantir que a webview esteja visível
                 webview.style.display = 'flex';
                 webview.style.opacity = '1';
@@ -1128,7 +1074,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                   
                   // Adicionar listeners para a nova webview
                   const hideLoadingWhenReady = () => {
-                    console.log(`[DEBUG] Webview ${webviewId} carregada, escondendo loading`);
                     // Garantir que a webview esteja visível antes de esconder o loading
                     newWebview.style.display = 'flex';
                     newWebview.style.opacity = '1';
@@ -1137,7 +1082,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     setTimeout(() => {
                       hideLoading();
-                      console.log(`[DEBUG] Loading escondido para ${webviewId}`);
                     }, 100);
                     
                     newWebview.removeEventListener('did-finish-load', hideLoadingWhenReady);
@@ -1421,14 +1365,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const showContextMenu = async (x, y, currentViewId) => {
     if (!currentViewId) {
-      console.log('No currentViewId provided');
       return;
     }
 
     // Verificar se é a home
     if (currentViewId === 'webview-home') {
       const menuTemplate = await getMenuTemplate(currentViewId);
-      console.log(`[showContextMenu] Enviando requisição de menu de contexto para home em clientX: ${x}, clientY: ${y}`);
       window.electronAPI.invoke('show-context-menu-window', menuTemplate, x, y, currentViewId);
       return;
     }
@@ -1438,11 +1380,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isSpecialApp = specialApps.some(app => {
       // Tratamento especial para o Google Chat e Facebook Messenger
       if (app === 'google-chat' && currentViewId === 'webview-google') {
-        console.log('[showContextMenu] Google Chat detectado como aplicativo especial');
         return true;
       }
       if (app === 'facebook-messenger' && currentViewId === 'webview-facebook') {
-        console.log('[showContextMenu] Facebook Messenger detectado como aplicativo especial');
         return true;
       }
       return currentViewId.includes(app);
@@ -1464,25 +1404,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       switch(appName) {
         case 'google-chat':
           windowInstance = googleChatWindowInstance;
-          console.log('[showContextMenu] Instância do Google Chat:', {
-            hasInstance: !!windowInstance,
-            instanceId: windowInstance?.id,
-            hasContainer: !!windowInstance?.container,
-            containerId: windowInstance?.container?.id,
-            containerDisplay: windowInstance?.container?.style.display,
-            containerClasses: windowInstance?.container?.className
-          });
           break;
         case 'facebook-messenger':
           windowInstance = facebookMessengerWindowInstance;
-          console.log('[showContextMenu] Instância do Facebook Messenger:', {
-            hasInstance: !!windowInstance,
-            instanceId: windowInstance?.id,
-            hasContainer: !!windowInstance?.container,
-            containerId: windowInstance?.container?.id,
-            containerDisplay: windowInstance?.container?.style.display,
-            containerClasses: windowInstance?.container?.className
-          });
           break;
         case 'teams':
           windowInstance = teamsWindowInstance;
@@ -1517,21 +1441,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                            (windowInstance.container.classList.contains('active') || 
                             windowInstance.container.style.display === 'flex');
 
-      console.log(`[showContextMenu] Verificando menu de contexto para ${appName}:`, {
-        currentViewId,
-        hasInstance: !!windowInstance,
-        hasContainer: !!(windowInstance && windowInstance.container),
-        isButtonActive,
-        isWindowActive,
-        buttonClasses: button?.className,
-        containerClasses: windowInstance?.container?.className,
-        containerDisplay: windowInstance?.container?.style.display
-      });
-
       if (isButtonActive || isWindowActive) {
         // Obter o template do menu
         const menuTemplate = await getMenuTemplate(currentViewId);
-        console.log(`[showContextMenu] Enviando requisição de menu de contexto para ${currentViewId} em clientX: ${x}, clientY: ${y}`);
         window.electronAPI.invoke('show-context-menu-window', menuTemplate, x, y, currentViewId);
       } else {
         console.log(`[showContextMenu] Menu de contexto não mostrado para ${appName} - nem botão nem janela estão ativos`);
@@ -1549,7 +1461,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const target = e.target.closest('.nav-button');
         if (!target) {
-          console.log('Nenhum botão encontrado');
           return;
         }
 
@@ -1562,12 +1473,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (webviewId === 'webview-home') {
           const isButtonActive = target.classList.contains('active') || target.classList.contains('opened');
           if (isButtonActive) {
-            console.log('Mostrando menu de contexto para home:', {
-              webviewId,
-              isButtonActive,
-              buttonClasses: target.className,
-              buttonDataId: target.getAttribute('data-id')
-            });
             showContextMenu(e.clientX, e.clientY, webviewId);
           }
           return;
@@ -1618,26 +1523,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                                windowInstance.container && 
                                (windowInstance.container.classList.contains('active') || 
                                 windowInstance.container.style.display === 'flex');
-
-          console.log(`Verificando menu de contexto para ${appName}:`, {
-            webviewId,
-            hasInstance: !!windowInstance,
-            hasContainer: !!(windowInstance && windowInstance.container),
-            isButtonActive,
-            isWindowActive,
-            buttonClasses: target.className,
-            buttonDataId: target.getAttribute('data-id'),
-            containerClasses: windowInstance?.container?.className,
-            containerDisplay: windowInstance?.container?.style.display
-          });
-
           // Mostrar o menu se o botão estiver ativo ou se a janela estiver ativa
           if (isButtonActive || isWindowActive) {
-            console.log(`Mostrando menu de contexto para ${appName} - botão ou janela ativos`);
             showContextMenu(e.clientX, e.clientY, webviewId);
-          } else {
-            console.log(`Menu de contexto não mostrado para ${appName} - nem botão nem janela estão ativos`);
-          }
+          } 
         } else {
           // Para webviews normais
           const isButtonActive = target.classList.contains('active') || 
@@ -1645,12 +1534,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 target.getAttribute('data-id') === webviewId;
           
           if (isButtonActive) {
-            console.log('Mostrando menu de contexto para webview normal:', {
-              webviewId,
-              isButtonActive,
-              buttonClasses: target.className,
-              buttonDataId: target.getAttribute('data-id')
-            });
             showContextMenu(e.clientX, e.clientY, webviewId);
           }
         }
@@ -1669,13 +1552,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Verificar se o container está ativo
         const isActive = container.classList.contains('active') || 
                         container.style.display === 'flex';
-        
-        console.log(`Verificando menu de contexto para ${appName} no container:`, {
-          webviewId,
-          containerClasses: container.className,
-          containerDisplay: container.style.display,
-          isActive
-        });
         
         if (isActive) {
           e.preventDefault();
@@ -1710,7 +1586,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
           
           if (webviewId && windowInstance && windowInstance.container === container) {
-            console.log(`Mostrando menu de contexto para ${appName} no container:`, webviewId);
             showContextMenu(e.clientX, e.clientY, webviewId);
           }
         }
@@ -1734,13 +1609,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
         
-        console.log('Verificando menu de contexto para webview normal:', {
-          webviewId: webview.id,
-          webviewClasses: webview.className,
-          webviewDisplay: webview.style.display,
-          isActive
-        });
-        
         if (isActive) {
           e.preventDefault();
           e.stopPropagation();
@@ -1753,20 +1621,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const setupMenuEvents = (menu, currentViewId) => {
     console.log('Setting up menu events for:', currentViewId);
     
-    // O menu é agora uma janela separada, então os eventos de clique são tratados nela
-    // e os comandos são enviados de volta para esta janela (mainWindow) via IPC.
-    // Não precisamos mais do `menu.querySelectorAll('.context-menu-item').forEach` aqui.
   };
 
   // Listener para os comandos do menu de contexto vindos do processo principal
   window.electronAPI.on('execute-context-menu-command', async (command, currentViewId) => {
-    console.log('[execute-context-menu-command] Iniciando execução do comando:', {
-      command,
-      currentViewId,
-      timestamp: new Date().toISOString()
-    });
-
-    // Lista de todas as instâncias especiais
     const allSpecialInstances = [
       linkedInWindowInstance,
       teamsWindowInstance,
@@ -1789,11 +1647,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isSpecialApp = specialApps.some(app => {
       // Tratamento especial para o Google Chat e Facebook Messenger
       if (app === 'google-chat' && currentViewId === 'webview-google') {
-        console.log('[execute-context-menu-command] Google Chat detectado como aplicativo especial');
+
         return true;
       }
       if (app === 'facebook-messenger' && currentViewId === 'webview-facebook') {
-        console.log('[execute-context-menu-command] Facebook Messenger detectado como aplicativo especial');
         return true;
       }
       return currentViewId.includes(app);
@@ -1802,31 +1659,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       (currentViewId === 'webview-google' ? 'google-chat' : 
        currentViewId === 'webview-facebook' ? 'facebook-messenger' : 
        specialApps.find(app => currentViewId.includes(app))) : null;
-
-    console.log('[execute-context-menu-command] Menu context:', { 
-      isSpecialApp, 
-      appName, 
-      currentViewId,
-      googleChatInstance: googleChatWindowInstance ? {
-        id: googleChatWindowInstance.id,
-        hasContainer: !!googleChatWindowInstance.container,
-        containerId: googleChatWindowInstance.container?.id,
-        containerDisplay: googleChatWindowInstance.container?.style.display,
-        containerClasses: googleChatWindowInstance.container?.className
-      } : null,
-      facebookMessengerInstance: facebookMessengerWindowInstance ? {
-        id: facebookMessengerWindowInstance.id,
-        hasContainer: !!facebookMessengerWindowInstance.container,
-        containerId: facebookMessengerWindowInstance.container?.id,
-        containerDisplay: facebookMessengerWindowInstance.container?.style.display,
-        containerClasses: facebookMessengerWindowInstance.container?.className
-      } : null
-    });
-
     switch (command) {
       case 'reload-current':
-        console.log(`[execute-context-menu-command] Executando reload-current para: ${currentViewId}`);
-        
         if (isSpecialApp) {
           let windowInstance = null;
           switch(appName) {
@@ -1867,9 +1701,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           if (windowInstance && windowInstance.id) {
             try {
-              console.log(`[execute-context-menu-command] Recarregando janela do ${appName}...`);
               await window.electronAPI.invoke(`reload-${appName}-window`, windowInstance.id);
-              console.log(`[execute-context-menu-command] Janela do ${appName} recarregada com sucesso`);
             } catch (error) {
               console.error(`[execute-context-menu-command] Erro ao recarregar janela do ${appName}:`, error);
             }
@@ -1879,9 +1711,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const webview = document.getElementById(currentViewId);
           if (webview) {
             try {
-              console.log(`[execute-context-menu-command] Recarregando webview ${currentViewId}...`);
               
-              // Verificar se é home ou settings
               if (currentViewId === 'webview-home') {
                 webview.src = '../../pages/home/home.html';
                 updateActiveViewTitle(webview);
@@ -1892,12 +1722,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 webview.reload();
               }
               
-              console.log(`[execute-context-menu-command] Webview ${currentViewId} recarregada com sucesso`);
             } catch (error) {
               console.error(`[execute-context-menu-command] Erro ao recarregar webview ${currentViewId}:`, error);
             }
           } else {
-            console.log(`[execute-context-menu-command] Webview ${currentViewId} não encontrada, tentando recriar...`);
             try {
               const url = serviceMap[currentViewId];
               if (url) {
@@ -1910,110 +1738,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         break;
 
-      case 'reload-all':
-        console.log('[execute-context-menu-command] Executando reload-all...');
-        
-        // Recarregar cada janela especial que está aberta
-        for (const instance of allSpecialInstances) {
-          if (instance && instance.container && 
-              (instance.container.style.display === 'flex' || 
-               instance.container.style.display === 'block' || 
-               instance.container.style.opacity === '1')) {
-            try {
-              const appName = instance.container.className.split('-')[0];
-              console.log(`[execute-context-menu-command] Recarregando janela do ${appName}...`);
-              
-              // Recarregar a janela via IPC
-              if (instance.id) {
-                await window.electronAPI.invoke(`reload-${appName}-window`, instance.id);
-                console.log(`[execute-context-menu-command] Janela do ${appName} recarregada com sucesso`);
-              }
-            } catch (error) {
-              console.error(`[execute-context-menu-command] Erro ao recarregar janela do ${appName}:`, error);
-            }
-          }
-        }
-
-        // Recarregar todas as webviews que estão abertas
-        const openWebviews = document.querySelectorAll('webview');
-        openWebviews.forEach(webview => {
-          if (webview.id !== 'webview-home' && webview.id !== 'webview-settings') {
-            // Verificar se a webview está visível
-            const isVisible = webview.style.display === 'flex' || 
-                            webview.style.display === 'block' || 
-                            webview.style.opacity === '1' ||
-                            window.getComputedStyle(webview).display !== 'none';
-            
-            if (isVisible) {
-              try {
-                console.log(`[execute-context-menu-command] Recarregando webview ${webview.id}...`);
-                webview.reload();
-                console.log(`[execute-context-menu-command] Webview ${webview.id} recarregada com sucesso`);
-              } catch (error) {
-                console.error(`[execute-context-menu-command] Erro ao recarregar webview ${webview.id}:`, error);
-              }
-            }
-          }
-        });
-
-        // Recarregar a home
-        try {
-          console.log('[execute-context-menu-command] Iniciando recarregamento da home...');
-          const homeWebview = document.getElementById('webview-home');
-          
-          if (homeWebview) {
-            // Forçar recarregamento da home
-            homeWebview.src = '../../pages/home/home.html';
-            console.log('[execute-context-menu-command] Home recarregada com sucesso');
-            
-            // Atualizar o título
-            updateActiveViewTitle(homeWebview);
-            
-            // Recarregar aplicações
-            refreshApplications();
-          } else {
-            console.log('[execute-context-menu-command] Home não encontrada, criando nova instância...');
-            showWebview('webview-home', 'home-button');
-          }
-        } catch (error) {
-          console.error('[execute-context-menu-command] Erro ao recarregar home:', error);
-          // Tentar recriar a home em caso de erro
-          try {
-            showWebview('webview-home', 'home-button');
-          } catch (retryError) {
-            console.error('[execute-context-menu-command] Erro ao tentar recriar home:', retryError);
-          }
-        }
-
-        // Recarregar as configurações se estiverem abertas
-        const settingsWebview = document.getElementById('webview-settings');
-        if (settingsWebview) {
-          const isSettingsVisible = settingsWebview.style.display === 'flex' || 
-                                  settingsWebview.style.display === 'block' || 
-                                  settingsWebview.style.opacity === '1' ||
-                                  window.getComputedStyle(settingsWebview).display !== 'none';
-          
-          if (isSettingsVisible) {
-            try {
-              console.log('[execute-context-menu-command] Recarregando configurações...');
-              settingsWebview.src = '../../pages/settings/settings.html';
-              console.log('[execute-context-menu-command] Configurações recarregadas com sucesso');
-            } catch (error) {
-              console.error('[execute-context-menu-command] Erro ao recarregar configurações:', error);
-            }
-          }
-        }
-        break;
-
       case 'close-all':
-        console.log('[execute-context-menu-command] Executando close-all...');
         
         // Fechar cada janela especial ativa
         for (const instance of allSpecialInstances) {
           if (instance && instance.container) {
             try {
               const appName = instance.container.className.split('-')[0];
-              console.log(`[execute-context-menu-command] Fechando janela do ${appName}...`);
               
               // Esconder o container visualmente
               instance.container.style.opacity = '0';
@@ -2106,31 +1837,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         break;
 
       case 'close-current':
-        console.log(`[execute-context-menu-command] Executando close-current para: ${currentViewId}`);
         if (isSpecialApp) {
           let windowInstance = null;
           switch(appName) {
             case 'google-chat':
               windowInstance = googleChatWindowInstance;
-              console.log('[execute-context-menu-command] Instância do Google Chat encontrada:', {
-                hasInstance: !!windowInstance,
-                instanceId: windowInstance?.id,
-                hasContainer: !!windowInstance?.container,
-                containerId: windowInstance?.container?.id,
-                containerDisplay: windowInstance?.container?.style.display,
-                containerClasses: windowInstance?.container?.className
-              });
               break;
             case 'facebook-messenger':
               windowInstance = facebookMessengerWindowInstance;
-              console.log('[execute-context-menu-command] Instância do Facebook Messenger encontrada:', {
-                hasInstance: !!windowInstance,
-                instanceId: windowInstance?.id,
-                hasContainer: !!windowInstance?.container,
-                containerId: windowInstance?.container?.id,
-                containerDisplay: windowInstance?.container?.style.display,
-                containerClasses: windowInstance?.container?.className
-              });
               break;
             case 'teams':
               windowInstance = teamsWindowInstance;
@@ -2163,58 +1877,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           // Verificar se temos uma instância válida
           if (windowInstance) {
-            console.log(`[execute-context-menu-command] Iniciando processo de fechamento do ${appName}...`, {
-              instanceId: windowInstance.id,
-              hasContainer: !!windowInstance.container,
-              containerClasses: windowInstance.container?.className,
-              containerDisplay: windowInstance.container?.style.display,
-              containerId: windowInstance.container?.id,
-              appName: appName,
-              currentViewId: currentViewId,
-              timestamp: new Date().toISOString()
-            });
-
             try {
               // Primeiro, esconder o container visualmente
               if (windowInstance.container) {
-                console.log(`[execute-context-menu-command] Escondendo container do ${appName}...`);
                 windowInstance.container.style.opacity = '0';
                 windowInstance.container.style.display = 'none';
                 windowInstance.container.classList.remove('active');
-                console.log(`[execute-context-menu-command] Container do ${appName} escondido:`, {
-                  display: windowInstance.container.style.display,
-                  opacity: windowInstance.container.style.opacity,
-                  classes: windowInstance.container.className
-                });
               }
 
               // Tentar fechar a janela via IPC
               if (windowInstance.id) {
-                console.log(`[execute-context-menu-command] Enviando comando close-${appName}-window para janela ${windowInstance.id}`);
                 await window.electronAPI.invoke(`close-${appName}-window`, windowInstance.id);
-                console.log(`[execute-context-menu-command] Comando de fechar ${appName} enviado com sucesso`);
               } else {
                 console.error(`[execute-context-menu-command] ID da janela do ${appName} não encontrado`);
               }
 
               // Limpar a instância global após um pequeno delay
               setTimeout(() => {
-                console.log(`[execute-context-menu-command] Iniciando limpeza de recursos do ${appName}...`);
                 
                 // Remover o container do DOM
                 if (windowInstance.container) {
-                  console.log(`[execute-context-menu-command] Removendo container do ${appName} do DOM`);
                   windowInstance.container.remove();
                 }
 
                 // Limpar a instância global
                 switch(appName) {
                   case 'google-chat':
-                    console.log('[execute-context-menu-command] Limpando instância global do Google Chat');
                     googleChatWindowInstance = null;
                     break;
                   case 'facebook-messenger':
-                    console.log('[execute-context-menu-command] Limpando instância global do Facebook Messenger');
                     facebookMessengerWindowInstance = null;
                     break;
                   case 'teams':
@@ -2243,35 +1934,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Atualizar o botão na sidebar
                 const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
                 if (button) {
-                  console.log(`[execute-context-menu-command] Atualizando estado do botão do ${appName}`);
                   button.classList.remove('opened', 'active');
                 }
 
                 // Se não houver mais webviews abertas, mostrar a home
                 if (!hasOpenWebviews()) {
-                  console.log('[execute-context-menu-command] Nenhuma webview aberta, mostrando home');
                   showWebview('webview-home', 'home-button');
                 }
 
-                console.log(`[execute-context-menu-command] ${appName} fechado e recursos limpos com sucesso`);
               }, 200);
             } catch (error) {
               console.error(`[execute-context-menu-command] Erro ao fechar ${appName}:`, error);
               
               // Mesmo em caso de erro, tentar limpar os recursos
               if (windowInstance.container) {
-                console.log(`[execute-context-menu-command] Tentando limpar recursos do ${appName} após erro`);
                 windowInstance.container.remove();
               }
 
               // Limpar a instância global
               switch(appName) {
                 case 'google-chat':
-                  console.log('[execute-context-menu-command] Limpando instância global do Google Chat após erro');
                   googleChatWindowInstance = null;
                   break;
                 case 'facebook-messenger':
-                  console.log('[execute-context-menu-command] Limpando instância global do Facebook Messenger após erro');
                   facebookMessengerWindowInstance = null;
                   break;
                 case 'teams':
@@ -2300,13 +1985,11 @@ document.addEventListener('DOMContentLoaded', async () => {
               // Atualizar o botão na sidebar
               const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
               if (button) {
-                console.log(`[execute-context-menu-command] Atualizando estado do botão do ${appName} após erro`);
                 button.classList.remove('opened', 'active');
               }
 
               // Se não houver mais webviews abertas, mostrar a home
               if (!hasOpenWebviews()) {
-                console.log('[execute-context-menu-command] Nenhuma webview aberta após erro, mostrando home');
                 showWebview('webview-home', 'home-button');
               }
             }
@@ -2433,18 +2116,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } catch (error) {
       console.error('Erro ao configurar sessão do usuário:', error);
-    }
-  };
-
-  // Adicionar função para limpar sessão do usuário
-  const clearUserSession = async () => {
-    try {
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (user) {
-        await window.electronAPI.clearUserSession(user.id);
-      }
-    } catch (error) {
-      console.error('Erro ao limpar sessão do usuário:', error);
     }
   };
 
@@ -2600,10 +2271,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       setupSidebarScroll();
       refreshApplications();
       
-      // Aguardar um pouco para garantir que tudo carregou
       setTimeout(() => {
         showWebview('webview-home', 'home-button');
-        // Esconder loading após um delay para garantir que tudo está pronto
         setTimeout(() => {
           hideLoading();
         }, 500);

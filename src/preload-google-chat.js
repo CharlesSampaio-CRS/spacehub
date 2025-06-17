@@ -4,45 +4,38 @@ contextBridge.exposeInMainWorld('googleChatAPI', {
   // Funções específicas para o Google Chat
   handleAuth: (callback) => {
     ipcRenderer.on('google-chat-auth', (event, data) => {
-      console.log('Recebido evento google-chat-auth:', data);
       callback(data);
     });
   },
   
   handleNavigation: (callback) => {
     ipcRenderer.on('google-chat-navigation', (event, data) => {
-      console.log('Recebido evento google-chat-navigation:', data);
       callback(data);
     });
   },
   
   sendNavigation: (url) => {
-    console.log('Enviando navegação do Google Chat:', url);
     ipcRenderer.send('google-chat-navigation', { url });
   },
   
   // Funções comuns para todas as janelas de aplicativos
   onWindowReady: (callback) => {
     ipcRenderer.on('google-chat-window-ready', (event, data) => {
-      console.log('Janela do Google Chat pronta:', data);
       callback(data);
     });
   },
   
   onWindowClosed: (callback) => {
     ipcRenderer.on('google-chat-window-closed', (event, data) => {
-      console.log('Janela do Google Chat fechada:', data);
       callback(data);
     });
   },
   
   requestWrapperBounds: () => {
-    console.log('Solicitando bounds do wrapper do Google Chat');
     ipcRenderer.send('request-wrapper-bounds');
   },
   
   updateBounds: (bounds) => {
-    console.log('Atualizando bounds do Google Chat:', bounds);
     const windowId = window.location.hash.replace('#', '');
     if (windowId) {
       ipcRenderer.invoke('update-google-chat-window-bounds', windowId, bounds).catch(error => {

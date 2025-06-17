@@ -338,7 +338,6 @@ ipcMain.on('start-google-login', () => {
 
       // Criar sessão específica para o email do Google
       const sessionInfo = createUserSession(email);
-      console.log(`Nova sessão Google criada para: ${email}`);
       
       if (loginWindow) {
         loginWindow.webContents.send('google-login-success', { token });
@@ -631,15 +630,6 @@ const createUserSession = (email) => {
     }
   });
 
-  // Configurar gerenciamento de cookies
-  userSession.cookies.on('changed', (event, cookie, cause, removed) => {
-    if (removed) {
-      console.log(`Cookie removido: ${cookie.name}`);
-    } else {
-      console.log(`Cookie modificado: ${cookie.name}`);
-    }
-  });
-
   // Configurar limpeza periódica do cache e dados
   setInterval(async () => {
     try {
@@ -647,7 +637,6 @@ const createUserSession = (email) => {
       await userSession.clearStorageData({
         storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
       });
-      console.log(`Cache e dados limpos para sessão: ${email}`);
     } catch (error) {
       console.error(`Erro ao limpar cache da sessão ${email}:`, error);
     }
@@ -792,7 +781,6 @@ ipcMain.handle('logout', async (event, email) => {
     // Limpar a sessão do usuário
     if (email) {
       await clearUserSession(email);
-      console.log(`Sessão limpa para: ${email}`);
     }
 
     // Limpar dados do store
@@ -818,7 +806,6 @@ const clearAllSessions = async () => {
       await session.clearStorageData({
         storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
       });
-      console.log(`Sessão limpa para: ${email}`);
     } catch (error) {
       console.error(`Erro ao limpar sessão ${email}:`, error);
     }
@@ -859,10 +846,6 @@ ipcMain.handle('show-context-menu-window', async (event, menuTemplate, clientX, 
   // Ajustar as coordenadas do mouse para a posição na tela
   const screenX = mainWindowX + clientX;
   const screenY = mainWindowY + clientY;
-
-  console.log(`[main] Received context menu request: clientX=${clientX}, clientY=${clientY}`);
-  console.log(`[main] MainWindow position: x=${mainWindowX}, y=${mainWindowY}`);
-  console.log(`[main] Calculated screen position for menu: x=${screenX}, y=${screenY}`);
 
   // Calcular as dimensões aproximadas do menu para definir o tamanho da janela
   const menuWidth = 220; // Largura aproximada

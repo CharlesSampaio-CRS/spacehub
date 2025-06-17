@@ -162,7 +162,6 @@ class AppWindowManager {
           }
 
           await window.loadURL(finalUrl);
-          console.log('URL carregada com sucesso:', finalUrl);
         } catch (error) {
           console.error(`Erro ao carregar URL do ${appName}:`, error);
           throw error;
@@ -170,7 +169,6 @@ class AppWindowManager {
 
         // Configurar eventos da janela
         window.on('ready-to-show', () => {
-          console.log(`Janela do ${appName} pronta para mostrar`);
           try {
             window.setBounds({
               x: parentWindow.getPosition()[0] + x,
@@ -190,10 +188,6 @@ class AppWindowManager {
                 window.setBackgroundColor('#ffffff');
                 break;
             }
-            
-            console.log(`Janela do ${appName} ajustada em ready-to-show:`, { x, y, width, height });
-            console.log('Bounds atuais:', window.getBounds());
-            console.log('Content Bounds atuais:', window.getContentBounds());
 
             window.show();
             window.focus();
@@ -205,17 +199,8 @@ class AppWindowManager {
         });
 
         window.on('closed', () => {
-          console.log(`Janela do ${appName} fechada:`, window.id);
           this.windows.delete(window.id);
           event.sender.send(`${appName.toLowerCase()}-window-closed`, { windowId: window.id });
-        });
-
-        window.on('show', () => {
-          console.log(`Janela do ${appName} mostrada:`, window.id);
-        });
-
-        window.on('hide', () => {
-          console.log(`Janela do ${appName} escondida:`, window.id);
         });
 
         // Manter a janela filha sempre visível quando a janela principal estiver visível
@@ -227,7 +212,6 @@ class AppWindowManager {
         });
 
         parentWindow.on('hide', () => {
-          console.log(`Janela principal escondida, escondendo janela do ${appName}`);
           if (window && !window.isDestroyed()) {
             window.hide();
           }
@@ -235,25 +219,20 @@ class AppWindowManager {
 
         // Ajustar a posição da janela filha quando a janela principal for redimensionada
         parentWindow.on('resize', () => {
-          console.log(`Resize da janela principal. Tentando ajustar ${appName}.`);
           if (window && !window.isDestroyed()) {
-            console.log(`Bounds da janela do ${appName} antes do resize:`, window.getBounds());
             event.sender.send('request-wrapper-bounds');
           }
         });
 
         // Ajustar a posição da janela filha quando a janela principal for movida
         parentWindow.on('move', () => {
-          console.log(`Move da janela principal. Tentando ajustar ${appName}.`);
           if (window && !window.isDestroyed()) {
-            console.log(`Bounds da janela do ${appName} antes do move:`, window.getBounds());
             event.sender.send('request-wrapper-bounds');
           }
         });
 
         // Armazenar referência da janela
         this.windows.set(window.id, window);
-        console.log(`Janela do ${appName} armazenada:`, window.id);
 
         return { id: window.id };
       } catch (error) {
@@ -295,7 +274,6 @@ class AppWindowManager {
 
       // Atualizar bounds
       ipcMain.handle(`update-${normalizedAppName}-window-bounds`, async (event, windowId, newWrapperBounds) => {
-        console.log(`Recebido update-${normalizedAppName}-window-bounds para janela:`, windowId, newWrapperBounds);
         const window = this.windows.get(windowId);
         if (window && !window.isDestroyed() && newWrapperBounds) {
           const parentWindow = BrowserWindow.fromWebContents(event.sender);
@@ -306,14 +284,12 @@ class AppWindowManager {
               width: newWrapperBounds.width,
               height: newWrapperBounds.height
             });
-            console.log(`Janela do ${normalizedAppName} ajustada via update-${normalizedAppName}-window-bounds.`);
           }
         }
       });
 
       // Mostrar janela
       ipcMain.handle(`show-${normalizedAppName}-window`, async (event, windowId, wrapperBounds) => {
-        console.log(`Mostrando janela do ${normalizedAppName}:`, windowId, wrapperBounds);
         const window = this.windows.get(windowId);
         if (window) {
           try {
@@ -325,10 +301,6 @@ class AppWindowManager {
                 width: wrapperBounds.width,
                 height: wrapperBounds.height
               });
-
-              console.log(`Janela do ${normalizedAppName} ajustada em show-${normalizedAppName}-window:`, wrapperBounds);
-              console.log('Bounds atuais:', window.getBounds());
-              console.log('Content Bounds atuais:', window.getContentBounds());
 
               if (!window.isVisible()) {
                 window.show();
@@ -354,7 +326,6 @@ class AppWindowManager {
 
       // Ocultar janela
       ipcMain.handle(`hide-${normalizedAppName}-window`, async (event, windowId) => {
-        console.log(`Ocultando janela do ${normalizedAppName}:`, windowId);
         const window = this.windows.get(windowId);
         if (window) {
           try {
@@ -367,61 +338,31 @@ class AppWindowManager {
             return false;
           }
         } else {
-          console.error(`Janela do ${normalizedAppName} não encontrada para ocultar:`, windowId);
           return false;
         }
       });
 
       // Fechar janela
       ipcMain.handle(`close-${normalizedAppName}-window`, async (event, windowId) => {
-        console.log(`[main] Iniciando processo de fechamento da janela do ${normalizedAppName}:`, {
-          windowId: windowId,
-          hasWindow: this.windows.has(windowId),
-          windowExists: this.windows.get(windowId) ? !this.windows.get(windowId).isDestroyed() : false,
-          timestamp: new Date().toISOString(),
-          senderId: event.sender.id,
-          senderType: event.sender.getType(),
-          senderURL: event.sender.getURL()
-        });
-
         const window = this.windows.get(windowId);
         if (window) {
           try {
-            // Verificar estado atual da janela
-            console.log(`[main] Estado atual da janela do ${normalizedAppName}:`, {
-              isVisible: window.isVisible(),
-              isDestroyed: window.isDestroyed(),
-              isFocused: window.isFocused(),
-              bounds: window.getBounds(),
-              id: window.id
-            });
 
             // Tentar fechar a janela
             window.close();
             
             // Verificar se a janela foi realmente fechada
             setTimeout(() => {
-              console.log(`[main] Verificação pós-fechamento da janela do ${normalizedAppName}:`, {
-                windowId: windowId,
-                wasDestroyed: window.isDestroyed(),
-                stillInMap: this.windows.has(windowId),
-                timestamp: new Date().toISOString()
-              });
-
-              // Se a janela ainda não foi destruída, forçar a destruição
               if (!window.isDestroyed()) {
-                console.log(`[main] Forçando destruição da janela do ${normalizedAppName}`);
                 window.destroy();
               }
 
               // Remover da lista de janelas se ainda estiver presente
               if (this.windows.has(windowId)) {
-                console.log(`[main] Removendo janela do ${normalizedAppName} da lista de janelas`);
                 this.windows.delete(windowId);
               }
             }, 100);
 
-            console.log(`[main] Comando de fechamento da janela do ${normalizedAppName} enviado com sucesso`);
           } catch (error) {
             console.error(`[main] Erro ao fechar janela do ${normalizedAppName}:`, error);
             
@@ -433,7 +374,6 @@ class AppWindowManager {
               if (this.windows.has(windowId)) {
                 this.windows.delete(windowId);
               }
-              console.log(`[main] Recursos da janela do ${normalizedAppName} limpos após erro`);
             } catch (cleanupError) {
               console.error(`[main] Erro ao limpar recursos da janela do ${normalizedAppName}:`, cleanupError);
             }
@@ -445,7 +385,6 @@ class AppWindowManager {
 
       // Recarregar janela
       ipcMain.handle(`reload-${normalizedAppName}-window`, async (event, windowId) => {
-        console.log(`Recarregando janela do ${normalizedAppName}:`, windowId);
         const window = this.windows.get(windowId);
         if (window) {
           await window.reload();
@@ -456,7 +395,6 @@ class AppWindowManager {
 
       // Manipular navegação
       ipcMain.on(`${normalizedAppName}-navigation`, (event, { windowId, url }) => {
-        console.log(`Navegando na janela do ${normalizedAppName}:`, windowId, url);
         const window = this.windows.get(windowId);
         if (window) {
           window.loadURL(url);
@@ -468,7 +406,6 @@ class AppWindowManager {
   }
 
   cleanup() {
-    console.log('Limpando todas as janelas de aplicativos');
     this.windows.forEach(window => {
       if (!window.isDestroyed()) {
         window.close();
@@ -477,5 +414,4 @@ class AppWindowManager {
     this.windows.clear();
   }
 }
-
 module.exports = new AppWindowManager(); 
