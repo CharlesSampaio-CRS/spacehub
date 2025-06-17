@@ -11,7 +11,6 @@ class AppWindowManager {
     // Handler genérico para criar janelas de aplicativos
     const createAppWindowHandler = async (event, windowData, wrapperBounds, appName) => {
       try {
-        console.log(`Criando janela do ${appName}...`, { windowData, wrapperBounds });
         const { url, options } = windowData;
         const parentWindow = BrowserWindow.fromWebContents(event.sender);
         
@@ -19,8 +18,6 @@ class AppWindowManager {
           console.error('Janela principal não encontrada');
           throw new Error('Janela principal não encontrada');
         }
-
-        console.log('Janela principal encontrada:', parentWindow.id);
 
         // Usar wrapperBounds para posicionamento preciso
         const x = wrapperBounds.x;
@@ -117,9 +114,6 @@ class AppWindowManager {
           y: parentWindow.getPosition()[1] + y
         });
 
-        console.log(`Janela do ${appName} criada com bounds iniciais:`, { x, y, width, height });
-        console.log('Configurações da janela:', window.getBounds());
-
         // Configurar User-Agent específico para cada aplicativo
         const userAgents = {
           teams: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -133,8 +127,6 @@ class AppWindowManager {
           window.webContents.setUserAgent(userAgents[appName.toLowerCase()]);
         }
 
-        // Carregar a URL
-        console.log('Carregando URL:', url);
         try {
           // Verificar e corrigir URLs específicas
           let finalUrl = url;

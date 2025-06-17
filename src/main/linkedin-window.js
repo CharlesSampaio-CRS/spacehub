@@ -10,7 +10,6 @@ class LinkedInWindowManager {
   setupIpcHandlers() {
     ipcMain.handle('create-linkedin-window', async (event, windowData, wrapperBounds) => {
       try {
-        console.log('Criando janela do LinkedIn...', windowData, wrapperBounds);
         const { url, options } = windowData;
         const parentWindow = BrowserWindow.fromWebContents(event.sender);
         
@@ -18,9 +17,6 @@ class LinkedInWindowManager {
           console.error('Janela principal não encontrada');
           throw new Error('Janela principal não encontrada');
         }
-
-        console.log('Janela principal encontrada:', parentWindow.id);
-
         // Usar wrapperBounds para posicionamento preciso
         const x = wrapperBounds.x;
         const y = wrapperBounds.y;
@@ -45,12 +41,7 @@ class LinkedInWindowManager {
           }
         });
 
-        console.log('Janela do LinkedIn criada com bounds iniciais: x=', x, 'y=', y, 'width=', width, 'height=', height);
-
-        // Carregar a URL
-        console.log('Carregando URL:', url);
         await window.loadURL(url);
-        console.log('URL carregada com sucesso');
 
         // Configurar eventos da janela
         window.on('ready-to-show', () => {
@@ -210,7 +201,6 @@ class LinkedInWindowManager {
     });
 
     ipcMain.handle('hide-linkedin-window', async (event, windowId) => {
-      console.log('Ocultando janela do LinkedIn:', windowId);
       const window = this.windows.get(windowId);
       if (window) {
         try {
