@@ -65,6 +65,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
   const specialApps = Object.keys(specialAppsMap);
 
+  // Funções para controlar o loading
+  const showLoading = () => {
+    const loading = document.getElementById('loading');
+    if (loading) {
+      loading.classList.remove('hidden');
+    }
+  };
+
+  const hideLoading = () => {
+    const loading = document.getElementById('loading');
+    if (loading) {
+      loading.classList.add('hidden');
+    }
+  };
+
   const getTitleFromWebviewId = (webviewId) => {
     if (!webviewId.startsWith('webview-')) return '';
     const name = webviewId.replace('webview-', '');
@@ -237,7 +252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               width: window.innerWidth - sidebarWidth,
               height: window.innerHeight - (headerHeight + headerMargin + bottomMargin)
             });
-            console.log(`Janela do ${appName} exibida com sucesso`);
+            hideLoading();
           } catch (error) {
             console.error(`Erro ao exibir janela do ${appName}:`, error);
             // Tentar recriar a janela em caso de erro
@@ -730,9 +745,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       console.log('Mostrando webview:', { webviewId, buttonId });
       
+      // Mostrar loading imediatamente ao clicar
+      showLoading();
+      
       // Verificar se os parâmetros são válidos
       if (!webviewId || !buttonId) {
         console.error('webviewId ou buttonId inválidos:', { webviewId, buttonId });
+        hideLoading();
         return;
       }
       
@@ -748,6 +767,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const webviewContainer = document.querySelector('.webview-container');
       if (!webviewContainer) {
         console.error('Container da webview não encontrado');
+        hideLoading();
         return;
       }
 
@@ -760,11 +780,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         height: window.innerHeight - (headerHeight + headerMargin + bottomMargin)
       };
       
-      // Primeiro, esconder todas as webviews e janelas especiais
+      // Primeiro, esconder todas as webviews e janelas especiais EXCETO a atual
       const allWebviews = document.querySelectorAll('.webview, .linkedin-window-container, .teams-window-container, .slack-window-container, .skype-window-container, .twitter-window-container, .whatsapp-window-container, .instagram-window-container, .telegram-window-container, .facebook-messenger-window-container, .discord-window-container, .google-chat-window-container, .wechat-window-container, .snapchat-window-container, .threads-window-container');
       
       allWebviews.forEach(w => {
-        if (w && w.style) {
+        if (w && w.style && w.id !== webviewId && !w.id.includes(webviewId.replace('webview-', ''))) {
           w.classList.remove('active');
           w.style.display = 'none';
           w.style.opacity = '0';
@@ -792,6 +812,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const url = serviceMap[webviewId];
       if (!url) {
         console.error('URL não encontrada para webviewId:', webviewId);
+        hideLoading();
         return;
       }
 
@@ -876,22 +897,42 @@ document.addEventListener('DOMContentLoaded', async () => {
                 try {
                   await window.electronAPI.invoke(`show-${appName.toLowerCase()}-window`, windowInstance.id, containerBounds);
                   console.log(`Janela do ${appName} exibida com sucesso`);
+                  
+                  // Aguardar evento de janela pronta antes de exibir o container e esconder o loading
+                  window.electronAPI.on(`${appName.toLowerCase()}-window-ready`, (data) => {
+                    if (data.windowId === windowInstance.id) {
+                      windowInstance.container.style.display = 'flex';
+                      windowInstance.container.style.opacity = '1';
+                      windowInstance.container.style.visibility = 'visible';
+                      windowInstance.container.classList.add('active');
+                      hideLoading();
+                    }
+                  });
                 } catch (error) {
                   console.error(`Erro ao exibir janela do ${appName}:`, error);
+                  hideLoading();
                   // Tentar recriar a janela em caso de erro
                   const newInstance = await createAppWindow(webviewId, url, appName);
                   if (newInstance && newInstance.container) {
                     newInstance.container.style.display = 'flex';
                     newInstance.container.style.opacity = '1';
+                    newInstance.container.style.visibility = 'visible';
                     newInstance.container.classList.add('active');
                     currentWebview = newInstance;
+                    
+                    // Esconder loading após um delay para novas janelas especiais
+                    setTimeout(() => {
+                      hideLoading();
+                    }, 1500);
                   } else {
                     console.error(`Não foi possível criar nova janela para ${appName}`);
+                    hideLoading();
                   }
                 }
               }
             } catch (err) {
               console.error(`Erro ao manipular container do ${appName}:`, err);
+              hideLoading();
               // Tentar recriar a janela
               try {
                 const newInstance = await createAppWindow(webviewId, url, appName);
@@ -900,6 +941,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                   newInstance.container.style.opacity = '1';
                   newInstance.container.classList.add('active');
                   currentWebview = newInstance;
+                } else {
+                  console.error(`Não foi possível criar nova janela para ${appName}`);
                 }
               } catch (createErr) {
                 console.error(`Erro ao tentar recriar janela do ${appName}:`, createErr);
@@ -907,6 +950,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           } else {
             console.error(`Container não encontrado para janela do ${appName}`);
+            hideLoading();
             // Tentar criar uma nova janela
             try {
               const newInstance = await createAppWindow(webviewId, url, appName);
@@ -915,6 +959,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 newInstance.container.style.opacity = '1';
                 newInstance.container.classList.add('active');
                 currentWebview = newInstance;
+              } else {
+                console.error(`Não foi possível criar nova janela para ${appName}`);
               }
             } catch (createErr) {
               console.error(`Erro ao criar nova janela do ${appName}:`, createErr);
@@ -937,11 +983,18 @@ document.addEventListener('DOMContentLoaded', async () => {
               newInstance.container.style.opacity = '1';
               newInstance.container.classList.add('active');
               currentWebview = newInstance;
+              
+              // Esconder loading após um delay para novas janelas especiais
+              setTimeout(() => {
+                hideLoading();
+              }, 1500);
             } else {
-              console.error(`Falha ao criar janela do ${appName}: container não encontrado`);
+              console.error(`Não foi possível criar nova janela para ${appName}`);
+              hideLoading();
             }
           } catch (err) {
             console.error(`Erro ao criar janela do ${appName}:`, err);
+            hideLoading();
           }
         }
       } else {
@@ -977,18 +1030,90 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Criar ou obter webview normal
         try {
           let webview = document.getElementById(webviewId);
+          console.log(`[DEBUG] Webview existente para ${webviewId}:`, webview);
+          
           if (!webview) {
+            console.log(`[DEBUG] Criando nova webview para ${webviewId}`);
             webview = createWebview(webviewId, url);
+            console.log(`[DEBUG] Nova webview criada:`, webview);
           }
           
           if (webview) {
+            console.log(`[DEBUG] Configurando webview ${webviewId} para exibição`);
             updateWebviewAccess(webviewId);
             webview.style.display = 'flex';
             webview.style.opacity = '1';
             webview.classList.add('active');
             currentWebview = webview;
+            
+            // Garantir que a webview seja visível imediatamente
+            webview.style.visibility = 'visible';
+            webview.style.zIndex = '1000';
+            
+            console.log(`[DEBUG] Webview ${webviewId} configurada:`, {
+              display: webview.style.display,
+              opacity: webview.style.opacity,
+              visibility: webview.style.visibility,
+              zIndex: webview.style.zIndex,
+              classes: webview.className
+            });
+            
+            // Adicionar listeners para detectar quando a webview termina de carregar
+            const hideLoadingWhenReady = () => {
+              console.log(`[DEBUG] Webview ${webviewId} carregada, escondendo loading`);
+              // Garantir que a webview esteja visível antes de esconder o loading
+              webview.style.display = 'flex';
+              webview.style.opacity = '1';
+              webview.style.visibility = 'visible';
+              webview.classList.add('active');
+              
+              // Pequeno delay para garantir que a webview seja renderizada
+              setTimeout(() => {
+                hideLoading();
+                console.log(`[DEBUG] Loading escondido para ${webviewId}`);
+              }, 100);
+              
+              // Remover os listeners após usar
+              webview.removeEventListener('did-finish-load', hideLoadingWhenReady);
+              webview.removeEventListener('dom-ready', hideLoadingWhenReady);
+            };
+            
+            // Para webviews locais (home, settings), esconder loading imediatamente
+            if (webviewId === 'webview-home' || webviewId === 'webview-settings') {
+              console.log(`[DEBUG] Webview local ${webviewId}, escondendo loading imediatamente`);
+              // Garantir que a webview esteja visível
+              webview.style.display = 'flex';
+              webview.style.opacity = '1';
+              webview.style.visibility = 'visible';
+              webview.classList.add('active');
+              
+              setTimeout(() => {
+                hideLoading();
+                console.log(`[DEBUG] Loading escondido para webview local ${webviewId}`);
+              }, 100);
+            } else {
+              console.log(`[DEBUG] Webview externa ${webviewId}, adicionando listeners de carregamento`);
+              // Para webviews externas, adicionar listeners para quando terminar de carregar
+              webview.addEventListener('did-finish-load', hideLoadingWhenReady);
+              webview.addEventListener('dom-ready', hideLoadingWhenReady);
+              
+              // Fallback: esconder loading após um tempo máximo
+              setTimeout(() => {
+                console.log(`[DEBUG] Fallback: escondendo loading para ${webviewId} após timeout`);
+                // Garantir que a webview esteja visível
+                webview.style.display = 'flex';
+                webview.style.opacity = '1';
+                webview.style.visibility = 'visible';
+                webview.classList.add('active');
+                
+                hideLoading();
+                webview.removeEventListener('did-finish-load', hideLoadingWhenReady);
+                webview.removeEventListener('dom-ready', hideLoadingWhenReady);
+              }, 3000);
+            }
           } else {
             console.error(`Não foi possível criar ou obter webview para ${webviewId}`);
+            hideLoading();
             // Tentar criar novamente com um pequeno delay
             setTimeout(async () => {
               try {
@@ -997,16 +1122,61 @@ document.addEventListener('DOMContentLoaded', async () => {
                   updateWebviewAccess(webviewId);
                   newWebview.style.display = 'flex';
                   newWebview.style.opacity = '1';
+                  newWebview.style.visibility = 'visible';
                   newWebview.classList.add('active');
                   currentWebview = newWebview;
+                  
+                  // Adicionar listeners para a nova webview
+                  const hideLoadingWhenReady = () => {
+                    console.log(`[DEBUG] Webview ${webviewId} carregada, escondendo loading`);
+                    // Garantir que a webview esteja visível antes de esconder o loading
+                    newWebview.style.display = 'flex';
+                    newWebview.style.opacity = '1';
+                    newWebview.style.visibility = 'visible';
+                    newWebview.classList.add('active');
+                    
+                    setTimeout(() => {
+                      hideLoading();
+                      console.log(`[DEBUG] Loading escondido para ${webviewId}`);
+                    }, 100);
+                    
+                    newWebview.removeEventListener('did-finish-load', hideLoadingWhenReady);
+                    newWebview.removeEventListener('dom-ready', hideLoadingWhenReady);
+                  };
+                  
+                  // Para webviews locais, esconder loading imediatamente
+                  if (webviewId === 'webview-home' || webviewId === 'webview-settings') {
+                    setTimeout(() => {
+                      hideLoading();
+                    }, 100);
+                  } else {
+                    // Para webviews externas, adicionar listeners
+                    newWebview.addEventListener('did-finish-load', hideLoadingWhenReady);
+                    newWebview.addEventListener('dom-ready', hideLoadingWhenReady);
+                    
+                    // Fallback
+                    setTimeout(() => {
+                      // Garantir que a webview esteja visível
+                      newWebview.style.display = 'flex';
+                      newWebview.style.opacity = '1';
+                      newWebview.style.visibility = 'visible';
+                      newWebview.classList.add('active');
+                      
+                      hideLoading();
+                      newWebview.removeEventListener('did-finish-load', hideLoadingWhenReady);
+                      newWebview.removeEventListener('dom-ready', hideLoadingWhenReady);
+                    }, 3000);
+                  }
                 }
               } catch (err) {
                 console.error(`Erro ao tentar recriar webview:`, err);
+                hideLoading();
               }
             }, 100);
           }
         } catch (err) {
           console.error(`Erro ao manipular webview normal:`, err);
+          hideLoading();
         }
       }
 
@@ -1017,9 +1187,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (sidebarButton.id !== 'home-button') {
           sidebarButton.classList.add('opened');
         }
-      }
+      } 
     } catch (error) {
       console.error('Erro ao mostrar webview:', error);
+      hideLoading();
     }
   };
 
@@ -2413,6 +2584,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Modificar a função init
   const init = async () => {
     try {
+      // Mostrar loading imediatamente
+      showLoading();
+      
       const currentLanguage = await window.electronAPI.getLanguage();
       document.documentElement.lang = currentLanguage;
       translatePage(currentLanguage);
@@ -2425,9 +2599,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       setupContextMenu();
       setupSidebarScroll();
       refreshApplications();
-      showWebview('webview-home', 'home-button');
+      
+      // Aguardar um pouco para garantir que tudo carregou
+      setTimeout(() => {
+        showWebview('webview-home', 'home-button');
+        // Esconder loading após um delay para garantir que tudo está pronto
+        setTimeout(() => {
+          hideLoading();
+        }, 500);
+      }, 100);
     } catch (error) {
       console.error('Erro na inicialização:', error);
+      hideLoading();
     }
   };
 
