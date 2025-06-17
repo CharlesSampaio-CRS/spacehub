@@ -59,11 +59,19 @@ class LinkedInWindowManager {
           event.sender.send('linkedin-window-ready', { windowId: window.id });
         });
 
-        window.on('closed', () => {
-          this.windows.delete(window.id);
-          event.sender.send('linkedin-window-closed', { windowId: window.id });
-        });
+        const windowId = window.id;
 
+window.on('closed', () => {
+  // Remover da lista de janelas
+  this.windows.delete(windowId);
+
+  // Enviar evento com segurança
+  if (event?.sender && !event.sender.isDestroyed?.()) {
+    event.sender.send('linkedin-window-closed', { windowId });
+  }
+});
+
+        
         // Manter a janela filha sempre visível quando a janela principal estiver visível
         parentWindow.on('show', () => {
           if (window && !window.isDestroyed()) {

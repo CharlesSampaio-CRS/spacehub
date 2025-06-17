@@ -564,7 +564,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   const cleanupWebviewCache = () => {
-    const now = Date.now();
     const entries = Array.from(webviewLastAccess.entries());
     entries.sort((a, b) => a[1] - b[1]);
     

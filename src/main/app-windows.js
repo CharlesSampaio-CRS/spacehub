@@ -190,9 +190,16 @@ class AppWindowManager {
           }
         });
 
+        const windowId = window.id;
+
         window.on('closed', () => {
-          this.windows.delete(window.id);
-          event.sender.send(`${appName.toLowerCase()}-window-closed`, { windowId: window.id });
+          this.windows.delete(windowId);
+        
+          try {
+            event.sender.send(`${appName.toLowerCase()}-window-closed`, { windowId });
+          } catch (error) {
+            console.warn(`Não foi possível enviar evento de janela fechada para ${appName}:`, error.message);
+          }
         });
 
         // Manter a janela filha sempre visível quando a janela principal estiver visível
