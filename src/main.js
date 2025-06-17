@@ -103,16 +103,14 @@ function createMainWindow() {
       partition: 'persist:mainSession',
       webviewTag: true,
       sandbox: false,
-      nativeWindowOpen: true,
-      webSecurity: false,
-      allowRunningInsecureContent: true,
-      experimentalFeatures: true,
-      plugins: true,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      experimentalFeatures: false,
+      plugins: false,
       webgl: true,
       enableRemoteModule: false,
-      nodeIntegrationInSubFrames: true,
-      backgroundThrottling: false,
-      enableBlinkFeatures: 'OutOfBlinkCors,Popups'
+      nodeIntegrationInSubFrames: false,
+      backgroundThrottling: true,
     }
   });
 
