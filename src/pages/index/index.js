@@ -290,9 +290,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             webPreferences: {
               nodeIntegration: false,
               contextIsolation: true,
-              sandbox: true,
+              sandbox: true, // Padrão mais seguro
               webSecurity: true, // Padrão mais seguro
-              allowRunningInsecureContent: false, // Padrão mais seguro
               backgroundThrottling: true, // Habilitar throttling por padrão para economia de recursos
             }
           }
@@ -1396,7 +1395,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           type: 'separator'
         },
         {
-          command: 'close-google-window',
+          command: 'close-current',
           label: t['Fechar'],
           icon_svg: '<path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>'
         }
@@ -1739,6 +1738,55 @@ document.addEventListener('DOMContentLoaded', async () => {
   const setupMenuEvents = (menu, currentViewId) => {
     console.log('Setting up menu events for:', currentViewId);
     
+    menu.on('click', async (menuItem) => {
+      const command = menuItem.command;
+      
+      switch (command) {
+        case 'reload-current':
+          if (currentViewId === 'webview-home') {
+            const webview = document.getElementById(currentViewId);
+            if (webview) {
+              webview.src = '../../pages/home/home.html';
+              updateActiveViewTitle(webview);
+              refreshApplications();
+            }
+          } else {
+            const webview = document.getElementById(currentViewId);
+            if (webview) {
+              webview.reload();
+            }
+          }
+          break;
+          
+        case 'close-current':
+          const webview = document.getElementById(currentViewId);
+          if (webview) {
+            webview.remove();
+            const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+            if (button) {
+              button.classList.remove('active', 'opened');
+            }
+            document.querySelector('.content-area').style.display = 'none';
+            updateActiveViewTitle(null);
+          }
+          break;
+          
+        case 'close-all':
+          const allWebviews = document.querySelectorAll('webview');
+          allWebviews.forEach(webview => {
+            webview.remove();
+          });
+          
+          const allButtons = document.querySelectorAll('.nav-button');
+          allButtons.forEach(button => {
+            button.classList.remove('active', 'opened');
+          });
+          
+          document.querySelector('.content-area').style.display = 'none';
+          updateActiveViewTitle(null);
+          break;
+      }
+    });
   };
 
   // Listener para os comandos do menu de contexto vindos do processo principal
@@ -1760,72 +1808,120 @@ document.addEventListener('DOMContentLoaded', async () => {
       threadsWindowInstance
     ];
 
-    // Verificar se é um aplicativo especial (necessário para close-current)
+    // Verificar se é um aplicativo especial
     const specialApps = ['linkedin', 'teams', 'slack', 'skype', 'twitter', 'whatsapp', 'instagram', 'google-chat', 'facebook', 'telegram', 'discord', 'wechat', 'snapchat', 'threads'];
     const isSpecialApp = specialApps.some(app => {
-      // Tratamento especial para o Google Chat e Facebook Messenger
-      if (app === 'google-chat' && currentViewId === 'webview-google') {
-
-        return true;
-      }
-      if (app === 'facebook' && currentViewId === 'webview-facebook') {
-        return true;
-      }
+      if (app === 'google-chat' && currentViewId === 'webview-google') return true;
+      if (app === 'facebook' && currentViewId === 'webview-facebook') return true;
       return currentViewId.includes(app);
     });
+    
     const appName = isSpecialApp ? 
       (currentViewId === 'webview-google' ? 'google-chat' : 
        currentViewId === 'webview-facebook' ? 'facebook' : 
        specialApps.find(app => currentViewId.includes(app))) : null;
+
+    const getWindowInstance = (appName) => {
+      switch(appName) {
+        case 'google-chat': return googleChatWindowInstance;
+        case 'facebook': return facebookWindowInstance;
+        case 'teams': return teamsWindowInstance;
+        case 'slack': return slackWindowInstance;
+        case 'skype': return skypeWindowInstance;
+        case 'linkedin': return linkedInWindowInstance;
+        case 'twitter': return twitterWindowInstance;
+        case 'whatsapp': return whatsappWindowInstance;
+        case 'instagram': return instagramWindowInstance;
+        case 'telegram': return telegramWindowInstance;
+        case 'discord': return discordWindowInstance;
+        case 'wechat': return wechatWindowInstance;
+        case 'snapchat': return snapchatWindowInstance;
+        case 'threads': return threadsWindowInstance;
+        default: return null;
+      }
+    };
+
+    const clearWindowInstance = (appName) => {
+      switch(appName) {
+        case 'linkedin': linkedInWindowInstance = null; break;
+        case 'teams': teamsWindowInstance = null; break;
+        case 'slack': slackWindowInstance = null; break;
+        case 'skype': skypeWindowInstance = null; break;
+        case 'twitter': twitterWindowInstance = null; break;
+        case 'whatsapp': whatsappWindowInstance = null; break;
+        case 'instagram': instagramWindowInstance = null; break;
+        case 'telegram': telegramWindowInstance = null; break;
+        case 'facebook': facebookWindowInstance = null; break;
+        case 'discord': discordWindowInstance = null; break;
+        case 'google-chat': googleChatWindowInstance = null; break;
+        case 'wechat': wechatWindowInstance = null; break;
+        case 'snapchat': snapchatWindowInstance = null; break;
+        case 'threads': threadsWindowInstance = null; break;
+      }
+    };
+
+    const closeSpecialWindow = async (windowInstance, appName, currentViewId) => {
+      if (windowInstance && windowInstance.container) {
+        console.log(`[closeSpecialWindow] Fechando janela do ${appName}`, windowInstance);
+        windowInstance.container.style.opacity = '0';
+        windowInstance.container.classList.remove('active');
+
+        setTimeout(async () => {
+          try {
+            if (windowInstance.id) {
+              console.log(`[closeSpecialWindow] Enviando comando para fechar janela do ${appName}`, windowInstance.id);
+              await window.electronAPI.invoke(`close-${appName}-window`, windowInstance.id);
+            } else {
+              console.error(`[closeSpecialWindow] ID da janela do ${appName} não encontrado`);
+            }
+          } catch (error) {
+            console.error(`[closeSpecialWindow] Erro ao fechar janela do ${appName}:`, error);
+          } finally {
+            if (windowInstance.container) {
+              windowInstance.container.style.visibility = 'hidden';
+              windowInstance.container.style.display = 'none';
+              windowInstance.container.remove();
+            }
+            clearWindowInstance(appName);
+            
+            const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+            if (button) {
+              button.classList.remove('active', 'opened');
+            }
+          }
+        }, 300);
+      } else {
+        console.error(`[closeSpecialWindow] Instância ou container não encontrado para ${appName}`);
+      }
+    };
+
     switch (command) {
+      case 'close-current':
+        if (isSpecialApp) {
+          console.log(`[execute-context-menu-command] Fechando janela especial: ${appName}`);
+          const windowInstance = getWindowInstance(appName);
+          if (windowInstance) {
+            await closeSpecialWindow(windowInstance, appName, currentViewId);
+          } else {
+            console.error(`[execute-context-menu-command] Instância não encontrada para ${appName}`);
+          }
+        } else {
+          const webview = document.getElementById(currentViewId);
+          if (webview) {
+            webview.remove();
+            const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+            if (button) {
+              button.classList.remove('active', 'opened');
+            }
+            document.querySelector('.content-area').style.display = 'none';
+            updateActiveViewTitle(null);
+          }
+        }
+        break;
+
       case 'reload-current':
         if (isSpecialApp) {
-          let windowInstance = null;
-          switch(appName) {
-            case 'google-chat':
-              windowInstance = googleChatWindowInstance;
-              break;
-            case 'facebook':
-              windowInstance = facebookWindowInstance;
-              break;
-            case 'teams':
-              windowInstance = teamsWindowInstance;
-              break;
-            case 'slack':
-              windowInstance = slackWindowInstance;
-              break;
-            case 'skype':
-              windowInstance = skypeWindowInstance;
-              break;
-            case 'linkedin':
-              windowInstance = linkedInWindowInstance;
-              break;
-            case 'twitter':
-              windowInstance = twitterWindowInstance;
-              break;
-            case 'whatsapp':
-              windowInstance = whatsappWindowInstance;
-              break;
-            case 'instagram':
-              windowInstance = instagramWindowInstance;
-              break;
-            case 'telegram':
-              windowInstance = telegramWindowInstance;
-              break;
-            case 'discord':
-              windowInstance = discordWindowInstance;
-              break;
-            case 'wechat':
-              windowInstance = wechatWindowInstance;
-              break;
-            case 'snapchat':
-              windowInstance = snapchatWindowInstance;
-              break;
-            case 'threads':
-              windowInstance = threadsWindowInstance;
-              break;
-          }
-
+          const windowInstance = getWindowInstance(appName);
           if (windowInstance && windowInstance.id) {
             try {
               await window.electronAPI.invoke(`reload-${appName}-window`, windowInstance.id);
@@ -1834,11 +1930,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           }
         } else {
-          // Para webviews normais
           const webview = document.getElementById(currentViewId);
           if (webview) {
             try {
-              
               if (currentViewId === 'webview-home') {
                 webview.src = '../../pages/home/home.html';
                 updateActiveViewTitle(webview);
@@ -1848,275 +1942,38 @@ document.addEventListener('DOMContentLoaded', async () => {
               } else {
                 webview.reload();
               }
-              
             } catch (error) {
               console.error(`[execute-context-menu-command] Erro ao recarregar webview ${currentViewId}:`, error);
-            }
-          } else {
-            try {
-              const url = serviceMap[currentViewId];
-              if (url) {
-                showWebview(currentViewId, `${currentViewId.replace('webview-', '')}-button`);
-              }
-            } catch (error) {
-              console.error(`[execute-context-menu-command] Erro ao recriar webview ${currentViewId}:`, error);
             }
           }
         }
         break;
 
       case 'close-all':
-        
-        // Fechar cada janela especial ativa
+        // Fechar todas as janelas especiais
         for (const instance of allSpecialInstances) {
           if (instance && instance.container) {
-            // Esconder o container visualmente com transição
-            instance.container.style.opacity = '0';
-            instance.container.classList.remove('active');
-
-            // Limpar a instância global após o fade-out e tentar fechar a janela
-            setTimeout(async () => {
-              try {
-                // Fechar a janela via IPC
-                if (instance.id) {
-                  const currentAppName = (instance.container && instance.container.className) ? instance.container.className.split('-')[0] : null;
-                  if (currentAppName) {
-                    await window.electronAPI.invoke(`close-${currentAppName}-window`, instance.id);
-                  }
-                }
-              } catch (error) {
-                // Se o objeto já foi destruído, é esperado, apenas logar e prosseguir
-                if (error.message && error.message.includes('Object has been destroyed')) {
-                  console.warn(`[execute-context-menu-command] Janela especial já destruída no processo principal.`);
-                } else {
-                  console.error(`[execute-context-menu-command] Erro ao fechar janela especial:`, error);
-                }
-              } finally {
-                // Remover o container
-                instance.container.style.visibility = 'hidden';
-                instance.container.style.display = 'none';
-                instance.container.remove();
-
-                // Limpar a instância global
-                switch(appName) {
-                  case 'linkedin':
-                    linkedInWindowInstance = null;
-                    break;
-                  case 'teams':
-                    teamsWindowInstance = null;
-                    break;
-                  case 'slack':
-                    slackWindowInstance = null;
-                    break;
-                  case 'skype':
-                    skypeWindowInstance = null;
-                    break;
-                  case 'twitter':
-                    twitterWindowInstance = null;
-                    break;
-                  case 'whatsapp':
-                    whatsappWindowInstance = null;
-                    break;
-                  case 'instagram':
-                    instagramWindowInstance = null;
-                    break;
-                  case 'telegram':
-                    telegramWindowInstance = null;
-                    break;
-                  case 'facebook':
-                    facebookWindowInstance = null;
-                    break;
-                  case 'discord':
-                    discordWindowInstance = null;
-                    break;
-                  case 'google-chat':
-                    googleChatWindowInstance = null;
-                    break;
-                  case 'wechat':
-                    wechatWindowInstance = null;
-                    break;
-                  case 'snapchat':
-                    snapchatWindowInstance = null;
-                    break;
-                  case 'threads':
-                    threadsWindowInstance = null;
-                    break;
-                }
-              }
-            }, TRANSITION_DURATION);
+            const appName = instance.container.className.split('-')[0];
+            await closeSpecialWindow(instance, appName, `webview-${appName}`);
           }
         }
 
-        // Fechar todas as webviews normais exceto a home
+        // Fechar todos os webviews normais
         const allWebviews = document.querySelectorAll('webview');
         allWebviews.forEach(webview => {
-          if (webview.id !== 'webview-home' && webview.id !== 'webview-settings') {
-            try {
-              webview.remove();
-              webviewCache.delete(webview.id);
-              webviewLastAccess.delete(webview.id);
-            } catch (error) {
-              console.error(`[execute-context-menu-command] Erro ao remover webview ${webview.id}:`, error);
-            }
-          }
+          webview.remove();
         });
 
-        // Atualizar todos os botões na sidebar
-        const buttons = document.querySelectorAll('.nav-button');
-        buttons.forEach(button => {
-          if (button.id !== 'home-button' && button.id !== 'settings-button') {
-            button.classList.remove('active', 'opened');
-          }
+        // Resetar todos os botões
+        const allButtons = document.querySelectorAll('.nav-button');
+        allButtons.forEach(button => {
+          button.classList.remove('active', 'opened');
         });
 
-        // Mostrar a home
-        showWebview('webview-home', 'home-button');
+        // Limpar a área de conteúdo
+        document.querySelector('.content-area').style.display = 'none';
+        updateActiveViewTitle(null);
         break;
-
-      case 'close-current':
-        if (isSpecialApp) {
-          let windowInstance = null;
-          switch(appName) {
-            case 'google-chat':
-              windowInstance = googleChatWindowInstance;
-              break;
-            case 'facebook':
-              windowInstance = facebookWindowInstance;
-              break;
-            case 'teams':
-              windowInstance = teamsWindowInstance;
-              break;
-            case 'slack':
-              windowInstance = slackWindowInstance;
-              break;
-            case 'skype':
-              windowInstance = skypeWindowInstance;
-              break;
-            case 'linkedin':
-              windowInstance = linkedInWindowInstance;
-              break;
-            case 'twitter':
-              windowInstance = twitterWindowInstance;
-              break;
-            case 'whatsapp':
-              windowInstance = whatsappWindowInstance;
-              break;
-            case 'instagram':
-              windowInstance = instagramWindowInstance;
-              break;
-            case 'telegram':
-              windowInstance = telegramWindowInstance;
-              break;
-            case 'discord':
-              windowInstance = discordWindowInstance;
-              break;
-            case 'wechat':
-              windowInstance = wechatWindowInstance;
-              break;
-            case 'snapchat':
-              windowInstance = snapchatWindowInstance;
-              break;
-            case 'threads':
-              windowInstance = threadsWindowInstance;
-              break;
-          }
-
-          // Verificar se temos uma instância válida
-          if (windowInstance) {
-            // Primeiro, esconder o container visualmente com transição
-            if (windowInstance.container) {
-              windowInstance.container.style.opacity = '0';
-              windowInstance.container.classList.remove('active');
-            }
-
-            // Limpar a instância global após o fade-out e tentar fechar a janela
-            setTimeout(async () => {
-              try {
-                // Tentar fechar a janela via IPC
-                if (windowInstance.id) {
-                  await window.electronAPI.invoke(`close-${appName}-window`, windowInstance.id);
-                } else {
-                  console.error(`[execute-context-menu-command] ID da janela do ${appName} não encontrado`);
-                }
-              } catch (error) {
-                // Se o objeto já foi destruído, é esperado, apenas logar e prosseguir
-                if (error.message && error.message.includes('Object has been destroyed')) {
-                  console.warn(`[execute-context-menu-command] Janela do ${appName} já destruída no processo principal.`);
-                } else {
-                  console.error(`[execute-context-menu-command] Erro ao fechar ${appName}:`, error);
-                }
-              } finally {
-                // Remover o container do DOM
-                if (windowInstance.container) {
-                  windowInstance.container.style.visibility = 'hidden';
-                  windowInstance.container.style.display = 'none';
-                  windowInstance.container.remove();
-                }
-
-                // Limpar a instância global
-                switch(appName) {
-                  case 'google-chat':
-                    googleChatWindowInstance = null;
-                    break;
-                  case 'facebook':
-                    facebookWindowInstance = null;
-                    break;
-                  case 'teams':
-                    teamsWindowInstance = null;
-                    break;
-                  case 'slack':
-                    slackWindowInstance = null;
-                    break;
-                  case 'skype':
-                    skypeWindowInstance = null;
-                    break;
-                  case 'linkedin':
-                    linkedInWindowInstance = null;
-                    break;
-                  case 'twitter':
-                    twitterWindowInstance = null;
-                    break;
-                  case 'whatsapp':
-                    whatsappWindowInstance = null;
-                    break;
-                  case 'instagram':
-                    instagramWindowInstance = null;
-                    break;
-                  case 'telegram':
-                    telegramWindowInstance = null;
-                    break;
-                  case 'discord':
-                    discordWindowInstance = null;
-                    break;
-                  case 'wechat':
-                    wechatWindowInstance = null;
-                    break;
-                  case 'snapchat':
-                    snapchatWindowInstance = null;
-                    break;
-                  case 'threads':
-                    threadsWindowInstance = null;
-                    break;
-                }
-
-                // Atualizar o botão na sidebar
-                const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
-                if (button) {
-                  button.classList.remove('opened', 'active');
-                }
-
-                // Se não houver mais webviews abertas, mostrar a home
-                if (!hasOpenWebviews()) {
-                  showWebview('webview-home', 'home-button');
-                }
-              }
-            }, TRANSITION_DURATION);
-          } else {
-            console.log(`[execute-context-menu-command] ${appName} não está ativo para fechar - instância não encontrada`);
-          }
-        }
-        break;
-      // ... outros casos ...
     }
   });
 
@@ -2438,6 +2295,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ... existing code ...
   window.electronAPI.on('close-all-webviews', async () => {
     try {
+      // Fechar todas as webviews, incluindo as do Google
       const webviews = document.querySelectorAll('webview');
       for (const webview of webviews) {
         const webviewId = webview.getAttribute('id');
@@ -2450,12 +2308,35 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (button) {
             button.classList.remove('active', 'opened');
           }
-          
-          // Limpar qualquer estado relacionado
-          if (googleChatWindowInstance && webviewId.includes('google')) {
-            googleChatWindowInstance.cleanup();
-          }
         }
+      }
+
+      // Fechar todas as browser views
+      const browserViews = document.querySelectorAll('.browser-view-container');
+      for (const view of browserViews) {
+        view.remove();
+      }
+
+      // Limpar estados de aplicativos especiais
+      if (linkedInWindowInstance) {
+        linkedInWindowInstance.cleanup();
+      }
+      if (googleChatWindowInstance) {
+        googleChatWindowInstance.cleanup();
+      }
+
+      // Limpar qualquer outro estado relacionado
+      activeViewId = null;
+      document.querySelector('.content-area').innerHTML = '';
+      
+      // Atualizar a interface
+      updateActiveViewTitle(null);
+      document.querySelector('.content-area').style.display = 'none';
+
+      // Forçar limpeza de qualquer webview do Google que possa ter ficado
+      const googleWebviews = document.querySelectorAll('webview[id*="google"]');
+      for (const webview of googleWebviews) {
+        webview.remove();
       }
     } catch (error) {
       console.error('Erro ao fechar todas as janelas:', error);
