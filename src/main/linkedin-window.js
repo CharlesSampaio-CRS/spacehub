@@ -80,21 +80,11 @@ class LinkedInWindowManager {
         // Ajustar a posição da janela filha quando a janela principal for redimensionada
         parentWindow.on('resize', () => {
           const newParentBounds = parentWindow.getBounds();
-          // Obter as novas coordenadas do webview-wrapper em relação à tela
-          // Isso exige que o processo de renderização seja o que envia a posição do wrapper atualizada.
-          // Para depuração, vamos logar o que ele tenta fazer.
-          console.log('Resize da janela principal. Tentando ajustar LinkedIn.');
           if (window && !window.isDestroyed()) {
-            // Nota: Para um ajuste preciso, o renderer precisaria enviar o novo wrapperBounds
-            // aqui, ou este lado precisaria calcular baseado em uma geometria conhecida do HTML
-            // Por enquanto, apenas logamos o que está acontecendo.
-
-            // Vamos tentar buscar as bounds atualizadas do wrapper do renderer
             event.sender.send('request-wrapper-bounds');
           }
         });
 
-        // Ajustar a posição da janela filha quando a janela principal for movida
         parentWindow.on('move', () => {
           const newParentBounds = parentWindow.getBounds();
           if (window && !window.isDestroyed()) {
@@ -124,7 +114,6 @@ class LinkedInWindowManager {
             width: newWrapperBounds.width,
             height: newWrapperBounds.height
           });
-          console.log('Janela do LinkedIn ajustada via update-linkedin-window-bounds.');
         }
       }
     });
