@@ -500,6 +500,7 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
   position: relative;
   display: flex;
   align-items: center;
+  z-index: 99999;
 }
 
 .profile-button {
@@ -512,6 +513,8 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
   border-radius: 8px;
   cursor: pointer;
   transition: var(--transition);
+  position: relative;
+  z-index: 99999;
 }
 
 .profile-button:hover {
@@ -543,16 +546,25 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
   width: 280px;
   background: var(--card-bg);
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   padding: 16px;
   margin-top: 8px;
   display: none;
-  z-index: 1000;
+  z-index: 999999;
   border: var(--component-border);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .profile-menu.show {
-  display: block;
+  display: block !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 .profile-info {

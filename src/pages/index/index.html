@@ -161,27 +161,6 @@
         document.documentElement.lang = language;
         translatePage(language);
       });
-
-      console.log('setupProfileMenu called', {
-        profileButton: document.getElementById('profile-button'),
-        profileMenu: document.getElementById('profile-menu'),
-        profileSettings: document.getElementById('profile-settings'),
-        profileLogout: document.getElementById('profile-logout')
-      });
-
-      const profileButton = document.getElementById('profile-button');
-      const profileMenu = document.getElementById('profile-menu');
-      if (profileButton && profileMenu) {
-        profileButton.onclick = (e) => {
-          e.stopPropagation();
-          profileMenu.classList.toggle('show');
-        };
-        document.addEventListener('click', (e) => {
-          if (!profileMenu.contains(e.target) && !profileButton.contains(e.target)) {
-            profileMenu.classList.remove('show');
-          }
-        });
-      }
     });
   </script>
 </body>

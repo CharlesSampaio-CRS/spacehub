@@ -1635,7 +1635,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (button) {
               button.classList.remove('active', 'opened');
             }
-            document.querySelector('.content-area').style.display = 'none';
+            const contentArea = document.querySelector('.content-area');
+            if (contentArea) {
+              contentArea.style.display = 'none';
+            }
             updateActiveViewTitle(null);
           }
           break;
@@ -1665,7 +1668,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             // Limpar a área de conteúdo
-            document.querySelector('.content-area').style.display = 'none';
+            const contentArea = document.querySelector('.content-area');
+            if (contentArea) {
+              contentArea.style.display = 'none';
+            }
             updateActiveViewTitle(null);
           });
           break;
@@ -1843,7 +1849,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (button) {
               button.classList.remove('active', 'opened');
             }
-            document.querySelector('.content-area').style.display = 'none';
+            const contentArea = document.querySelector('.content-area');
+            if (contentArea) {
+              contentArea.style.display = 'none';
+            }
             updateActiveViewTitle(null);
           }
         }
@@ -1904,7 +1913,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
 
           // Limpar a área de conteúdo
-          document.querySelector('.content-area').style.display = 'none';
+          const contentArea = document.querySelector('.content-area');
+          if (contentArea) {
+            contentArea.style.display = 'none';
+          }
           updateActiveViewTitle(null);
         });
         break;
@@ -2038,6 +2050,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   const setupProfileMenu = async () => {
+    // Evitar configuração múltipla
+    if (window.profileMenuConfigured) {
+      return;
+    }
+    
+    console.log('setupProfileMenu iniciado');
+    
     const profileButton = document.getElementById('profile-button');
     const profileMenu = document.getElementById('profile-menu');
     const profileSettings = document.getElementById('profile-settings');
@@ -2048,11 +2067,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const profileAvatar = document.getElementById('profile-avatar');
     const profileMenuAvatar = document.getElementById('profile-menu-avatar');
 
+    console.log('Elementos encontrados:', {
+      profileButton: !!profileButton,
+      profileMenu: !!profileMenu,
+      profileSettings: !!profileSettings,
+      profileLogout: !!profileLogout
+    });
+
+    // Verificar o HTML do menu
+    if (profileMenu) {
+      console.log('HTML do menu:', profileMenu.innerHTML);
+      console.log('Elementos internos do menu:', {
+        profileInfo: !!profileMenu.querySelector('.profile-info'),
+        profileSettings: !!profileMenu.querySelector('#profile-settings'),
+        profileLogout: !!profileMenu.querySelector('#profile-logout')
+      });
+    }
+
     // Verificar se os elementos necessários existem
     if (!profileButton || !profileMenu || !profileSettings || !profileLogout) {
       console.warn('Elementos do menu de perfil não encontrados');
       return;
     }
+
+    // Marcar como configurado para evitar configuração múltipla
+    window.profileMenuConfigured = true;
 
     try {
       // Buscar informações do usuário da API
@@ -2093,26 +2132,55 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error('Erro ao carregar dados do usuário:', error);
     }
 
-    // Toggle do menu
-    profileButton.addEventListener('click', (e) => {
+    // Toggle do menu - usar onclick para garantir que funcione
+    profileButton.onclick = (e) => {
+      e.preventDefault();
       e.stopPropagation();
-      profileMenu.classList.toggle('show');
-    });
+      console.log('Botão de perfil clicado');
+      
+      const allWebviews = document.querySelectorAll('webview, .linkedin-window-container, .teams-window-container, .slack-window-container, .skype-window-container, .twitter-window-container, .whatsapp-window-container, .instagram-window-container, .telegram-window-container, .facebook-window-container, .discord-window-container, .google-chat-window-container, .wechat-window-container, .snapchat-window-container, .threads-window-container');
+      if (profileMenu.classList.contains('show')) {
+        profileMenu.classList.remove('show');
+        // Restaurar visibilidade dos webviews
+        allWebviews.forEach(w => { if (w && w.style) w.style.visibility = 'visible'; });
+        console.log('Menu fechado');
+        console.log('Menu display:', profileMenu.style.display);
+        console.log('Menu visibility:', profileMenu.style.visibility);
+      } else {
+        profileMenu.classList.add('show');
+        // Forçar a exibição se necessário
+        profileMenu.style.display = 'block';
+        profileMenu.style.visibility = 'visible';
+        profileMenu.style.opacity = '1';
+        profileMenu.style.transform = 'translateY(0)';
+        // Esconder webviews enquanto o menu está aberto
+        allWebviews.forEach(w => { if (w && w.style) w.style.visibility = 'hidden'; });
+        console.log('Menu aberto');
+        console.log('Menu display:', profileMenu.style.display);
+        console.log('Menu visibility:', profileMenu.style.visibility);
+        console.log('Menu classes:', profileMenu.className);
+      }
+    };
 
     // Fechar menu ao clicar fora
     document.addEventListener('click', (e) => {
-      if (!profileMenu?.contains(e.target) && !profileButton?.contains(e.target)) {
-        profileMenu?.classList.remove('show');
+      if (profileMenu && profileButton && !profileMenu.contains(e.target) && !profileButton.contains(e.target)) {
+        profileMenu.classList.remove('show');
+        // Restaurar visibilidade dos webviews
+        const allWebviews = document.querySelectorAll('webview, .linkedin-window-container, .teams-window-container, .slack-window-container, .skype-window-container, .twitter-window-container, .whatsapp-window-container, .instagram-window-container, .telegram-window-container, .facebook-window-container, .discord-window-container, .google-chat-window-container, .wechat-window-container, .snapchat-window-container, .threads-window-container');
+        allWebviews.forEach(w => { if (w && w.style) w.style.visibility = 'visible'; });
       }
     });
 
     // Configurar ações dos botões
-    profileSettings.addEventListener('click', () => {
+    profileSettings.onclick = () => {
+      console.log('Configurações clicado');
       showWebview('webview-settings', 'settings-button');
       profileMenu.classList.remove('show');
-    });
+    };
 
-    profileLogout.addEventListener('click', async () => {
+    profileLogout.onclick = async () => {
+      console.log('Logout clicado');
       profileMenu.classList.remove('show');
       const currentLanguage = await window.electronAPI.getLanguage();
       showConfirmationDialog(translations[currentLanguage]['logout_confirmation'], async () => {
@@ -2141,18 +2209,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           console.error('Erro ao fazer logout:', error);
         }
       });
-    });
+    };
 
-    // Adicionar listener para mudanças no idioma
-    window.electronAPI.onLanguageChanged((language) => {
-      const elements = document.querySelectorAll('[data-translate]');
-      elements.forEach(element => {
-        const key = element.getAttribute('data-translate');
-        if (translations[language] && translations[language][key]) {
-          element.textContent = translations[language][key];
-        }
-      });
-    });
+    console.log('setupProfileMenu concluído');
   };
 
   // Adicionar listener para o evento create-webview-request
@@ -2191,9 +2250,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.documentElement.lang = currentLanguage;
       translatePage(currentLanguage);
 
+      // Configurar o menu de perfil imediatamente após o DOM estar pronto
+      setupProfileMenu();
+      
       setupMemoryManagement(); // Adicionar gerenciamento de memória
       await setupUserSession();
-      setupProfileMenu();
+      
       setupButtonEvents();
       setupDarkMode();
       setupContextMenu();
@@ -2270,11 +2332,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Limpar qualquer outro estado relacionado
       activeViewId = null;
-      document.querySelector('.content-area').innerHTML = '';
-      
-      // Atualizar a interface
+      const contentArea = document.querySelector('.content-area');
+      if (contentArea) {
+        contentArea.style.display = 'none';
+      }
       updateActiveViewTitle(null);
-      document.querySelector('.content-area').style.display = 'none';
 
       // Forçar limpeza de qualquer webview do Google que possa ter ficado
       const googleWebviews = document.querySelectorAll('webview[id*="google"]');
@@ -2286,4 +2348,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
   // ... existing code ...
+
+  // Garantir que o menu de perfil seja configurado assim que o DOM estiver pronto
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        setupProfileMenu();
+      }, 50);
+    });
+  } else {
+    // DOM já está pronto
+    setTimeout(() => {
+      setupProfileMenu();
+    }, 50);
+  }
+
+  // Garantir que o menu seja configurado quando a página terminar de carregar
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      setupProfileMenu();
+    }, 100);
+  });
 });
