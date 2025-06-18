@@ -33,12 +33,18 @@ class AppWindowManager {
               preload: path.join(__dirname, '../preload-teams.js'),
               nodeIntegration: false,
               contextIsolation: true,
-              sandbox: false,
+              sandbox: true,
               webSecurity: true,
-              allowRunningInsecureContent: true,
-              backgroundThrottling: false,
+              allowRunningInsecureContent: false,
+              backgroundThrottling: true,
               enableRemoteModule: false,
-              nodeIntegrationInSubFrames: true
+              nodeIntegrationInSubFrames: false,
+              spellcheck: false,
+              enableWebSQL: false,
+              enableBlinkFeatures: '',
+              disableBlinkFeatures: 'WebSQL,WebGL,WebGL2',
+              partition: 'persist:teams',
+              cache: false
             }
           },
           slack: {
@@ -47,12 +53,19 @@ class AppWindowManager {
               preload: path.join(__dirname, '../preload-slack.js'),
               nodeIntegration: false,
               contextIsolation: true,
-              sandbox: false,
+              sandbox: true,
               webSecurity: true,
-              allowRunningInsecureContent: true,
-              backgroundThrottling: false,
+              allowRunningInsecureContent: false,
+              backgroundThrottling: true,
               enableRemoteModule: false,
-              nodeIntegrationInSubFrames: true
+              nodeIntegrationInSubFrames: false,
+              spellcheck: false,
+              enableWebSQL: false,
+              enableBlinkFeatures: '',
+              disableBlinkFeatures: 'WebSQL,WebGL,WebGL2',
+              partition: 'persist:slack',
+              cache: false,
+              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
           },
           skype: {
@@ -61,12 +74,18 @@ class AppWindowManager {
               preload: path.join(__dirname, '../preload-skype.js'),
               nodeIntegration: false,
               contextIsolation: true,
-              sandbox: false,
+              sandbox: true,
               webSecurity: true,
-              allowRunningInsecureContent: true,
-              backgroundThrottling: false,
+              allowRunningInsecureContent: false,
+              backgroundThrottling: true,
               enableRemoteModule: false,
-              nodeIntegrationInSubFrames: true
+              nodeIntegrationInSubFrames: false,
+              spellcheck: false,
+              enableWebSQL: false,
+              enableBlinkFeatures: '',
+              disableBlinkFeatures: 'WebSQL,WebGL,WebGL2',
+              partition: 'persist:skype',
+              cache: false
             }
           },
           whatsapp: {
@@ -75,12 +94,18 @@ class AppWindowManager {
               preload: path.join(__dirname, '../preload-whatsapp.js'),
               nodeIntegration: false,
               contextIsolation: true,
-              sandbox: false,
+              sandbox: true,
               webSecurity: true,
-              allowRunningInsecureContent: true,
-              backgroundThrottling: false,
+              allowRunningInsecureContent: false,
+              backgroundThrottling: true,
               enableRemoteModule: false,
-              nodeIntegrationInSubFrames: true
+              nodeIntegrationInSubFrames: false,
+              spellcheck: false,
+              enableWebSQL: false,
+              enableBlinkFeatures: '',
+              disableBlinkFeatures: 'WebSQL,WebGL,WebGL2',
+              partition: 'persist:whatsapp',
+              cache: false
             }
           },
           instagram: {
@@ -89,12 +114,18 @@ class AppWindowManager {
               preload: path.join(__dirname, '../preload-instagram.js'),
               nodeIntegration: false,
               contextIsolation: true,
-              sandbox: false,
+              sandbox: true,
               webSecurity: true,
-              allowRunningInsecureContent: true,
-              backgroundThrottling: false,
+              allowRunningInsecureContent: false,
+              backgroundThrottling: true,
               enableRemoteModule: false,
-              nodeIntegrationInSubFrames: true
+              nodeIntegrationInSubFrames: false,
+              spellcheck: false,
+              enableWebSQL: false,
+              enableBlinkFeatures: '',
+              disableBlinkFeatures: 'WebSQL,WebGL,WebGL2',
+              partition: 'persist:instagram',
+              cache: false
             }
           },
           facebook: {
@@ -103,12 +134,18 @@ class AppWindowManager {
               preload: path.join(__dirname, '../preload-facebook.js'),
               nodeIntegration: false,
               contextIsolation: true,
-              sandbox: false,
+              sandbox: true,
               webSecurity: true,
-              allowRunningInsecureContent: true,
-              backgroundThrottling: false,
+              allowRunningInsecureContent: false,
+              backgroundThrottling: true,
               enableRemoteModule: false,
-              nodeIntegrationInSubFrames: true
+              nodeIntegrationInSubFrames: false,
+              spellcheck: false,
+              enableWebSQL: false,
+              enableBlinkFeatures: '',
+              disableBlinkFeatures: 'WebSQL,WebGL,WebGL2',
+              partition: 'persist:facebook',
+              cache: false
             }
           },
           twitter: {
@@ -117,12 +154,18 @@ class AppWindowManager {
               preload: path.join(__dirname, '../preload-twitter.js'),
               nodeIntegration: false,
               contextIsolation: true,
-              sandbox: false,
+              sandbox: true,
               webSecurity: true,
-              allowRunningInsecureContent: true,
-              backgroundThrottling: false,
+              allowRunningInsecureContent: false,
+              backgroundThrottling: true,
               enableRemoteModule: false,
-              nodeIntegrationInSubFrames: true
+              nodeIntegrationInSubFrames: false,
+              spellcheck: false,
+              enableWebSQL: false,
+              enableBlinkFeatures: '',
+              disableBlinkFeatures: 'WebSQL,WebGL,WebGL2',
+              partition: 'persist:twitter',
+              cache: false
             }
           },
           'google-chat': {
@@ -131,12 +174,18 @@ class AppWindowManager {
               preload: path.join(__dirname, '../preload-google-chat.js'),
               nodeIntegration: false,
               contextIsolation: true,
-              sandbox: false,
+              sandbox: true,
               webSecurity: true,
-              allowRunningInsecureContent: true,
-              backgroundThrottling: false,
+              allowRunningInsecureContent: false,
+              backgroundThrottling: true,
               enableRemoteModule: false,
-              nodeIntegrationInSubFrames: true
+              nodeIntegrationInSubFrames: false,
+              spellcheck: false,
+              enableWebSQL: false,
+              enableBlinkFeatures: '',
+              disableBlinkFeatures: 'WebSQL,WebGL,WebGL2',
+              partition: 'persist:google-chat',
+              cache: false
             }
           }
         };
@@ -153,7 +202,66 @@ class AppWindowManager {
           width: width,
           height: height,
           x: parentWindow.getPosition()[0] + x,
-          y: parentWindow.getPosition()[1] + y
+          y: parentWindow.getPosition()[1] + y,
+          // Configurações adicionais para otimização
+          titleBarStyle: 'hidden',
+          thickFrame: false,
+          hasShadow: false,
+          fullscreenable: false,
+          maximizable: false,
+          minimizable: false,
+          skipTaskbar: true,
+          webPreferences: {
+            ...(appSpecificOptions[appName.toLowerCase()]?.webPreferences || {}),
+            // Configurações globais de otimização
+            offscreen: false,
+            backgroundThrottling: true,
+            enableRemoteModule: false,
+            nodeIntegration: false,
+            contextIsolation: true,
+            sandbox: true,
+            webSecurity: true,
+            allowRunningInsecureContent: false,
+            spellcheck: false,
+            enableWebSQL: false,
+            enableBlinkFeatures: '',
+            disableBlinkFeatures: 'WebSQL,WebGL,WebGL2',
+            partition: `persist:${appName.toLowerCase()}`,
+            cache: false
+          }
+        });
+
+        // Configurar limpeza periódica de cache
+        setInterval(() => {
+          if (window && !window.isDestroyed()) {
+            window.webContents.session.clearCache();
+            window.webContents.session.clearStorageData({
+              storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
+            });
+          }
+        }, 300000); // Limpar a cada 5 minutos
+
+        // Configurar eventos de memória
+        window.webContents.on('did-finish-load', () => {
+          if (window && !window.isDestroyed()) {
+            window.webContents.setFrameRate(30); // Reduzir taxa de quadros para economizar recursos
+            window.webContents.setBackgroundThrottling(true);
+          }
+        });
+
+        // Configurar eventos de visibilidade
+        window.on('hide', () => {
+          if (window && !window.isDestroyed()) {
+            window.webContents.setFrameRate(10); // Reduzir ainda mais quando oculto
+            window.webContents.setBackgroundThrottling(true);
+          }
+        });
+
+        window.on('show', () => {
+          if (window && !window.isDestroyed()) {
+            window.webContents.setFrameRate(30);
+            window.webContents.setBackgroundThrottling(false);
+          }
         });
 
         // Configurar User-Agent específico para cada aplicativo
@@ -188,7 +296,7 @@ class AppWindowManager {
               break;
             case 'slack':
               if (!url.includes('app.slack.com')) {
-                finalUrl = 'https://app.slack.com/client';
+                finalUrl = 'https://app.slack.com/client?web=true&app=true&desktop=true';
               }
               break;
             case 'whatsapp':
