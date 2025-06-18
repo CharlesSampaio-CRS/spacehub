@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (webviewContainer) {
     webviewContainer.style.cssText = `
       position: absolute;
-      top: 40px;
+      top: 60px;
       left: 64px;
       right: 0;
       bottom: 0;
@@ -142,9 +142,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (headerElement) {
     headerElement.style.position = 'fixed';
     headerElement.style.top = '0';
-    headerElement.style.left = '0';
+    headerElement.style.left = '64px';
     headerElement.style.right = '0';
     headerElement.style.zIndex = '1000';
+    headerElement.style.height = '60px';
   }
 
   const sidebarElement = document.getElementById('sidebar');
@@ -215,8 +216,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           const header = document.getElementById('header');
           const sidebar = document.getElementById('sidebar');
           // Utilizar valores fixos para altura do cabeçalho e largura da sidebar
-          const headerHeight = 40; // Altura base do cabeçalho
-          const sidebarWidth = 64; // Largura base da sidebar
+          const headerHeight = header ? header.offsetHeight : 60; // Altura base do cabeçalho
+          const sidebarWidth = sidebar ? sidebar.offsetWidth : 64; // Largura base da sidebar
           const headerMargin = 4;
           const bottomMargin = 4;
 
@@ -291,9 +292,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // Obter as dimensões reais do header e sidebar
-        // Utilizar valores fixos para altura do cabeçalho e largura da sidebar
-        const headerHeight = 40; // Altura base do cabeçalho
-        const sidebarWidth = 64; // Largura base da sidebar
+        const header = document.getElementById('header');
+        const sidebar = document.getElementById('sidebar');
+        
+        // Valores padrão caso os elementos não sejam encontrados
+        const headerHeight = header ? header.offsetHeight : 60;
+        const sidebarWidth = sidebar ? sidebar.offsetWidth : 64;
         const headerMargin = 4;
         const bottomMargin = 4;
 
@@ -423,7 +427,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Adicionar listener para redimensionamento da janela
             const resizeHandler = () => {
-              const newHeaderHeight = 40; // Altura base do cabeçalho
+              const newHeaderHeight = 60; // Altura base do cabeçalho
               const newSidebarWidth = 64; // Largura base da sidebar
               
               container.style.top = `${newHeaderHeight + headerMargin}px`;
@@ -701,7 +705,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const sidebar = document.querySelector('.sidebar');
       
       // Valores padrão caso os elementos não sejam encontrados
-      const headerHeight = header ? header.offsetHeight : 40;
+      const headerHeight = header ? header.offsetHeight : 60;
       const sidebarWidth = sidebar ? sidebar.offsetWidth : 64;
       const headerMargin = 4;
       const bottomMargin = 4;
@@ -1234,13 +1238,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Atualizar Todos': 'Atualizar Todos',
         'Fechar Todos': 'Fechar Todos',
         'Atualizar': 'Atualizar',
-        'Fechar': 'Fechar'
+        'Fechar': 'Fechar',
+        'close_all_confirmation': 'Tem certeza de que deseja fechar todas as janelas?'
       },
       'en-US': {
         'Atualizar Todos': 'Refresh All',
         'Fechar Todos': 'Close All',
         'Atualizar': 'Refresh',
-        'Fechar': 'Close'
+        'Fechar': 'Close',
+        'close_all_confirmation': 'Are you sure you want to close all windows?'
       }
     };
 
@@ -1635,18 +1641,33 @@ document.addEventListener('DOMContentLoaded', async () => {
           break;
           
         case 'close-all':
-          const allWebviews = document.querySelectorAll('webview');
-          allWebviews.forEach(webview => {
-            webview.remove();
+          // Mostrar diálogo de confirmação antes de fechar todas as janelas
+          const currentLanguage = await window.electronAPI.getLanguage();
+          showConfirmationDialog(translations[currentLanguage]['close_all_confirmation'], async () => {
+            // Fechar todas as janelas especiais
+            for (const instance of allSpecialInstances) {
+              if (instance && instance.container) {
+                const appName = instance.container.className.split('-')[0];
+                await closeSpecialWindow(instance, appName, `webview-${appName}`);
+              }
+            }
+
+            // Fechar todos os webviews normais
+            const allWebviews = document.querySelectorAll('webview');
+            allWebviews.forEach(webview => {
+              webview.remove();
+            });
+
+            // Resetar todos os botões
+            const allButtons = document.querySelectorAll('.nav-button');
+            allButtons.forEach(button => {
+              button.classList.remove('active', 'opened');
+            });
+
+            // Limpar a área de conteúdo
+            document.querySelector('.content-area').style.display = 'none';
+            updateActiveViewTitle(null);
           });
-          
-          const allButtons = document.querySelectorAll('.nav-button');
-          allButtons.forEach(button => {
-            button.classList.remove('active', 'opened');
-          });
-          
-          document.querySelector('.content-area').style.display = 'none';
-          updateActiveViewTitle(null);
           break;
       }
     });
@@ -1859,29 +1880,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         break;
 
       case 'close-all':
-        // Fechar todas as janelas especiais
-        for (const instance of allSpecialInstances) {
-          if (instance && instance.container) {
-            const appName = instance.container.className.split('-')[0];
-            await closeSpecialWindow(instance, appName, `webview-${appName}`);
+        // Mostrar diálogo de confirmação antes de fechar todas as janelas
+        const currentLanguage = await window.electronAPI.getLanguage();
+        showConfirmationDialog(translations[currentLanguage]['close_all_confirmation'], async () => {
+          // Fechar todas as janelas especiais
+          for (const instance of allSpecialInstances) {
+            if (instance && instance.container) {
+              const appName = instance.container.className.split('-')[0];
+              await closeSpecialWindow(instance, appName, `webview-${appName}`);
+            }
           }
-        }
 
-        // Fechar todos os webviews normais
-        const allWebviews = document.querySelectorAll('webview');
-        allWebviews.forEach(webview => {
-          webview.remove();
+          // Fechar todos os webviews normais
+          const allWebviews = document.querySelectorAll('webview');
+          allWebviews.forEach(webview => {
+            webview.remove();
+          });
+
+          // Resetar todos os botões
+          const allButtons = document.querySelectorAll('.nav-button');
+          allButtons.forEach(button => {
+            button.classList.remove('active', 'opened');
+          });
+
+          // Limpar a área de conteúdo
+          document.querySelector('.content-area').style.display = 'none';
+          updateActiveViewTitle(null);
         });
-
-        // Resetar todos os botões
-        const allButtons = document.querySelectorAll('.nav-button');
-        allButtons.forEach(button => {
-          button.classList.remove('active', 'opened');
-        });
-
-        // Limpar a área de conteúdo
-        document.querySelector('.content-area').style.display = 'none';
-        updateActiveViewTitle(null);
         break;
     }
   });
