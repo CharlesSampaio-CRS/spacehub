@@ -550,6 +550,217 @@ ipcMain.on('restart-for-update', () => {
 });
 
 app.whenReady().then(() => {
+  // Registrar todos os handlers IPC
+  ipcMain.handle('get-dark-mode', () => {
+    return store.get('darkMode') === true;
+  });
+
+  ipcMain.handle('get-language', () => store.get('language') || 'pt-BR');
+
+  ipcMain.on('language-changed', (event, language) => {
+    store.set('language', language);
+    BrowserWindow.getAllWindows().forEach(window => {
+      if (!window.isDestroyed()) {
+        window.webContents.send('language-changed', language);
+      }
+    });
+  });
+
+  ipcMain.handle('create-login-window', () => {
+    createLoginWindow();
+  });
+
+  ipcMain.handle('close-current-window', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) {
+      win.close();
+    }
+  });
+
+  ipcMain.handle('restart-app', () => {
+    const currentLanguage = store.get('language');
+    store.set('language', currentLanguage);
+    setTimeout(() => {
+      app.relaunch();
+      app.exit(0);
+    }, 100);
+  });
+
+  ipcMain.handle('login', async (event, { email, password }) => {
+    try {
+      const { data } = await axios.post('https://spaceapp-digital-api.onrender.com/login', {
+        email,
+        password
+      });
+      const sessionInfo = createUserSession(email);
+      return data;
+    } catch (error) {
+      console.error('Login error in main process:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('register', async (event, { name, email, password }) => {
+    try {
+      const { data } = await axios.post('https://spaceapp-digital-api.onrender.com/register', {
+        name,
+        email,
+        password
+      });
+      const sessionInfo = createUserSession(email);
+      return { status: 201, data };
+    } catch (error) {
+      console.error('Register error in main process:', error);
+      if (error.response) {
+        throw error.response;
+      }
+      throw error;
+    }
+  });
+
+  // Handler para menu de contexto
+  ipcMain.handle('show-context-menu-window', async (event, menuTemplate, clientX, clientY, currentViewId) => {
+    if (contextMenuWindow && !contextMenuWindow.isDestroyed()) {
+      contextMenuWindow.close(); // Fechar qualquer menu existente
+    }
+
+    const mainWindow = BrowserWindow.fromWebContents(event.sender);
+    const [mainWindowX, mainWindowY] = mainWindow.getPosition();
+
+    // Ajustar as coordenadas do mouse para a posição na tela
+    const screenX = mainWindowX + clientX;
+    const screenY = mainWindowY + clientY;
+
+    // Calcular as dimensões aproximadas do menu para definir o tamanho da janela
+    const menuWidth = 220; // Largura aproximada
+    const menuHeight = (menuTemplate.length * 32) + 16; // Altura aproximada (item height + padding)
+
+    contextMenuWindow = new BrowserWindow({
+      width: menuWidth,
+      height: menuHeight,
+      x: screenX,
+      y: screenY,
+      transparent: true,
+      frame: false,
+      alwaysOnTop: true, // Manter sempre no topo
+      show: false, // Mostrar após carregar o conteúdo e posicionar
+      webPreferences: {
+        nodeIntegration: true, // Habilitar nodeIntegration para o script do menu
+        contextIsolation: false, // Necessário para usar require no script do menu
+        preload: path.join(__dirname, 'preload.js') // Usar o mesmo preload ou um específico
+      }
+    });
+
+    contextMenuWindow.setAlwaysOnTop(true, 'pop-up-menu'); // Nível pop-up-menu para garantir prioridade
+    contextMenuWindow.setVisibleOnAllWorkspaces(true); // Garante que apareça em qualquer workspace
+
+    contextMenuWindow.loadFile(path.join(__dirname, 'pages/context-menu/context-menu.html'));
+
+    contextMenuWindow.webContents.on('did-finish-load', () => {
+      // Enviar o template do menu para a janela do menu de contexto
+      contextMenuWindow.webContents.send('show-context-menu', menuTemplate, currentViewId);
+      contextMenuWindow.show();
+      contextMenuWindow.focus(); // Forçar o foco na nova janela
+    });
+
+    // Fechar a janela do menu quando ela perder o foco
+    contextMenuWindow.on('blur', () => {
+      if (contextMenuWindow && !contextMenuWindow.isDestroyed()) {
+        contextMenuWindow.close();
+      }
+    });
+
+    contextMenuWindow.on('closed', () => {
+      contextMenuWindow = null;
+    });
+  });
+
+  // Listener para ações do menu de contexto
+  ipcMain.on('context-menu-action', (event, command, currentViewId) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      // Encaminhar o comando para a janela principal (renderer process)
+      mainWindow.webContents.send('execute-context-menu-command', command, currentViewId);
+    }
+    if (contextMenuWindow && !contextMenuWindow.isDestroyed()) {
+      contextMenuWindow.close(); // Fechar a janela do menu após a ação
+    }
+  });
+
+  // Adicionar outros handlers necessários
+  ipcMain.handle('logout', async (event, email) => {
+    try {
+      // Limpar a sessão do usuário
+      if (email) {
+        await clearUserSession(email);
+      }
+
+      // Limpar dados do store
+      store.delete('token');
+      store.delete('userUuid');
+      store.delete('user');
+
+      // Fechar janela principal e criar janela de login
+      closeWindow(mainWindow);
+      createLoginWindow();
+      return { success: true };
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Adicionar função para limpar todas as sessões
+  const clearAllSessions = async () => {
+    for (const [email, session] of userSessions.entries()) {
+      try {
+        await session.clearCache();
+        await session.clearStorageData({
+          storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
+        });
+      } catch (error) {
+        console.error(`Erro ao limpar sessão ${email}:`, error);
+      }
+    }
+    userSessions.clear();
+  };
+
+  // Adicionar handler para limpar todas as sessões
+  ipcMain.handle('clear-all-sessions', async () => {
+    await clearAllSessions();
+    return { success: true };
+  });
+
+  ipcMain.on('create-webview', (event, webviewId, url) => {
+    // Send the webview creation request back to the renderer process
+    event.sender.send('create-webview-request', {
+      webviewId,
+      url,
+      isLinkedIn: url.includes('linkedin.com')
+    });
+  });
+
+  // Adicionar handler para get-current-window
+  ipcMain.handle('get-current-window', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    return win ? win.id : null;
+  });
+
+  // Adicionar handler para fechar janela do Google
+  ipcMain.handle('close-google-window', async (event, targetId) => {
+    try {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        // Enviar comando para o renderer process fechar a janela do Google
+        mainWindow.webContents.send('close-google-window', targetId);
+        return { success: true };
+      }
+      return { success: false, error: 'Main window not found' };
+    } catch (error) {
+      console.error('Erro ao fechar janela do Google:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Criar janela de login inicial
   createLoginWindow();
 
   // Configurar idioma inicial
@@ -560,6 +771,7 @@ app.whenReady().then(() => {
     }
   });
 
+  // Configurar auto-updater
   autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.autoRunAppAfterInstall = true;
   
@@ -695,231 +907,4 @@ ipcMain.handle('clear-user-session', (event, email) => {
 
 ipcMain.handle('get-user-session', (event, email) => {
   return userSessions.has(email) ? { sessionId: `persist:user_${email}` } : null;
-});
-
-// Modificar o handler de login
-ipcMain.handle('login', async (event, { email, password }) => {
-  try {
-    const { data } = await axios.post('https://spaceapp-digital-api.onrender.com/login', {
-      email,
-      password
-    });
-
-    // Criar sessão específica para o email
-    const sessionInfo = createUserSession(email);
-
-    return data;
-  } catch (error) {
-    console.error('Login error in main process:', error);
-    throw error;
-  }
-});
-
-// Modificar o handler de registro
-ipcMain.handle('register', async (event, { name, email, password }) => {
-  try {
-    const { data } = await axios.post('https://spaceapp-digital-api.onrender.com/register', {
-      name,
-      email,
-      password
-    });
-
-    // Criar sessão específica para o email registrado
-    const sessionInfo = createUserSession(email);
-
-    return { status: 201, data };
-  } catch (error) {
-    console.error('Register error in main process:', error);
-    if (error.response) {
-      throw error.response;
-    }
-    throw error;
-  }
-});
-
-ipcMain.handle('get-dark-mode', () => {
-  return store.get('darkMode') === true;
-});
-
-// Adicionar handlers de idioma
-ipcMain.handle('get-language', () => store.get('language') || 'pt-BR');
-
-ipcMain.on('language-changed', (event, language) => {
-  store.set('language', language);
-  // Propagar para todas as janelas
-  BrowserWindow.getAllWindows().forEach(window => {
-    if (!window.isDestroyed()) {
-      window.webContents.send('language-changed', language);
-    }
-  });
-});
-
-// Handler para criar janela de login
-ipcMain.handle('create-login-window', () => {
-  createLoginWindow();
-});
-
-// Handler para fechar a janela atual
-ipcMain.handle('close-current-window', (event) => {
-  const win = BrowserWindow.fromWebContents(event.sender);
-  if (win) {
-    win.close();
-  }
-});
-
-// Adicionar handler para reiniciar a aplicação
-ipcMain.handle('restart-app', () => {
-  // Primeiro, salvar o idioma no store
-  const currentLanguage = store.get('language');
-  store.set('language', currentLanguage);
-  
-  // Pequeno delay antes de reiniciar
-  setTimeout(() => {
-    app.relaunch();
-    app.exit(0);
-  }, 100);
-});
-
-// Modificar o handler de logout para limpar a sessão
-ipcMain.handle('logout', async (event, email) => {
-  try {
-    // Limpar a sessão do usuário
-    if (email) {
-      await clearUserSession(email);
-    }
-
-    // Limpar dados do store
-    store.delete('token');
-    store.delete('userUuid');
-    store.delete('user');
-
-    // Fechar janela principal e criar janela de login
-    closeWindow(mainWindow);
-    createLoginWindow();
-    return { success: true };
-  } catch (error) {
-    console.error('Erro no logout:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-// Adicionar função para limpar todas as sessões
-const clearAllSessions = async () => {
-  for (const [email, session] of userSessions.entries()) {
-    try {
-      await session.clearCache();
-      await session.clearStorageData({
-        storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
-      });
-    } catch (error) {
-      console.error(`Erro ao limpar sessão ${email}:`, error);
-    }
-  }
-  userSessions.clear();
-};
-
-// Adicionar handler para limpar todas as sessões
-ipcMain.handle('clear-all-sessions', async () => {
-  await clearAllSessions();
-  return { success: true };
-});
-
-ipcMain.on('create-webview', (event, webviewId, url) => {
-  // Send the webview creation request back to the renderer process
-  event.sender.send('create-webview-request', {
-    webviewId,
-    url,
-    isLinkedIn: url.includes('linkedin.com')
-  });
-});
-
-// Adicionar handler para get-current-window
-ipcMain.handle('get-current-window', (event) => {
-  const win = BrowserWindow.fromWebContents(event.sender);
-  return win ? win.id : null;
-});
-
-// Novo handler para criar e mostrar o menu de contexto nativo
-ipcMain.handle('show-context-menu-window', async (event, menuTemplate, clientX, clientY, currentViewId) => {
-  if (contextMenuWindow && !contextMenuWindow.isDestroyed()) {
-    contextMenuWindow.close(); // Fechar qualquer menu existente
-  }
-
-  const mainWindow = BrowserWindow.fromWebContents(event.sender);
-  const [mainWindowX, mainWindowY] = mainWindow.getPosition();
-
-  // Ajustar as coordenadas do mouse para a posição na tela
-  const screenX = mainWindowX + clientX;
-  const screenY = mainWindowY + clientY;
-
-  // Calcular as dimensões aproximadas do menu para definir o tamanho da janela
-  const menuWidth = 220; // Largura aproximada
-  // A altura será dinâmica baseada no número de itens. No HTML/JS do menu, ele se ajustará.
-  // Aqui, um valor inicial para a janela, ou podemos deixar o `show: false` e redimensionar depois.
-  const menuHeight = (menuTemplate.length * 32) + 16; // Altura aproximada (item height + padding)
-
-  contextMenuWindow = new BrowserWindow({
-    width: menuWidth,
-    height: menuHeight,
-    x: screenX,
-    y: screenY,
-    transparent: true,
-    frame: false,
-    alwaysOnTop: true, // Manter sempre no topo
-    show: false, // Mostrar após carregar o conteúdo e posicionar
-    webPreferences: {
-      nodeIntegration: true, // Habilitar nodeIntegration para o script do menu
-      contextIsolation: false, // Necessário para usar require no script do menu
-      preload: path.join(__dirname, 'preload.js') // Usar o mesmo preload ou um específico
-    }
-  });
-
-  contextMenuWindow.setAlwaysOnTop(true, 'pop-up-menu'); // Nível pop-up-menu para garantir prioridade
-  contextMenuWindow.setVisibleOnAllWorkspaces(true); // Garante que apareça em qualquer workspace
-
-  contextMenuWindow.loadFile(path.join(__dirname, 'pages/context-menu/context-menu.html'));
-
-  contextMenuWindow.webContents.on('did-finish-load', () => {
-    // Enviar o template do menu para a janela do menu de contexto
-    contextMenuWindow.webContents.send('show-context-menu', menuTemplate, currentViewId);
-    contextMenuWindow.show();
-    contextMenuWindow.focus(); // Forçar o foco na nova janela
-  });
-
-  // Fechar a janela do menu quando ela perder o foco
-  contextMenuWindow.on('blur', () => {
-    if (contextMenuWindow && !contextMenuWindow.isDestroyed()) {
-      contextMenuWindow.close();
-    }
-  });
-
-  contextMenuWindow.on('closed', () => {
-    contextMenuWindow = null;
-  });
-});
-
-// Listener para ações do menu de contexto vindas da janela do menu de contexto
-ipcMain.on('context-menu-action', (event, command, currentViewId) => {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    // Encaminhar o comando para a janela principal (renderer process)
-    mainWindow.webContents.send('execute-context-menu-command', command, currentViewId);
-  }
-  if (contextMenuWindow && !contextMenuWindow.isDestroyed()) {
-    contextMenuWindow.close(); // Fechar a janela do menu após a ação
-  }
-});
-
-// Adicionar handler para fechar janela do Google
-ipcMain.handle('close-google-window', async (event, targetId) => {
-  try {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      // Enviar comando para o renderer process fechar a janela do Google
-      mainWindow.webContents.send('close-google-window', targetId);
-      return { success: true };
-    }
-    return { success: false, error: 'Main window not found' };
-  } catch (error) {
-    console.error('Erro ao fechar janela do Google:', error);
-    return { success: false, error: error.message };
-  }
 });
