@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (webviewContainer) {
     webviewContainer.style.cssText = `
       position: absolute;
-      top: 60px;
+      top: 34px;
       left: 64px;
       right: 0;
       bottom: 0;
@@ -137,6 +137,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
   }
 
+  // Função para ajustar dinamicamente a posição do webview-container
+  const adjustWebviewContainerPosition = () => {
+    const webviewContainer = document.querySelector('.webview-container');
+    const header = document.querySelector('.header');
+    
+    if (webviewContainer && header) {
+      const headerHeight = header.offsetHeight;
+      const headerMargin = 4; // Margem entre header e container
+      
+      webviewContainer.style.top = `${headerHeight + headerMargin}px`;
+    }
+  };
+
   // Ajustar z-index para cabeçalho e barra lateral
   const headerElement = document.getElementById('header');
   if (headerElement) {
@@ -146,6 +159,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     headerElement.style.right = '0';
     headerElement.style.zIndex = '1000';
     headerElement.style.height = '34px';
+    
+    // Adicionar listener para ajustar posição quando a altura do header mudar
+    const resizeObserver = new ResizeObserver(() => {
+      adjustWebviewContainerPosition();
+    });
+    resizeObserver.observe(headerElement);
   }
 
   const sidebarElement = document.getElementById('sidebar');
@@ -395,6 +414,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       // Fechar o menu de perfil se estiver aberto
       closeProfileMenu();
+      
+      // Ajustar posição do container baseado na altura atual do header
+      adjustWebviewContainerPosition();
       
       disableAllButtons(); // Desabilitar botões no início
       showLoading();
@@ -676,6 +698,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       } 
 
+      // Ajustar posição do container novamente para garantir que esteja correto
+      adjustWebviewContainerPosition();
+      
       hideLoading();
       enableAllButtons(); // Reabilitar botões após carregar
     } catch (error) {
@@ -1921,6 +1946,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     translatePage(language);
   });
 
+  // Adicionar listener para redimensionamento da janela
+  window.addEventListener('resize', () => {
+    adjustWebviewContainerPosition();
+  });
+
   // Modificar a função init
   const init = async () => {
     try {
@@ -1941,6 +1971,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       setupDarkMode();
       setupContextMenu();
       setupSidebarScroll();
+      
+      // Ajustar posição inicial do container
+      adjustWebviewContainerPosition();
+      
       refreshApplications();
       
       setTimeout(() => {

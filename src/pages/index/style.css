@@ -211,7 +211,7 @@ body.dark-mode .nav-button.opened::after {
   top: 0;
   left: var(--sidebar-width);
   right: 0;
-  height: 60px;
+  height: 34px;
   background-color: var(--card-bg);
   border-bottom: var(--component-border);
   display: flex;

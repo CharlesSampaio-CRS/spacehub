@@ -1,7 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('snapchatAPI', {
-  // Funções específicas para o Snapchat
+  // Funções específicas para o SnapChat
   handleAuth: (callback) => {
     ipcRenderer.on('snapchat-auth', (event, data) => callback(data));
   },
