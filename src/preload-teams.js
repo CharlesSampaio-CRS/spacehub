@@ -23,60 +23,75 @@ const ensureWindowReady = (callback) => {
 contextBridge.exposeInMainWorld('teamsAPI', {
   // Funções específicas para o Teams
   handleAuth: (callback) => {
-    ipcRenderer.on('teams-auth', (event, data) => {
-      console.log('Recebido evento teams-auth:', data);
-      callback(data);
-    });
+    ipcRenderer.on('teams-auth', (event, data) => callback(data));
   },
   
   handleNavigation: (callback) => {
-    ipcRenderer.on('teams-navigation', (event, data) => {
-      console.log('Recebido evento teams-navigation:', data);
-      callback(data);
-    });
+    ipcRenderer.on('teams-navigation', (event, data) => callback(data));
   },
   
   sendNavigation: (url) => {
-    console.log('Enviando navegação do Teams:', url);
-    ensureWindowReady(() => {
-      ipcRenderer.send('teams-navigation', { url });
-    });
+    ipcRenderer.send('teams-navigation', { url });
   },
   
   // Funções comuns para todas as janelas de aplicativos
   onWindowReady: (callback) => {
-    ipcRenderer.on('teams-window-ready', (event, data) => {
-      console.log('Janela do Teams pronta:', data);
-      callback(data);
-    });
+    ipcRenderer.on('teams-window-ready', (event, data) => callback(data));
   },
   
   onWindowClosed: (callback) => {
-    ipcRenderer.on('teams-window-closed', (event, data) => {
-      console.log('Janela do Teams fechada:', data);
-      callback(data);
-    });
+    ipcRenderer.on('teams-window-closed', (event, data) => callback(data));
   },
   
   requestWrapperBounds: () => {
-    console.log('Solicitando bounds do wrapper do Teams');
-    ensureWindowReady(() => {
-      ipcRenderer.send('request-wrapper-bounds');
-    });
+    ipcRenderer.send('request-wrapper-bounds');
   },
   
   updateBounds: (bounds) => {
-    console.log('Atualizando bounds do Teams:', bounds);
-    ensureWindowReady(() => {
-      const windowId = window.location.hash.replace('#', '');
-      if (windowId) {
-        ipcRenderer.invoke('update-teams-window-bounds', windowId, bounds).catch(error => {
-          console.error('Erro ao atualizar bounds do Teams:', error);
-        });
-      } else {
-        console.error('ID da janela do Teams não encontrado');
-      }
-    });
+    const windowId = window.location.hash.replace('#', '');
+    if (windowId) {
+      ipcRenderer.invoke('update-teams-window-bounds', windowId, bounds);
+    }
+  },
+
+  // Funções adicionais para gerenciamento de autenticação
+  onAuthComplete: (callback) => {
+    ipcRenderer.on('teams-auth-complete', (event, data) => callback(data));
+  },
+
+  onAuthError: (callback) => {
+    ipcRenderer.on('teams-auth-error', (event, data) => callback(data));
+  },
+
+  // Funções para gerenciamento de estado da janela
+  onWindowLoaded: (callback) => {
+    ipcRenderer.on('teams-window-loaded', (event, data) => callback(data));
+  },
+
+  onWindowShow: (callback) => {
+    ipcRenderer.on('teams-window-show', (event, data) => callback(data));
+  },
+
+  onWindowHide: (callback) => {
+    ipcRenderer.on('teams-window-hide', (event, data) => callback(data));
+  },
+
+  // Funções para controle de visibilidade
+  showWindow: () => {
+    ipcRenderer.send('teams-show-window');
+  },
+
+  hideWindow: () => {
+    ipcRenderer.send('teams-hide-window');
+  },
+
+  // Funções para gerenciamento de sessão
+  onSessionExpired: (callback) => {
+    ipcRenderer.on('teams-session-expired', (event, data) => callback(data));
+  },
+
+  onSessionRestored: (callback) => {
+    ipcRenderer.on('teams-session-restored', (event, data) => callback(data));
   },
 
   // Função para verificar o estado da janela

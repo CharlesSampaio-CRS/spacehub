@@ -32,5 +32,45 @@ contextBridge.exposeInMainWorld('instagramAPI', {
     if (windowId) {
       ipcRenderer.invoke('update-instagram-window-bounds', windowId, bounds);
     }
+  },
+
+  // Funções adicionais para gerenciamento de autenticação
+  onAuthComplete: (callback) => {
+    ipcRenderer.on('instagram-auth-complete', (event, data) => callback(data));
+  },
+
+  onAuthError: (callback) => {
+    ipcRenderer.on('instagram-auth-error', (event, data) => callback(data));
+  },
+
+  // Funções para gerenciamento de estado da janela
+  onWindowLoaded: (callback) => {
+    ipcRenderer.on('instagram-window-loaded', (event, data) => callback(data));
+  },
+
+  onWindowShow: (callback) => {
+    ipcRenderer.on('instagram-window-show', (event, data) => callback(data));
+  },
+
+  onWindowHide: (callback) => {
+    ipcRenderer.on('instagram-window-hide', (event, data) => callback(data));
+  },
+
+  // Funções para controle de visibilidade
+  showWindow: () => {
+    ipcRenderer.send('instagram-show-window');
+  },
+
+  hideWindow: () => {
+    ipcRenderer.send('instagram-hide-window');
+  },
+
+  // Funções para gerenciamento de sessão
+  onSessionExpired: (callback) => {
+    ipcRenderer.on('instagram-session-expired', (event, data) => callback(data));
+  },
+
+  onSessionRestored: (callback) => {
+    ipcRenderer.on('instagram-session-restored', (event, data) => callback(data));
   }
 }); 

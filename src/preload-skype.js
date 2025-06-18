@@ -1,3 +1,5 @@
+const { contextBridge, ipcRenderer } = require('electron');
+
 contextBridge.exposeInMainWorld('skypeAPI', {
   // Funções específicas para o Skype
   handleAuth: (callback) => {
@@ -30,8 +32,48 @@ contextBridge.exposeInMainWorld('skypeAPI', {
     if (windowId) {
       ipcRenderer.invoke('update-skype-window-bounds', windowId, bounds);
     }
+  },
+
+  // Funções adicionais para gerenciamento de autenticação
+  onAuthComplete: (callback) => {
+    ipcRenderer.on('skype-auth-complete', (event, data) => callback(data));
+  },
+
+  onAuthError: (callback) => {
+    ipcRenderer.on('skype-auth-error', (event, data) => callback(data));
+  },
+
+  // Funções para gerenciamento de estado da janela
+  onWindowLoaded: (callback) => {
+    ipcRenderer.on('skype-window-loaded', (event, data) => callback(data));
+  },
+
+  onWindowShow: (callback) => {
+    ipcRenderer.on('skype-window-show', (event, data) => callback(data));
+  },
+
+  onWindowHide: (callback) => {
+    ipcRenderer.on('skype-window-hide', (event, data) => callback(data));
+  },
+
+  // Funções para controle de visibilidade
+  showWindow: () => {
+    ipcRenderer.send('skype-show-window');
+  },
+
+  hideWindow: () => {
+    ipcRenderer.send('skype-hide-window');
+  },
+
+  // Funções para gerenciamento de sessão
+  onSessionExpired: (callback) => {
+    ipcRenderer.on('skype-session-expired', (event, data) => callback(data));
+  },
+
+  onSessionRestored: (callback) => {
+    ipcRenderer.on('skype-session-restored', (event, data) => callback(data));
   }
-}); 
+});
 
 // Em vez de criar todas as janelas de uma vez, podemos criar apenas quando necessário
 const createAppWindow = async (webviewId, url, appName) => {

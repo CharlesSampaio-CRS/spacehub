@@ -41,20 +41,6 @@ class AppWindowManager {
               nodeIntegrationInSubFrames: true
             }
           },
-          'google-chat': {
-            webPreferences: {
-              ...options.webPreferences,
-              preload: path.join(__dirname, '../preload-google-chat.js'),
-              nodeIntegration: false,
-              contextIsolation: true,
-              sandbox: false,
-              webSecurity: true,
-              allowRunningInsecureContent: true,
-              backgroundThrottling: false,
-              enableRemoteModule: false,
-              nodeIntegrationInSubFrames: true
-            }
-          },
           slack: {
             webPreferences: {
               ...options.webPreferences,
@@ -96,6 +82,62 @@ class AppWindowManager {
               enableRemoteModule: false,
               nodeIntegrationInSubFrames: true
             }
+          },
+          instagram: {
+            webPreferences: {
+              ...options.webPreferences,
+              preload: path.join(__dirname, '../preload-instagram.js'),
+              nodeIntegration: false,
+              contextIsolation: true,
+              sandbox: false,
+              webSecurity: true,
+              allowRunningInsecureContent: true,
+              backgroundThrottling: false,
+              enableRemoteModule: false,
+              nodeIntegrationInSubFrames: true
+            }
+          },
+          facebook: {
+            webPreferences: {
+              ...options.webPreferences,
+              preload: path.join(__dirname, '../preload-facebook.js'),
+              nodeIntegration: false,
+              contextIsolation: true,
+              sandbox: false,
+              webSecurity: true,
+              allowRunningInsecureContent: true,
+              backgroundThrottling: false,
+              enableRemoteModule: false,
+              nodeIntegrationInSubFrames: true
+            }
+          },
+          twitter: {
+            webPreferences: {
+              ...options.webPreferences,
+              preload: path.join(__dirname, '../preload-twitter.js'),
+              nodeIntegration: false,
+              contextIsolation: true,
+              sandbox: false,
+              webSecurity: true,
+              allowRunningInsecureContent: true,
+              backgroundThrottling: false,
+              enableRemoteModule: false,
+              nodeIntegrationInSubFrames: true
+            }
+          },
+          'google-chat': {
+            webPreferences: {
+              ...options.webPreferences,
+              preload: path.join(__dirname, '../preload-google-chat.js'),
+              nodeIntegration: false,
+              contextIsolation: true,
+              sandbox: false,
+              webSecurity: true,
+              allowRunningInsecureContent: true,
+              backgroundThrottling: false,
+              enableRemoteModule: false,
+              nodeIntegrationInSubFrames: true
+            }
           }
         };
 
@@ -120,7 +162,10 @@ class AppWindowManager {
           slack: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           skype: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           whatsapp: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          twitter: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          instagram: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          facebook: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          twitter: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'google-chat': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         };
 
         if (userAgents[appName.toLowerCase()]) {
@@ -151,6 +196,21 @@ class AppWindowManager {
                 finalUrl = 'https://web.whatsapp.com';
               }
               break;
+            case 'instagram':
+              if (!url.includes('instagram.com')) {
+                finalUrl = 'https://instagram.com';
+              }
+              break;
+            case 'facebook':
+              if (!url.includes('facebook.com')) {
+                finalUrl = 'https://facebook.com';
+              }
+              break;
+            case 'twitter':
+              if (!url.includes('twitter.com')) {
+                finalUrl = 'https://twitter.com';
+              }
+              break;
           }
 
           await window.loadURL(finalUrl);
@@ -175,6 +235,8 @@ class AppWindowManager {
               case 'slack':
               case 'skype':
               case 'whatsapp':
+              case 'instagram':
+              case 'facebook':
               case 'twitter':
               case 'google-chat':
                 window.setBackgroundColor('#ffffff');
@@ -184,7 +246,22 @@ class AppWindowManager {
             window.show();
             window.focus();
             
+            // Enviar evento de janela pronta
             event.sender.send(`${appName.toLowerCase()}-window-ready`, { windowId: window.id });
+
+            // Configurar listeners específicos para cada aplicativo
+            switch(appName.toLowerCase()) {
+              case 'whatsapp':
+              case 'instagram':
+              case 'facebook':
+              case 'skype':
+              case 'teams':
+              case 'twitter':
+                window.webContents.on('did-finish-load', () => {
+                  event.sender.send(`${appName.toLowerCase()}-window-loaded`, { windowId: window.id });
+                });
+                break;
+            }
           } catch (error) {
             console.error(`Erro ao configurar janela do ${appName} em ready-to-show:`, error);
           }
