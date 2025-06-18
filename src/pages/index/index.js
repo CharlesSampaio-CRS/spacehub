@@ -689,6 +689,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Função otimizada para mostrar webview
   const showWebview = async (webviewId, buttonId) => {
     try {
+      // Fechar o menu de perfil se estiver aberto
+      closeProfileMenu();
+      
       disableAllButtons(); // Desabilitar botões no início
       showLoading();
       
@@ -1658,21 +1661,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Fechar todos os webviews normais
             const allWebviews = document.querySelectorAll('webview');
             allWebviews.forEach(webview => {
-              webview.remove();
+              if (webview.id !== 'webview-home') {
+                webview.remove();
+              }
             });
 
-            // Resetar todos os botões
+            // Resetar todos os botões, exceto o da home
             const allButtons = document.querySelectorAll('.nav-button');
             allButtons.forEach(button => {
-              button.classList.remove('active', 'opened');
+              if (button.id !== 'home-button') {
+                button.classList.remove('active', 'opened');
+              } else {
+                button.classList.add('active');
+              }
             });
+
+            // Garantir que a home fique visível
+            const homeWebview = document.getElementById('webview-home');
+            if (homeWebview && homeWebview.style) {
+              homeWebview.style.display = 'flex';
+              homeWebview.style.visibility = 'visible';
+              homeWebview.style.opacity = '1';
+              homeWebview.classList.add('active');
+            }
 
             // Limpar a área de conteúdo
             const contentArea = document.querySelector('.content-area');
             if (contentArea) {
               contentArea.style.display = 'none';
             }
-            updateActiveViewTitle(null);
+            updateActiveViewTitle(document.getElementById('webview-home'));
           });
           break;
       }
@@ -1903,21 +1921,36 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Fechar todos os webviews normais
           const allWebviews = document.querySelectorAll('webview');
           allWebviews.forEach(webview => {
-            webview.remove();
+            if (webview.id !== 'webview-home') {
+              webview.remove();
+            }
           });
 
-          // Resetar todos os botões
+          // Resetar todos os botões, exceto o da home
           const allButtons = document.querySelectorAll('.nav-button');
           allButtons.forEach(button => {
-            button.classList.remove('active', 'opened');
+            if (button.id !== 'home-button') {
+              button.classList.remove('active', 'opened');
+            } else {
+              button.classList.add('active');
+            }
           });
+
+          // Garantir que a home fique visível
+          const homeWebview = document.getElementById('webview-home');
+          if (homeWebview && homeWebview.style) {
+            homeWebview.style.display = 'flex';
+            homeWebview.style.visibility = 'visible';
+            homeWebview.style.opacity = '1';
+            homeWebview.classList.add('active');
+          }
 
           // Limpar a área de conteúdo
           const contentArea = document.querySelector('.content-area');
           if (contentArea) {
             contentArea.style.display = 'none';
           }
-          updateActiveViewTitle(null);
+          updateActiveViewTitle(document.getElementById('webview-home'));
         });
         break;
     }
@@ -2138,14 +2171,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.stopPropagation();
       console.log('Botão de perfil clicado');
       
-      const allWebviews = document.querySelectorAll('webview, .linkedin-window-container, .teams-window-container, .slack-window-container, .skype-window-container, .twitter-window-container, .whatsapp-window-container, .instagram-window-container, .telegram-window-container, .facebook-window-container, .discord-window-container, .google-chat-window-container, .wechat-window-container, .snapchat-window-container, .threads-window-container');
       if (profileMenu.classList.contains('show')) {
         profileMenu.classList.remove('show');
-        // Restaurar visibilidade dos webviews
-        allWebviews.forEach(w => { if (w && w.style) w.style.visibility = 'visible'; });
+        profileMenu.style.display = 'none';
+        profileMenu.style.visibility = 'hidden';
+        profileMenu.style.opacity = '0';
+        profileMenu.style.transform = 'translateY(-10px)';
         console.log('Menu fechado');
-        console.log('Menu display:', profileMenu.style.display);
-        console.log('Menu visibility:', profileMenu.style.visibility);
       } else {
         profileMenu.classList.add('show');
         // Forçar a exibição se necessário
@@ -2153,12 +2185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         profileMenu.style.visibility = 'visible';
         profileMenu.style.opacity = '1';
         profileMenu.style.transform = 'translateY(0)';
-        // Esconder webviews enquanto o menu está aberto
-        allWebviews.forEach(w => { if (w && w.style) w.style.visibility = 'hidden'; });
         console.log('Menu aberto');
-        console.log('Menu display:', profileMenu.style.display);
-        console.log('Menu visibility:', profileMenu.style.visibility);
-        console.log('Menu classes:', profileMenu.className);
       }
     };
 
@@ -2166,22 +2193,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('click', (e) => {
       if (profileMenu && profileButton && !profileMenu.contains(e.target) && !profileButton.contains(e.target)) {
         profileMenu.classList.remove('show');
-        // Restaurar visibilidade dos webviews
-        const allWebviews = document.querySelectorAll('webview, .linkedin-window-container, .teams-window-container, .slack-window-container, .skype-window-container, .twitter-window-container, .whatsapp-window-container, .instagram-window-container, .telegram-window-container, .facebook-window-container, .discord-window-container, .google-chat-window-container, .wechat-window-container, .snapchat-window-container, .threads-window-container');
-        allWebviews.forEach(w => { if (w && w.style) w.style.visibility = 'visible'; });
+        profileMenu.style.display = 'none';
+        profileMenu.style.visibility = 'hidden';
+        profileMenu.style.opacity = '0';
+        profileMenu.style.transform = 'translateY(-10px)';
+      }
+    });
+
+    // Fechar menu ao pressionar ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && profileMenu && profileMenu.classList.contains('show')) {
+        profileMenu.classList.remove('show');
+        profileMenu.style.display = 'none';
+        profileMenu.style.visibility = 'hidden';
+        profileMenu.style.opacity = '0';
+        profileMenu.style.transform = 'translateY(-10px)';
       }
     });
 
     // Configurar ações dos botões
     profileSettings.onclick = () => {
       console.log('Configurações clicado');
-      showWebview('webview-settings', 'settings-button');
+      // Fechar o menu primeiro
       profileMenu.classList.remove('show');
+      profileMenu.style.display = 'none';
+      profileMenu.style.visibility = 'hidden';
+      profileMenu.style.opacity = '0';
+      profileMenu.style.transform = 'translateY(-10px)';
+      // Depois abrir as configurações
+      showWebview('webview-settings', 'settings-button');
     };
 
     profileLogout.onclick = async () => {
       console.log('Logout clicado');
+      // Fechar o menu primeiro
       profileMenu.classList.remove('show');
+      profileMenu.style.display = 'none';
+      profileMenu.style.visibility = 'hidden';
+      profileMenu.style.opacity = '0';
+      profileMenu.style.transform = 'translateY(-10px)';
+      // Depois executar o logout
       const currentLanguage = await window.electronAPI.getLanguage();
       showConfirmationDialog(translations[currentLanguage]['logout_confirmation'], async () => {
         try {
@@ -2369,4 +2420,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       setupProfileMenu();
     }, 100);
   });
+
+  // Função para fechar o menu de perfil
+  const closeProfileMenu = () => {
+    const profileMenu = document.getElementById('profile-menu');
+    if (profileMenu && profileMenu.classList.contains('show')) {
+      profileMenu.classList.remove('show');
+      profileMenu.style.display = 'none';
+      profileMenu.style.visibility = 'hidden';
+      profileMenu.style.opacity = '0';
+      profileMenu.style.transform = 'translateY(-10px)';
+    }
+  };
 });

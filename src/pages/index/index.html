@@ -38,24 +38,6 @@
               <span id="profile-name" data-translate="Usuário">Usuário</span>
               <i class="fas fa-chevron-down"></i>
             </button>
-            <div class="profile-menu" id="profile-menu">
-              <div class="profile-info">
-                <img width="64" height="64" id="profile-menu-avatar" src="https://img.icons8.com/fluency/48/user-male-circle.png" alt="Profile" />
-                <div class="profile-details">
-                  <span id="profile-menu-name" data-translate="Usuário">Usuário</span>
-                  <span id="profile-menu-email" data-translate="usuario@email.com">usuario@email.com</span>
-                </div>
-              </div>
-              <div class="profile-menu-separator"></div>
-              <button class="profile-menu-item" id="profile-settings">
-                <i class="fas fa-cog"></i>
-                <span data-translate="Configurações">Configurações</span>
-              </button>
-              <button class="profile-menu-item" id="profile-logout">
-                <i class="fas fa-sign-out-alt"></i>
-                <span data-translate="Sair">Sair</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -78,6 +60,26 @@
     <div id="footer">
       <span></span>
     </div>
+  </div>
+  
+  <!-- Menu de perfil movido para fora do container -->
+  <div class="profile-menu" id="profile-menu">
+    <div class="profile-info">
+      <img width="64" height="64" id="profile-menu-avatar" src="https://img.icons8.com/fluency/48/user-male-circle.png" alt="Profile" />
+      <div class="profile-details">
+        <span id="profile-menu-name" data-translate="Usuário">Usuário</span>
+        <span id="profile-menu-email" data-translate="usuario@email.com">usuario@email.com</span>
+      </div>
+    </div>
+    <div class="profile-menu-separator"></div>
+    <button class="profile-menu-item" id="profile-settings">
+      <i class="fas fa-cog"></i>
+      <span data-translate="Configurações">Configurações</span>
+    </button>
+    <button class="profile-menu-item" id="profile-logout">
+      <i class="fas fa-sign-out-alt"></i>
+      <span data-translate="Sair">Sair</span>
+    </button>
   </div>
   <script src="index.js"></script>
   <script>
