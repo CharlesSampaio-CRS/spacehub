@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     headerElement.style.left = '64px';
     headerElement.style.right = '0';
     headerElement.style.zIndex = '1000';
-    headerElement.style.height = '60px';
+    headerElement.style.height = '34px';
   }
 
   const sidebarElement = document.getElementById('sidebar');
@@ -412,7 +412,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const sidebar = document.querySelector('.sidebar');
       
       // Valores padrão caso os elementos não sejam encontrados
-      const headerHeight = header ? header.offsetHeight : 60;
+      const headerHeight = header ? header.offsetHeight : 34;
       const sidebarWidth = sidebar ? sidebar.offsetWidth : 64;
       const headerMargin = 4;
       const bottomMargin = 4;
