@@ -81,6 +81,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
+  // Funções para controlar estados dos botões durante carregamento
+  const disableAllButtons = () => {
+    const allButtons = document.querySelectorAll('.nav-button');
+    allButtons.forEach(button => {
+      if (button) {
+        button.disabled = true;
+        button.style.opacity = '0.5';
+        button.style.pointerEvents = 'none';
+      }
+    });
+  };
+
+  const enableAllButtons = () => {
+    const allButtons = document.querySelectorAll('.nav-button');
+    allButtons.forEach(button => {
+      if (button) {
+        button.disabled = false;
+        button.style.opacity = '1';
+        button.style.pointerEvents = 'auto';
+      }
+    });
+  };
+
   const getTitleFromWebviewId = (webviewId) => {
     if (!webviewId.startsWith('webview-')) return '';
     const name = webviewId.replace('webview-', '');
@@ -662,21 +685,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Função otimizada para mostrar webview
   const showWebview = async (webviewId, buttonId) => {
     try {
+      disableAllButtons(); // Desabilitar botões no início
       showLoading();
       
-      // Obter as dimensões reais do header e sidebar
-      const headerHeight = 40; // Altura base do cabeçalho
-      const sidebarWidth = 64; // Largura base da sidebar
-      const headerMargin = 4;
-      const bottomMargin = 4;
-      
-      // Obter as dimensões do webview-container
       const webviewContainer = document.querySelector('.webview-container');
       if (!webviewContainer) {
         console.error('Container da webview não encontrado');
         hideLoading();
+        enableAllButtons(); // Reabilitar botões em caso de erro
         return;
       }
+
+      // Obter as dimensões reais do header e sidebar
+      const header = document.querySelector('.header');
+      const sidebar = document.querySelector('.sidebar');
+      
+      // Valores padrão caso os elementos não sejam encontrados
+      const headerHeight = header ? header.offsetHeight : 40;
+      const sidebarWidth = sidebar ? sidebar.offsetWidth : 64;
+      const headerMargin = 4;
+      const bottomMargin = 4;
 
       // Calcular as dimensões do container com valores inteiros
       const containerBounds = {
@@ -686,10 +714,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         height: Math.floor(window.innerHeight - (headerHeight + headerMargin + bottomMargin))
       };
 
-      // Validar as dimensões
       if (containerBounds.width <= 0 || containerBounds.height <= 0) {
         console.error('Dimensões inválidas do container:', containerBounds);
         hideLoading();
+        enableAllButtons(); // Reabilitar botões em caso de erro
         return;
       }
       
@@ -733,6 +761,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!url) {
         console.error('URL não encontrada para webviewId:', webviewId);
         hideLoading();
+        enableAllButtons(); // Reabilitar botões em caso de erro
         return;
       }
 
@@ -1009,9 +1038,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           sidebarButton.classList.add('opened');
         }
       } 
+
+      hideLoading();
+      enableAllButtons(); // Reabilitar botões após carregar
     } catch (error) {
       console.error('Erro ao mostrar webview:', error);
       hideLoading();
+      enableAllButtons(); // Garantir que os botões sejam reabilitados em caso de erro
     }
   };
 
