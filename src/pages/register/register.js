@@ -1,11 +1,9 @@
 const setupLanguage = () => {
-  // Verificar o idioma atual no store do Electron
   window.electronAPI.getLanguage().then(language => {
     document.documentElement.lang = language;
     translatePage(language);
   });
 
-  // Adicionar listener para mudanças no idioma
   window.electronAPI.onLanguageChanged((language) => {
     document.documentElement.lang = language;
     translatePage(language);
@@ -18,78 +16,75 @@ const showError = (message) => {
   errorElement.style.display = 'block';
 };
 
-const validateForm = () => {
-  const name = document.getElementById('name').value;
-  const email = document.getElementById('email').value;
+const validateForm = async () => {
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
   const registerButton = document.getElementById('registerButton');
 
-  // Obter o idioma atual do Electron
-  window.electronAPI.getLanguage().then(currentLanguage => {
-    const translations = {
-      'pt-BR': {
-        'Nome inválido': 'Nome inválido',
-        'Email inválido': 'Email inválido',
-        'Senha inválida': 'Senha inválida',
-        'As senhas não coincidem': 'As senhas não coincidem',
-        'Preencha todos os campos': 'Preencha todos os campos'
-      },
-      'en-US': {
-        'Nome inválido': 'Invalid name',
-        'Email inválido': 'Invalid email',
-        'Senha inválida': 'Invalid password',
-        'As senhas não coincidem': 'Passwords do not match',
-        'Preencha todos os campos': 'Please fill in all fields'
-      }
-    };
+  const currentLanguage = await window.electronAPI.getLanguage();
 
-    if (!name || !email || !password || !confirmPassword) {
-      showError(translations[currentLanguage]['Preencha todos os campos']);
-      registerButton.disabled = true;
-      return false;
+  const translations = {
+    'pt-BR': {
+      'Nome inválido': 'Nome inválido',
+      'Email inválido': 'Email inválido',
+      'Senha inválida': 'Senha inválida',
+      'As senhas não coincidem': 'As senhas não coincidem',
+      'Preencha todos os campos': 'Preencha todos os campos'
+    },
+    'en-US': {
+      'Nome inválido': 'Invalid name',
+      'Email inválido': 'Invalid email',
+      'Senha inválida': 'Invalid password',
+      'As senhas não coincidem': 'Passwords do not match',
+      'Preencha todos os campos': 'Please fill in all fields'
     }
+  };
 
-    if (name.length < 3) {
-      showError(translations[currentLanguage]['Nome inválido']);
-      registerButton.disabled = true;
-      return false;
-    }
+  if (!name || !email || !password || !confirmPassword) {
+    showError(translations[currentLanguage]['Preencha todos os campos']);
+    registerButton.disabled = true;
+    return false;
+  }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      showError(translations[currentLanguage]['Email inválido']);
-      registerButton.disabled = true;
-      return false;
-    }
+  if (name.length < 3) {
+    showError(translations[currentLanguage]['Nome inválido']);
+    registerButton.disabled = true;
+    return false;
+  }
 
-    if (password.length < 6) {
-      showError(translations[currentLanguage]['Senha inválida']);
-      registerButton.disabled = true;
-      return false;
-    }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showError(translations[currentLanguage]['Email inválido']);
+    registerButton.disabled = true;
+    return false;
+  }
 
-    if (password !== confirmPassword) {
-      showError(translations[currentLanguage]['As senhas não coincidem']);
-      registerButton.disabled = true;
-      return false;
-    }
+  if (password.length < 6) {
+    showError(translations[currentLanguage]['Senha inválida']);
+    registerButton.disabled = true;
+    return false;
+  }
 
-    document.getElementById('errorMessage').style.display = 'none';
-    registerButton.disabled = false;
-    return true;
-  });
+  if (password !== confirmPassword) {
+    showError(translations[currentLanguage]['As senhas não coincidem']);
+    registerButton.disabled = true;
+    return false;
+  }
+
+  document.getElementById('errorMessage').style.display = 'none';
+  registerButton.disabled = false;
+  return true;
 };
 
 const setupDarkMode = () => {
-  // Verificar o estado atual do modo escuro no store do Electron
   window.electronAPI.getDarkMode().then(isDarkMode => {
     document.documentElement.classList.toggle("dark-mode", isDarkMode);
     document.body.classList.toggle("dark-mode", isDarkMode);
     localStorage.setItem('darkMode', isDarkMode);
   });
 
-  // Adicionar listener para mudanças no modo escuro
   window.electronAPI.onDarkModeChanged((isDark) => {
     document.documentElement.classList.toggle("dark-mode", isDark);
     document.body.classList.toggle("dark-mode", isDark);
@@ -97,7 +92,6 @@ const setupDarkMode = () => {
   });
 };
 
-// Inicialização
 document.addEventListener('DOMContentLoaded', () => {
   setupDarkMode();
   setupLanguage();
@@ -105,18 +99,41 @@ document.addEventListener('DOMContentLoaded', () => {
   const registerForm = document.getElementById('registerForm');
   const registerButton = document.getElementById('registerButton');
   const loginLink = document.getElementById('loginLink');
+  const passwordInput = document.getElementById('password');
+  const strengthBar = document.getElementById('strengthBar');
 
-  // Validar formulário em tempo real
-  registerForm.addEventListener('input', validateForm);
+  // Força da senha (opcional)
+  passwordInput.addEventListener('input', () => {
+    const password = passwordInput.value;
+    let strength = 0;
+    if (password.length > 0) strength += 20;
+    if (password.length >= 8) strength += 30;
+    if (/[A-Z]/.test(password)) strength += 15;
+    if (/[0-9]/.test(password)) strength += 15;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 20;
 
-  // Enviar formulário
+    strengthBar.style.width = `${strength}%`;
+    strengthBar.style.backgroundColor =
+      strength < 40 ? '#ef4444' :
+      strength < 70 ? '#f59e0b' :
+      '#10b981';
+  });
+
+  // Validação em tempo real
+  registerForm.addEventListener('input', async () => {
+    await validateForm();
+  });
+
+  // Envio do formulário
   registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+
+    const isValid = await validateForm();
+    if (!isValid) return;
 
     const formData = {
-      name: document.getElementById('name').value,
-      email: document.getElementById('email').value,
+      name: document.getElementById('name').value.trim(),
+      email: document.getElementById('email').value.trim(),
       password: document.getElementById('password').value
     };
 
@@ -125,31 +142,26 @@ document.addEventListener('DOMContentLoaded', () => {
       if (result.success) {
         window.location.href = '../login/login.html';
       } else {
-        window.electronAPI.getLanguage().then(currentLanguage => {
-          const translations = {
-            'pt-BR': { 'Erro ao criar conta': 'Erro ao criar conta' },
-            'en-US': { 'Erro ao criar conta': 'Error creating account' }
-          };
-          showError(translations[currentLanguage]['Erro ao criar conta']);
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao registrar:', error);
-      window.electronAPI.getLanguage().then(currentLanguage => {
+        const currentLanguage = await window.electronAPI.getLanguage();
         const translations = {
           'pt-BR': { 'Erro ao criar conta': 'Erro ao criar conta' },
           'en-US': { 'Erro ao criar conta': 'Error creating account' }
         };
         showError(translations[currentLanguage]['Erro ao criar conta']);
-      });
+      }
+    } catch (error) {
+      console.error('Erro ao registrar:', error);
+      const currentLanguage = await window.electronAPI.getLanguage();
+      const translations = {
+        'pt-BR': { 'Erro ao criar conta': 'Erro ao criar conta' },
+        'en-US': { 'Erro ao criar conta': 'Error creating account' }
+      };
+      showError(translations[currentLanguage]['Erro ao criar conta']);
     }
   });
 
-  // Link para login
   loginLink.addEventListener('click', (e) => {
     e.preventDefault();
     window.location.href = '../login/login.html';
   });
 });
-
-  
