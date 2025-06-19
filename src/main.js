@@ -1,5 +1,5 @@
 const path = require('path');
-const { app, BrowserWindow, ipcMain, Menu, session, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, session, shell } = require('electron');
 const Store = require('electron-store');
 const axios = require('axios');
 const qs = require('querystring');
@@ -485,36 +485,103 @@ autoUpdater.on('update-downloaded', (info) => {
 
   updateReadyWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(`
     <!DOCTYPE html>
-    <html>
+    <html lang="pt-BR">
     <head>
       <meta charset="UTF-8">
       <title>Atualização Pronta</title>
       <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 30px; background-color: #f5f5f5; color: #333; }
-        h1 { color: #2c3e50; margin-bottom: 20px; }
-        p { margin-bottom: 30px; line-height: 1.5; }
-        .button-container { display: flex; justify-content: center; gap: 15px; }
-        button { padding: 10px 25px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; transition: background-color 0.3s; }
-        #restartBtn { background-color: #27ae60; color: white; }
-        #restartBtn:hover { background-color: #2ecc71; }
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background-color: #f5f5f5;
+          color: #333;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+        }
+  
+        .confirmation-dialog {
+          background-color: #ffffff;
+          border-radius: 12px;
+          padding: 30px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          width: 100%;
+          max-width: 400px;
+          text-align: center;
+        }
+  
+        .confirmation-dialog h3 {
+          margin-top: 0;
+          font-size: 22px;
+          color: #2c3e50;
+        }
+  
+        .confirmation-dialog p {
+          font-size: 15px;
+          margin: 20px 0 30px;
+          line-height: 1.6;
+        }
+  
+        .confirmation-buttons {
+          display: flex;
+          justify-content: center;
+          gap: 15px;
+        }
+  
+        .confirm-btn,
+        .cancel-btn {
+          padding: 10px 20px;
+          border: none;
+          border-radius: 6px;
+          font-size: 14px;
+          cursor: pointer;
+          transition: background-color 0.3s;
+        }
+  
+        .confirm-btn {
+          background-color: #27ae60;
+          color: #ffffff;
+        }
+  
+        .confirm-btn:hover {
+          background-color: #2ecc71;
+        }
+  
+        .cancel-btn {
+          background-color: #e0e0e0;
+          color: #333;
+        }
+  
+        .cancel-btn:hover {
+          background-color: #d5d5d5;
+        }
       </style>
     </head>
     <body>
-      <h1>Atualização Pronta para Instalar</h1>
-      <p>A versão ${info.version} foi baixada e está pronta para ser instalada.</p>
-      <div class="button-container">
-        <button id="restartBtn">Reiniciar Agora</button>
+      <div class="confirmation-dialog">
+        <h3>Atualização Disponível</h3>
+        <p>A versão <strong>${info.version}</strong> foi baixada e está pronta para ser instalada.</p>
+        <div class="confirmation-buttons">
+          <button class="confirm-btn" id="restartBtn">Reiniciar Agora</button>
+          <button class="cancel-btn" id="closeBtn">Agora Não</button>
+        </div>
       </div>
+  
       <script>
         const { ipcRenderer } = require('electron');
         document.getElementById('restartBtn').addEventListener('click', () => {
           ipcRenderer.send('restart-for-update');
         });
+  
+        document.getElementById('closeBtn').addEventListener('click', () => {
+          window.close(); // Fecha apenas a janela de updateReady
+        });
       </script>
     </body>
     </html>
   `)}`);
-
 
   updateReadyWindow.on('closed', () => {
     updateReadyWindow = null;
