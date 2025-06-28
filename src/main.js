@@ -693,18 +693,6 @@ ipcMain.handle('login', async (event, { email, password }) => {
       password
     });
 
-    console.log('Resposta do login normal:', JSON.stringify(data, null, 2));
-
-    // Verificar diferentes possíveis locais do token
-    console.log('=== ESTRUTURA COMPLETA DA RESPOSTA DO LOGIN NORMAL ===');
-    console.log('data:', JSON.stringify(data, null, 2));
-    console.log('data.token:', data?.token);
-    console.log('data.data:', data?.data);
-    console.log('data.data?.token:', data?.data?.token);
-    console.log('data.access_token:', data?.access_token);
-    console.log('data.data?.access_token:', data?.data?.access_token);
-    console.log('=====================================================');
-
     let token = null;
     if (data && data.token) {
       token = data.token;
