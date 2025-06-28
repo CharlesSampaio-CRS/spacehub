@@ -329,16 +329,14 @@ ipcMain.on('start-google-login', () => {
         email, password: fakePassword
       });
 
-      if (!loginRes.data || !loginRes.data.token) {
+      const token = loginRes.data.data.token;
+
+      if (!token) {
         throw new Error('Token de autenticação não recebido');
       }
 
-      const token = loginRes.data.token;
       saveToken(token);
-
-      // Criar sessão específica para o email do Google
-      const sessionInfo = createUserSession(email);
-      console.log(`Nova sessão Google criada para: ${email}`);
+      createUserSession(email);
       
       if (loginWindow) {
         loginWindow.webContents.send('google-login-success', { token });
@@ -694,6 +692,40 @@ ipcMain.handle('login', async (event, { email, password }) => {
       email,
       password
     });
+
+    console.log('Resposta do login normal:', JSON.stringify(data, null, 2));
+
+    // Verificar diferentes possíveis locais do token
+    console.log('=== ESTRUTURA COMPLETA DA RESPOSTA DO LOGIN NORMAL ===');
+    console.log('data:', JSON.stringify(data, null, 2));
+    console.log('data.token:', data?.token);
+    console.log('data.data:', data?.data);
+    console.log('data.data?.token:', data?.data?.token);
+    console.log('data.access_token:', data?.access_token);
+    console.log('data.data?.access_token:', data?.data?.access_token);
+    console.log('=====================================================');
+
+    let token = null;
+    if (data && data.token) {
+      token = data.token;
+      console.log('Token encontrado em: data.token');
+    } else if (data && data.data && data.data.token) {
+      token = data.data.token;
+      console.log('Token encontrado em: data.data.token');
+    } else if (data && data.access_token) {
+      token = data.access_token;
+      console.log('Token encontrado em: data.access_token');
+    } else if (data && data.data && data.data.access_token) {
+      token = data.data.access_token;
+      console.log('Token encontrado em: data.data.access_token');
+    }
+
+    console.log('Token final extraído (login normal):', token ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
+
+    if (!token) {
+      console.log('Estrutura da resposta do login normal não contém token:', data);
+      throw new Error('Token de autenticação não recebido no login normal');
+    }
 
     // Criar sessão específica para o email
     const sessionInfo = createUserSession(email);
