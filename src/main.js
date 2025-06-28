@@ -752,10 +752,24 @@ ipcMain.handle('register', async (event, { name, email, password }) => {
     return { status: 201, data };
   } catch (error) {
     console.error('Register error in main process:', error);
-    if (error.response) {
-      throw error.response;
+    
+    // Extrair mensagem de erro da resposta da API
+    let errorMessage = 'Erro desconhecido ao criar conta';
+    
+    if (error.response?.data?.error) {
+      errorMessage = error.response.data.error;
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
     }
-    throw error;
+    
+    // Retornar erro estruturado para o front-end
+    throw {
+      message: errorMessage,
+      status: error.response?.status || 500,
+      data: error.response?.data || null
+    };
   }
 });
 

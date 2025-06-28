@@ -139,24 +139,110 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const result = await window.electronAPI.register(formData);
-      if (result.success) {
+
+      if (result.status === 201) {
+        // Modal de sucesso
+        const currentLanguage = await window.electronAPI.getLanguage();
+        const successTranslations = {
+          'pt-BR': {
+            title: 'Conta criada com sucesso!',
+            text: 'Você será redirecionado para o login.'
+          },
+          'en-US': {
+            title: 'Account created successfully!',
+            text: 'You will be redirected to login.'
+          }
+        };
+        
+        await Swal.fire({
+          icon: 'success',
+          title: successTranslations[currentLanguage].title,
+          text: successTranslations[currentLanguage].text,
+          confirmButtonColor: '#10b981',
+          confirmButtonText: 'OK'
+        });
         window.location.href = '../login/login.html';
       } else {
+        // Erro conhecido retornado pela API
         const currentLanguage = await window.electronAPI.getLanguage();
-        const translations = {
-          'pt-BR': { 'Erro ao criar conta': 'Erro ao criar conta' },
-          'en-US': { 'Erro ao criar conta': 'Error creating account' }
+        const errorTranslations = {
+          'pt-BR': {
+            title: 'Erro ao criar conta',
+            defaultMessage: 'Erro desconhecido ao criar conta.',
+            networkError: 'Erro de conexão. Verifique sua internet e tente novamente.',
+            serverError: 'Erro no servidor. Tente novamente em alguns instantes.',
+            userExists: 'Usuário ou email já registrado.'
+          },
+          'en-US': {
+            title: 'Error creating account',
+            defaultMessage: 'Unknown error creating account.',
+            networkError: 'Connection error. Check your internet and try again.',
+            serverError: 'Server error. Try again in a few moments.',
+            userExists: 'User or email already registered.'
+          }
         };
-        showError(translations[currentLanguage]['Erro ao criar conta']);
+        
+        const errorMsg = result.data?.message || errorTranslations[currentLanguage].defaultMessage;
+        await Swal.fire({
+          icon: 'error',
+          title: errorTranslations[currentLanguage].title,
+          text: errorMsg,
+          confirmButtonColor: '#ef4444',
+          confirmButtonText: 'OK'
+        });
       }
     } catch (error) {
-      console.error('Erro ao registrar:', error);
       const currentLanguage = await window.electronAPI.getLanguage();
-      const translations = {
-        'pt-BR': { 'Erro ao criar conta': 'Erro ao criar conta' },
-        'en-US': { 'Erro ao criar conta': 'Error creating account' }
+      const errorTranslations = {
+        'pt-BR': {
+          title: 'Erro ao criar conta',
+          defaultMessage: 'Erro desconhecido ao criar conta.',
+          networkError: 'Erro de conexão. Verifique sua internet e tente novamente.',
+          serverError: 'Erro no servidor. Tente novamente em alguns instantes.',
+          userExists: 'Usuário ou email já registrado.'
+        },
+        'en-US': {
+          title: 'Error creating account',
+          defaultMessage: 'Unknown error creating account.',
+          networkError: 'Connection error. Check your internet and try again.',
+          serverError: 'Server error. Try again in a few moments.',
+          userExists: 'User or email already registered.'
+        }
       };
-      showError(translations[currentLanguage]['Erro ao criar conta']);
+
+      let errorMsg = errorTranslations[currentLanguage].defaultMessage;
+
+      // Tratar mensagem específica do Electron
+      if (error?.message && error.message.includes('Error invoking remote method')) {
+        // Verificar se é erro de usuário já existente
+        if (error.message.includes('[object Object]')) {
+          errorMsg = errorTranslations[currentLanguage].userExists;
+        } else {
+          errorMsg = errorTranslations[currentLanguage].networkError;
+        }
+      }
+      // Capturar mensagem de erro estruturada do main process
+      else if (error?.message) {
+        errorMsg = error.message;
+      } else if (error?.data?.error) {
+        errorMsg = error.data.error;
+      } else if (error?.data?.message) {
+        errorMsg = error.data.message;
+      } else {
+        try {
+          errorMsg = JSON.stringify(error);
+        } catch {
+          errorMsg = String(error);
+        }
+      }
+
+      await Swal.fire({
+        icon: 'error',
+        title: errorTranslations[currentLanguage].title,
+        text: errorMsg,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'OK'
+      });
     }
   });
 

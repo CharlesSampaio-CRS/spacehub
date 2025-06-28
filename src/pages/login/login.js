@@ -246,7 +246,6 @@ window.addEventListener('DOMContentLoaded', () => {
       
       window.electronAPI.send('login-success', token);
     } catch (error) {
-      console.error('Erro ao processar login com Google:', error);
       await Swal.fire({
         icon: 'error',
         title: 'Erro no Login',
@@ -273,7 +272,7 @@ window.addEventListener('DOMContentLoaded', () => {
     try {
       window.electronAPI.send('show-register');
     } catch (e) {
-      console.error('Erro ao abrir tela de registro:', e);
+      // Erro ao abrir tela de registro
     }
   });
 
@@ -297,7 +296,6 @@ async function loadAppVersion() {
       versionButton.addEventListener('click', checkForUpdates);
     }
   } catch (error) {
-    console.error('Erro ao carregar versão:', error);
     const versionButton = document.getElementById('versionButton');
     if (versionButton) {
       versionButton.querySelector('#appVersion').textContent = 'v?.?.?';
@@ -393,7 +391,6 @@ async function checkForUpdates() {
       });
     }
   } catch (error) {
-    console.error('Erro ao verificar atualizações:', error);
     Swal.fire({
       title: translations[currentLanguage]['Erro'],
       html: `
