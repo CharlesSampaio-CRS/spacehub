@@ -285,6 +285,50 @@ body.dark-mode .footer-text a:hover {
     background-color: var(--hover-color);
 }
 
+.login-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.btn-linkedin {
+    background-color: var(--component-bg);
+    color: var(--text-primary);
+    border: var(--component-border);
+    position: relative;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-linkedin:hover {
+    background-color: var(--component-bg);
+    transform: none;
+}
+
+.coming-soon {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #ff6b6b;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+body.dark-mode .btn-linkedin {
+    background-color: var(--component-bg);
+    border-color: var(--component-border);
+    opacity: 0.5;
+}
+
+body.dark-mode .coming-soon {
+    background-color: #ff5252;
+}
+
 /* Toggle Switch */
 .theme-toggle {
     display: flex;

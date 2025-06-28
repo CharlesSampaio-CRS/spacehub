@@ -1,7 +1,3 @@
-// const { ipcRenderer } = require("electron");
-// const axios = require("axios");
-// const Swal = require("sweetalert2");
-
 async function login() {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
@@ -27,7 +23,13 @@ async function login() {
       localStorage.removeItem('rememberedPassword');
     }
 
-    window.electronAPI.send('login-success', data.token);
+    const token = data.data?.token || data.token;
+    
+    if (!token) {
+      throw new Error('Token não encontrado na resposta do servidor');
+    }
+
+    window.electronAPI.send('login-success', token);
   } catch (error) {
     Swal.fire({
       icon: 'error',
@@ -216,6 +218,17 @@ window.addEventListener('DOMContentLoaded', () => {
   // Ação para login com Google
   document.getElementById('googleLogin')?.addEventListener('click', () => {
     window.electronAPI.send('start-google-login');
+  });
+
+  // Ação para login com LinkedIn (desabilitado - em breve)
+  document.getElementById('linkedinLogin')?.addEventListener('click', () => {
+    Swal.fire({
+      icon: 'info',
+      title: 'Em breve',
+      text: 'O login com LinkedIn estará disponível em breve!',
+      confirmButtonColor: '#3085d6',
+      confirmButtonText: 'OK'
+    });
   });
 
   // Eventos de resposta de login com Google
