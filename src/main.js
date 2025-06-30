@@ -778,6 +778,13 @@ ipcMain.on('language-changed', (event, language) => {
   });
 });
 
+// Handler para download de atualizações
+ipcMain.on('download-update', () => {
+  console.log('Iniciando download de atualização...');
+  // Aqui você pode implementar a lógica de download de atualização
+  // Por enquanto, apenas logamos a ação
+});
+
 // Handler para criar janela de login
 ipcMain.handle('create-login-window', () => {
   createLoginWindow();

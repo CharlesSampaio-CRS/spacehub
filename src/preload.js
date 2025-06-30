@@ -28,6 +28,7 @@ const updateAPI = {
   checkForUpdates: () => ipcRenderer.send('check-for-updates'),
   restartForUpdate: () => ipcRenderer.send('restart-for-update'),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  downloadUpdate: () => ipcRenderer.send('download-update'),
   onUpdateNotAvailable: (callback) => ipcRenderer.on('update-not-available', (_, msg) => callback(msg)),
   onUpdateProgress: (callback) => ipcRenderer.on('update-progress', (_, data) => callback(data)),
   onUpdateAvailable: (callback) => ipcRenderer.on('update-available', (_, info) => callback(info)),
