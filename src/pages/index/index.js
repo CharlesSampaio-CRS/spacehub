@@ -242,6 +242,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         button.setAttribute('data-id', webviewId);
       }
 
+      // --- LinkedIn como BrowserView ---
+      if (webviewId === 'webview-linkedin') {
+        // Esconde todas as webviews
+        document.querySelectorAll('.webview').forEach(w => w.classList.remove('active'));
+        // Mostra o BrowserView do LinkedIn
+        window.electronAPI.send('show-linkedin-view');
+        // Atualiza o título
+        const titleElement = document.getElementById('active-view-name');
+        titleElement.textContent = 'LinkedIn';
+        titleElement.setAttribute('data-translate', 'LinkedIn');
+        // Traduzir o título imediatamente
+        const currentLanguage = document.documentElement.lang;
+        if (typeof translations !== 'undefined' && translations[currentLanguage] && translations[currentLanguage]['LinkedIn']) {
+          titleElement.textContent = translations[currentLanguage]['LinkedIn'];
+        }
+        currentWebview = null;
+        return;
+      } else {
+        // Ao trocar para outro app, esconde o BrowserView do LinkedIn
+        window.electronAPI.send('hide-linkedin-view');
+      }
+      // --- Fim LinkedIn ---
+
       // Criar ou obter webview
       let webview = document.getElementById(webviewId);
       if (!webview) {
@@ -569,6 +592,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!menu.contains(e.target)) {
         menu.remove();
         document.removeEventListener('click', closeMenu);
+        if (currentViewId === 'webview-linkedin') {
+          // Só restaura se o LinkedIn ainda estiver ativo
+          const isLinkedInActive = document.querySelector('.nav-button[data-id="webview-linkedin"].active');
+          if (isLinkedInActive) {
+            window.electronAPI.send('restore-linkedin-view');
+          }
+        }
       }
     };
 
@@ -577,7 +607,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 100);
   };
 
+  // Adaptação para considerar LinkedIn ativo mesmo sem webview
   const isWebviewActive = (webviewId) => {
+    if (webviewId === 'webview-linkedin') {
+      // Considera LinkedIn ativo se o botão está ativo
+      const button = document.querySelector(`.nav-button[data-id="webview-linkedin"]`);
+      return button && button.classList.contains('active');
+    }
     const webview = document.getElementById(webviewId);
     return webview && (webview.classList.contains('active') || webview.classList.contains('opened'));
   };
@@ -585,6 +621,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const showContextMenu = async (x, y, currentViewId) => {
     if (!currentViewId || !isWebviewActive(currentViewId)) {
       return;
+    }
+
+    // Se for LinkedIn, esconder temporariamente o BrowserView
+    if (currentViewId === 'webview-linkedin') {
+      window.electronAPI.send('hide-linkedin-view-temporary');
     }
 
     const existingMenu = document.querySelector('.context-menu');
@@ -658,26 +699,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
         const isButtonActive = button && (button.classList.contains('active') || button.classList.contains('opened'));
         const webview = document.getElementById(webviewId);
-        const isWebviewActive = webview && (webview.classList.contains('active') || webview.classList.contains('opened'));
+        const isWebviewActiveFlag = webview && (webview.classList.contains('active') || webview.classList.contains('opened'));
 
-        if (isButtonActive || isWebviewActive) {
+        // Permitir menu para LinkedIn se botão estiver ativo
+        if (isButtonActive || isWebviewActiveFlag || webviewId === 'webview-linkedin') {
           showContextMenu(e.clientX, e.clientY, webviewId);
         } 
       });
     }
 
     document.addEventListener('contextmenu', (e) => {
-      if (e.target.tagName === 'WEBVIEW') {
+      // Permitir menu de contexto para LinkedIn quando ativo
+      const isLinkedInActive = document.querySelector('.nav-button[data-id="webview-linkedin"].active');
+      if (e.target.tagName === 'WEBVIEW' || (isLinkedInActive && e.target.closest('.webview-wrapper'))) {
         e.preventDefault();
         e.stopPropagation();
-        const webviewId = e.target.id;
-        
+        let webviewId;
+        if (e.target.tagName === 'WEBVIEW') {
+          webviewId = e.target.id;
+        } else if (isLinkedInActive) {
+          webviewId = 'webview-linkedin';
+        }
         const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
         const isButtonOpened = button && button.classList.contains('opened');
-        const isWebviewActive = e.target.classList.contains('active') || e.target.classList.contains('opened');
-      
-        
-        if (isButtonOpened || isWebviewActive) {
+        const isWebviewActiveFlag = e.target.classList.contains('active') || e.target.classList.contains('opened');
+        if (isButtonOpened || isWebviewActiveFlag || webviewId === 'webview-linkedin') {
           showContextMenu(e.clientX, e.clientY, webviewId);
         }
       }
