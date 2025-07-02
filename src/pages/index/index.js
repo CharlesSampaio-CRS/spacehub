@@ -567,21 +567,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           case 'close-current':
             console.log('Executando close-current para:', currentViewId);
-            const targetClose = document.getElementById(currentViewId);
-            if (targetClose && isWebviewActive(currentViewId)) {
-              const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
-              if (button) {
-                button.classList.remove('opened', 'active');
-              }
-              targetClose.remove();
-              document.querySelectorAll('.nav-button').forEach(btn => {
-                btn.classList.remove('active');
-              });
+            if (currentViewId === 'webview-linkedin') {
+              // Remove botão ativo
+              const button = document.querySelector(`.nav-button[data-id="webview-linkedin"]`);
+              if (button) button.classList.remove('opened', 'active');
+              window.electronAPI.send('destroy-linkedin-view');
+              document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
               const homeButton = document.getElementById('home-button');
-              if (homeButton) {
-                homeButton.classList.add('active');
-              }
+              if (homeButton) homeButton.classList.add('active');
               showWebview('webview-home', 'home-button');
+            } else {
+              const targetClose = document.getElementById(currentViewId);
+              if (targetClose && isWebviewActive(currentViewId)) {
+                const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+                if (button) {
+                  button.classList.remove('opened', 'active');
+                }
+                targetClose.remove();
+                document.querySelectorAll('.nav-button').forEach(btn => {
+                  btn.classList.remove('active');
+                });
+                const homeButton = document.getElementById('home-button');
+                if (homeButton) {
+                  homeButton.classList.add('active');
+                }
+                showWebview('webview-home', 'home-button');
+              }
             }
             break;
         }

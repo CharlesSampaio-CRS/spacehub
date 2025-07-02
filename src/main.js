@@ -997,3 +997,11 @@ ipcMain.on('restore-linkedin-view', () => {
     });
   }
 });
+
+ipcMain.on('destroy-linkedin-view', () => {
+  if (linkedInView) {
+    linkedInView.webContents.destroy();
+    linkedInView = null;
+    if (mainWindow) mainWindow.setBrowserView(null);
+  }
+});
