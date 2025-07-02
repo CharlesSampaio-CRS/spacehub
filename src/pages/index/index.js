@@ -195,27 +195,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error(`Erro ao carregar ${webviewId}:`, errorCode, errorDescription);
       });
 
-      // Atualizar o título da janela
-      let title;
-      if (webviewId === 'webview-settings') {
-        title = 'Settings';
-      } else if (webviewId === 'webview-home') {
-        title = 'Home';
-      } else {
-        title = button ? button.title : webviewId.replace('webview-', '');
-      }
-
-      const titleElement = document.getElementById('active-view-name');
-      titleElement.textContent = title;
-      titleElement.setAttribute('data-translate', title);
-      webview.setAttribute('alt', title);
-
-      // Traduzir o título imediatamente
-      const currentLanguage = document.documentElement.lang;
-      if (translations[currentLanguage] && translations[currentLanguage][title]) {
-        titleElement.textContent = translations[currentLanguage][title];
-      }
-
       // Adicionar a webview ao container
       webviewContainer.appendChild(webview);
       return webview;
@@ -246,13 +225,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (webviewId === 'webview-linkedin') {
         document.querySelectorAll('.webview').forEach(w => w.classList.remove('active'));
         window.electronAPI.send('show-linkedin-view');
-        const titleElement = document.getElementById('active-view-name');
-        titleElement.textContent = 'LinkedIn';
-        titleElement.setAttribute('data-translate', 'LinkedIn');
-        const currentLanguage = document.documentElement.lang;
-        if (typeof translations !== 'undefined' && translations[currentLanguage] && translations[currentLanguage]['LinkedIn']) {
-          titleElement.textContent = translations[currentLanguage]['LinkedIn'];
-        }
         currentWebview = null;
         return;
       } else {
@@ -264,13 +236,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (webviewId === 'webview-slack') {
         document.querySelectorAll('.webview').forEach(w => w.classList.remove('active'));
         window.electronAPI.send('show-slack-view');
-        const titleElement = document.getElementById('active-view-name');
-        titleElement.textContent = 'Slack';
-        titleElement.setAttribute('data-translate', 'Slack');
-        const currentLanguage = document.documentElement.lang;
-        if (typeof translations !== 'undefined' && translations[currentLanguage] && translations[currentLanguage]['Slack']) {
-          titleElement.textContent = translations[currentLanguage]['Slack'];
-        }
         currentWebview = null;
         return;
       } else {
@@ -286,7 +251,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (webview) {
         webview.classList.add('active');
-        updateActiveViewTitle(webview);
         currentWebview = webview;
         const sidebarButton = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
         if (sidebarButton) {
@@ -302,17 +266,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   const updateActiveViewTitle = (webview) => {
-    if (!webview) return;
-    const title = webview.getAttribute('alt');
-    const titleElement = document.getElementById('active-view-name');
-    titleElement.textContent = title;
-    titleElement.setAttribute('data-translate', title);
-
-    // Traduzir o título imediatamente
-    const currentLanguage = document.documentElement.lang;
-    if (translations[currentLanguage] && translations[currentLanguage][title]) {
-      titleElement.textContent = translations[currentLanguage][title];
-    }
+    // Remover todas as linhas que atualizam o texto do elemento #active-view-name
+    // Exemplo:
+    // titleElement.textContent = title;
+    // titleElement.setAttribute('data-translate', title);
+    // ... e similares em showWebview, updateActiveViewTitle, createWebview, etc.
   };
 
   const loadWithToken = (token, userUuid) => {
@@ -578,7 +536,6 @@ document.addEventListener('DOMContentLoaded', async () => {
               });
               if (currentWebview && currentWebview.id !== 'webview-home') {
                 currentWebview = null;
-                document.getElementById('active-view-name').textContent = '';
               }
               showWebview('webview-home', 'home-button');
             });
@@ -1079,7 +1036,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
           if (currentWebview && currentWebview.id !== 'webview-home') {
             currentWebview = null;
-            document.getElementById('active-view-name').textContent = '';
           }
           showWebview('webview-home', 'home-button');
         });
