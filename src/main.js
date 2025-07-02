@@ -130,7 +130,7 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
-  mainWindow.setMenu(null);
+  //mainWindow.setMenu(null);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url) && !url.includes('linkedin.com')) {
@@ -1066,5 +1066,57 @@ function showContextMenuWindow(x, y, currentViewId) {
 ipcMain.on('context-menu-command', (event, command) => {
   if (mainWindow && mainWindow.webContents) {
     mainWindow.webContents.send('context-menu-command', { command, currentViewId: global.lastContextMenuViewId });
+  }
+});
+
+ipcMain.on('show-profile-menu-window', (event, { x, y, user }) => {
+  showProfileMenuWindow(x, y, user);
+});
+
+function showProfileMenuWindow(x, y, user) {
+  if (global.profileMenuWindow && !global.profileMenuWindow.isDestroyed()) {
+    global.profileMenuWindow.close();
+  }
+
+  const menuWindow = new BrowserWindow({
+    width: 260,
+    height: 180,
+    x: Math.round(x),
+    y: Math.round(y),
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    resizable: false,
+    show: false,
+    skipTaskbar: true,
+    focusable: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      backgroundThrottling: false,
+    }
+  });
+
+  menuWindow.loadFile(path.join(__dirname, 'pages/profile-menu/profile-menu.html'));
+
+  menuWindow.once('ready-to-show', () => {
+    menuWindow.show();
+    menuWindow.webContents.send('set-profile-data', user);
+  });
+
+  menuWindow.on('blur', () => {
+    if (!menuWindow.isDestroyed()) menuWindow.close();
+  });
+
+  global.profileMenuWindow = menuWindow;
+
+  menuWindow.webContents.on('did-finish-load', () => {
+    menuWindow.webContents.send('set-profile-data', user);
+  });
+}
+
+ipcMain.on('profile-menu-action', (event, action) => {
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.send('profile-menu-action', action);
   }
 });

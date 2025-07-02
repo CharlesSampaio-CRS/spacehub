@@ -855,14 +855,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Toggle do menu
     profileButton?.addEventListener('click', (e) => {
       e.stopPropagation();
-      profileMenu.classList.toggle('show');
-      // Se LinkedIn está ativo, esconder BrowserView
-      const isLinkedInActive = document.querySelector('.nav-button[data-id="webview-linkedin"].active');
-      if (profileMenu.classList.contains('show') && isLinkedInActive) {
-        window.electronAPI.send('hide-linkedin-view-temporary');
-      } else if (!profileMenu.classList.contains('show') && isLinkedInActive) {
-        window.electronAPI.send('restore-linkedin-view');
-      }
+      // Pega posição do botão para posicionar o menu
+      const rect = profileButton.getBoundingClientRect();
+      // Pega limites da content (área principal)
+      const content = document.querySelector('.content') || document.body;
+      const contentRect = content.getBoundingClientRect();
+      // Calcula posição inicial (centralizado abaixo do avatar)
+      let x = Math.round(rect.left + rect.width / 2 - 130 + 30); // 130 = metade do menu (260px), +32px para mais dentro
+      let y = Math.round(rect.bottom + 90); // 16px de espaçamento para mais pra baixo
+      // Garante que o menu não saia da content
+      x = Math.max(contentRect.left + 32, Math.min(x, contentRect.right - 260 - 32));
+      y = Math.max(contentRect.top + 8, Math.min(y, contentRect.bottom - 180 - 8));
+      // Pega dados do usuário
+      const user = {
+        name: document.getElementById('profile-menu-name')?.textContent || 'Usuário',
+        email: document.getElementById('profile-menu-email')?.textContent || 'usuario@email.com',
+        avatar: document.getElementById('profile-menu-avatar')?.src || ''
+      };
+      window.electronAPI.send('show-profile-menu-window', { x, y, user });
     });
 
     // Fechar menu ao clicar fora
@@ -1038,6 +1048,35 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }
         break;
+    }
+  });
+
+  // Listener para ações do menu de usuário nativo
+  window.electronAPI.on('profile-menu-action', (event, action) => {
+    if (action === 'settings') {
+      showWebview('webview-settings', 'settings-button');
+    } else if (action === 'logout') {
+      // Reaproveita a lógica de logout já existente
+      profileMenu?.classList.remove('show');
+      const currentLanguage = document.documentElement.lang;
+      showConfirmationDialog(translations[currentLanguage]?.logout_confirmation || 'Tem certeza que deseja sair?', async () => {
+        try {
+          const rememberLogin = localStorage.getItem('rememberLogin') === 'true';
+          if (!rememberLogin) {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            localStorage.removeItem('userUuid');
+            localStorage.removeItem('rememberedEmail');
+            localStorage.removeItem('rememberedPassword');
+            localStorage.removeItem('rememberLogin');
+          }
+          await window.electronAPI.invoke('logout');
+          await window.electronAPI.invoke('create-login-window');
+          window.electronAPI.invoke('close-current-window');
+        } catch (error) {
+          console.error('Erro ao fazer logout:', error);
+        }
+      });
     }
   });
 
