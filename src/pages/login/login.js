@@ -2,8 +2,7 @@ async function login() {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
   const rememberMe = document.getElementById('rememberMe').checked;
-
-  console.log(email, password, rememberMe);
+  const loginButton = document.getElementById('loginButton');
 
   if (!email || !password) {
     Swal.fire({
@@ -13,6 +12,19 @@ async function login() {
     });
     return;
   }
+
+  // Obter idioma atual para traduzir o texto do botão
+  const currentLanguage = await window.electronAPI.getLanguage();
+  const loadingTexts = {
+    'pt-BR': 'Entrando...',
+    'en-US': 'Signing in...'
+  };
+  const loadingText = loadingTexts[currentLanguage] || 'Entrando...';
+
+  loginButton.disabled = true;
+  const originalText = loginButton.textContent;
+  loginButton.textContent = loadingText;
+  loginButton.classList.add('loading');
 
   try {
     const data = await window.electronAPI.login({ email, password });
@@ -38,6 +50,10 @@ async function login() {
       title: 'Erro',
       text: error.response?.data?.message || 'Falha ao tentar logar. Verifique sua conexão e tente novamente.'
     });
+  } finally {
+    loginButton.disabled = false;
+    loginButton.textContent = originalText;
+    loginButton.classList.remove('loading');
   }
 }
 
