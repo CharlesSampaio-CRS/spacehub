@@ -764,3 +764,27 @@ body.dark-mode webview {
   max-height: 30px;
   filter: brightness(1.05) contrast(1.2) saturate(1.15);
 }
+
+/* Estilo para mensagens de erro */
+.error-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 300px;
+  z-index: 1000;
+  border: 1px solid var(--component-border);
+}
+
+body.dark-mode .error-message {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border-color: var(--component-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}

@@ -18,6 +18,7 @@ let updateAvailableWindow = null;
 let updateReadyWindow = null;
 let linkedInView = null;
 let slackView = null;
+let teamsView = null;
 
 global.sharedObject = {
   env: {
@@ -131,7 +132,7 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
-  mainWindow.setMenu(null);
+  //mainWindow.setMenu(null);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url) && !url.includes('linkedin.com')) {
@@ -189,6 +190,60 @@ function createMainWindow() {
         } else {
           const winBounds = mainWindow.getBounds();
           linkedInView.setBounds({ x: 200, y: 0, width: winBounds.width - 200, height: winBounds.height });
+        }
+      });
+    }
+    if (slackView) {
+      mainWindow.webContents.executeJavaScript(`
+        (function() {
+          const el = document.querySelector('.webview-wrapper');
+          if (!el) return null;
+          const rect = el.getBoundingClientRect();
+          return {
+            x: rect.x + 8,
+            y: rect.y + 8,
+            width: rect.width - 16,
+            height: rect.height - 16
+          };
+        })();
+      `).then(bounds => {
+        if (bounds && bounds.width && bounds.height) {
+          slackView.setBounds({
+            x: Math.round(bounds.x),
+            y: Math.round(bounds.y),
+            width: Math.round(bounds.width),
+            height: Math.round(bounds.height)
+          });
+        } else {
+          const winBounds = mainWindow.getBounds();
+          slackView.setBounds({ x: 200, y: 0, width: winBounds.width - 200, height: winBounds.height });
+        }
+      });
+    }
+    if (teamsView) {
+      mainWindow.webContents.executeJavaScript(`
+        (function() {
+          const el = document.querySelector('.webview-wrapper');
+          if (!el) return null;
+          const rect = el.getBoundingClientRect();
+          return {
+            x: rect.x + 8,
+            y: rect.y + 8,
+            width: rect.width - 16,
+            height: rect.height - 16
+          };
+        })();
+      `).then(bounds => {
+        if (bounds && bounds.width && bounds.height) {
+          teamsView.setBounds({
+            x: Math.round(bounds.x),
+            y: Math.round(bounds.y),
+            width: Math.round(bounds.width),
+            height: Math.round(bounds.height)
+          });
+        } else {
+          const winBounds = mainWindow.getBounds();
+          teamsView.setBounds({ x: 200, y: 0, width: winBounds.width - 200, height: winBounds.height });
         }
       });
     }
@@ -1284,25 +1339,195 @@ function showSlackView() {
 }
 
 function hideSlackView() {
-  if (!mainWindow) return;
-  mainWindow.setBrowserView(null);
+  if (mainWindow && slackView) {
+    mainWindow.removeBrowserView(slackView);
+  }
 }
 
 ipcMain.on('show-slack-view', () => {
   showSlackView();
 });
+
 ipcMain.on('hide-slack-view', () => {
   hideSlackView();
 });
-ipcMain.on('destroy-slack-view', () => {
-  if (slackView) {
-    slackView.webContents.destroy();
-    slackView = null;
-    if (mainWindow) mainWindow.setBrowserView(null);
-  }
-});
+
 ipcMain.on('reload-slack-view', () => {
   if (slackView) {
     slackView.webContents.reload();
+  }
+});
+
+ipcMain.on('destroy-slack-view', () => {
+  if (slackView) {
+    if (mainWindow) {
+      mainWindow.removeBrowserView(slackView);
+    }
+    slackView = null;
+  }
+});
+
+// Cria o BrowserView do Teams
+function createTeamsView() {
+  if (teamsView) return teamsView;
+  teamsView = new BrowserView({
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      partition: 'persist:mainSession',
+      webSecurity: false,
+      allowRunningInsecureContent: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  });
+  // Definir user agent moderno para Teams
+  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
+  teamsView.webContents.setUserAgent(userAgent);
+  teamsView.webContents.loadURL('https://teams.microsoft.com');
+
+  // Handler para novas janelas
+  teamsView.webContents.setWindowOpenHandler(({ url }) => {
+    const isTeams = url.startsWith('https://teams.microsoft.com/');
+    if (!isTeams) {
+      shell.openExternal(url);
+      return { action: 'deny' };
+    }
+    // Abrir em nova BrowserWindow com user agent moderno
+    const win = new BrowserWindow({
+      width: 1000,
+      height: 700,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        partition: 'persist:mainSession',
+        webSecurity: false,
+        allowRunningInsecureContent: true,
+        preload: path.join(__dirname, 'preload.js')
+      }
+    });
+    win.setMenu(null);
+    win.webContents.setUserAgent(userAgent);
+    win.loadURL(url);
+
+    // Detecta navegação para um workspace e recarrega o teamsView principal
+    function handleTeamsWorkspaceNav(event, navUrl) {
+      if (navUrl && navUrl.startsWith('https://teams.microsoft.com/')) {
+        if (event && event.preventDefault) event.preventDefault();
+        if (teamsView) {
+          teamsView.webContents.loadURL(navUrl);
+        }
+        win.close();
+      }
+    }
+    win.webContents.on('will-navigate', handleTeamsWorkspaceNav);
+    win.webContents.on('did-navigate', handleTeamsWorkspaceNav);
+    win.webContents.on('will-redirect', handleTeamsWorkspaceNav);
+    win.webContents.on('did-navigate-in-page', handleTeamsWorkspaceNav);
+
+    // Fallback: polling da URL a cada 500ms
+    let lastUrl = '';
+    const urlPoll = setInterval(() => {
+      const currentUrl = win.webContents.getURL();
+      if (
+        currentUrl &&
+        currentUrl.startsWith('https://teams.microsoft.com/') &&
+        currentUrl !== lastUrl
+      ) {
+        lastUrl = currentUrl;
+        if (teamsView) {
+          teamsView.webContents.loadURL(currentUrl);
+        }
+        win.close();
+        clearInterval(urlPoll);
+      }
+    }, 500);
+
+    win.on('closed', () => clearInterval(urlPoll));
+
+    return { action: 'deny' };
+  });
+
+  // Garantir que ao selecionar um workspace, a navegação seja carregada na tela principal
+  teamsView.webContents.on('will-navigate', (event, url) => {
+    if (url.startsWith('https://teams.microsoft.com/')) {
+      event.preventDefault();
+      teamsView.webContents.loadURL(url);
+    }
+  });
+
+  teamsView.webContents.on('context-menu', (event, params) => {
+    if (mainWindow) {
+      mainWindow.webContents.send('context-menu-command', {
+        command: null,
+        currentViewId: 'webview-teams',
+        x: params.x,
+        y: params.y
+      });
+    }
+  });
+
+  return teamsView;
+}
+
+function showTeamsView() {
+  if (!mainWindow) return;
+  if (!teamsView) createTeamsView();
+  mainWindow.webContents.executeJavaScript(`
+    (function() {
+      const el = document.querySelector('.webview-wrapper');
+      if (!el) return null;
+      const rect = el.getBoundingClientRect();
+      return {
+        x: rect.x + 8,
+        y: rect.y + 8,
+        width: rect.width - 16,
+        height: rect.height - 16
+      };
+    })();
+  `).then(bounds => {
+    if (bounds && bounds.width && bounds.height) {
+      mainWindow.setBrowserView(teamsView);
+      teamsView.setBounds({
+        x: Math.round(bounds.x),
+        y: Math.round(bounds.y),
+        width: Math.round(bounds.width),
+        height: Math.round(bounds.height)
+      });
+      teamsView.setAutoResize({ width: true, height: true });
+    } else {
+      const winBounds = mainWindow.getBounds();
+      mainWindow.setBrowserView(teamsView);
+      teamsView.setBounds({ x: 200, y: 0, width: winBounds.width - 200, height: winBounds.height });
+      teamsView.setAutoResize({ width: true, height: true });
+    }
+  });
+}
+
+function hideTeamsView() {
+  if (mainWindow && teamsView) {
+    mainWindow.removeBrowserView(teamsView);
+  }
+}
+
+ipcMain.on('show-teams-view', () => {
+  showTeamsView();
+});
+
+ipcMain.on('hide-teams-view', () => {
+  hideTeamsView();
+});
+
+ipcMain.on('reload-teams-view', () => {
+  if (teamsView) {
+    teamsView.webContents.reload();
+  }
+});
+
+ipcMain.on('destroy-teams-view', () => {
+  if (teamsView) {
+    if (mainWindow) {
+      mainWindow.removeBrowserView(teamsView);
+    }
+    teamsView = null;
   }
 });

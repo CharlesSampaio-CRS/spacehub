@@ -80,6 +80,223 @@ document.addEventListener('DOMContentLoaded', async () => {
           console.log('WhatsApp console:', event.message);
         });
       }
+      // Configurações específicas para Teams
+      else if (url && url.includes('teams.microsoft.com')) {
+        console.log('Configurando webview do Teams...');
+        webview.setAttribute('allowpopups', 'true');
+        webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
+        webview.setAttribute('webpreferences', 'contextIsolation=no, nodeIntegration=no, webSecurity=no, allowRunningInsecureContent=yes, experimentalFeatures=yes, plugins=yes, webgl=yes');
+        
+        let loadAttempts = 0;
+        const maxLoadAttempts = 3;
+        let loadTimeout;
+
+        // Eventos específicos para Teams
+        webview.addEventListener('dom-ready', () => {
+          console.log('Teams webview DOM ready');
+          webview.setZoomFactor(currentZoom);
+          clearTimeout(loadTimeout);
+        });
+
+        webview.addEventListener('did-start-loading', () => {
+          console.log('Teams webview started loading');
+        });
+
+        webview.addEventListener('did-finish-load', () => {
+          console.log('Teams webview finished loading');
+          loadAttempts = 0;
+          clearTimeout(loadTimeout);
+        });
+
+        webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
+          console.error('Teams webview failed to load:', errorCode, errorDescription);
+
+          if (loadAttempts < maxLoadAttempts) {
+            loadAttempts++;
+            console.log(`Tentativa ${loadAttempts} de ${maxLoadAttempts} para recarregar Teams...`);
+            setTimeout(() => {
+              webview.reload();
+            }, 2000 * loadAttempts);
+          } else {
+            console.error('Número máximo de tentativas de carregamento atingido para Teams');
+            // Mostrar mensagem de erro para o usuário
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'error-message';
+            errorMsg.textContent = 'Não foi possível carregar o Teams. Por favor, tente novamente.';
+            webviewContainer.appendChild(errorMsg);
+          }
+        });
+
+        webview.addEventListener('crashed', () => {
+          console.error('Teams webview crashed');
+          if (loadAttempts < maxLoadAttempts) {
+            loadAttempts++;
+            console.log(`Tentativa ${loadAttempts} de ${maxLoadAttempts} para recriar Teams após crash...`);
+            setTimeout(() => {
+              createWebview(webviewId, url);
+            }, 2000 * loadAttempts);
+          }
+        });
+
+        webview.addEventListener('will-navigate', (event) => {
+          console.log('Teams navigation:', event.url);
+          if (event.url.includes('teams.microsoft.com')) {
+            event.preventDefault();
+            webview.loadURL(event.url);
+          }
+        });
+
+        webview.addEventListener('new-window', (event) => {
+          console.log('Teams new window:', event.url);
+          if (event.url.includes('teams.microsoft.com')) {
+            event.preventDefault();
+            webview.loadURL(event.url);
+          }
+        });
+
+        // Timeout para verificar se a página carregou
+        loadTimeout = setTimeout(() => {
+          if (webview.getURL() === 'about:blank' || webview.getURL() === '') {
+            console.log('Teams webview timeout, attempting reload...');
+            if (loadAttempts < maxLoadAttempts) {
+              loadAttempts++;
+              webview.reload();
+            }
+          }
+        }, 10000);
+
+        // Monitorar mudanças de URL
+        webview.addEventListener('did-navigate', (event) => {
+          console.log('Teams navigated to:', event.url);
+          if (event.url.includes('teams.microsoft.com')) {
+            clearTimeout(loadTimeout);
+          }
+        });
+
+        // Monitorar erros de console
+        webview.addEventListener('console-message', (event) => {
+          console.log('Teams console:', event.message);
+        });
+
+        // Monitorar erros de renderização
+        webview.addEventListener('render-process-gone', (event) => {
+          console.error('Teams render process gone:', event.reason);
+          if (loadAttempts < maxLoadAttempts) {
+            loadAttempts++;
+            setTimeout(() => {
+              createWebview(webviewId, url);
+            }, 2000 * loadAttempts);
+          }
+        });
+      }
+      // Configurações específicas para outras aplicações Microsoft (Outlook, Office, etc.)
+      else if (url && (url.includes('outlook.office.com') || url.includes('office.com') || url.includes('portal.office.com'))) {
+        console.log('Configurando webview da Microsoft Office...');
+        webview.setAttribute('allowpopups', 'true');
+        webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
+        webview.setAttribute('webpreferences', 'contextIsolation=no, nodeIntegration=no, webSecurity=no, allowRunningInsecureContent=yes, experimentalFeatures=yes, plugins=yes, webgl=yes');
+        
+        let loadAttempts = 0;
+        const maxLoadAttempts = 3;
+        let loadTimeout;
+
+        // Eventos específicos para Microsoft Office
+        webview.addEventListener('dom-ready', () => {
+          console.log('Microsoft Office webview DOM ready');
+          webview.setZoomFactor(currentZoom);
+          clearTimeout(loadTimeout);
+        });
+
+        webview.addEventListener('did-start-loading', () => {
+          console.log('Microsoft Office webview started loading');
+        });
+
+        webview.addEventListener('did-finish-load', () => {
+          console.log('Microsoft Office webview finished loading');
+          loadAttempts = 0;
+          clearTimeout(loadTimeout);
+        });
+
+        webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
+          console.error('Microsoft Office webview failed to load:', errorCode, errorDescription);
+
+          if (loadAttempts < maxLoadAttempts) {
+            loadAttempts++;
+            console.log(`Tentativa ${loadAttempts} de ${maxLoadAttempts} para recarregar Microsoft Office...`);
+            setTimeout(() => {
+              webview.reload();
+            }, 2000 * loadAttempts);
+          } else {
+            console.error('Número máximo de tentativas de carregamento atingido para Microsoft Office');
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'error-message';
+            errorMsg.textContent = 'Não foi possível carregar a aplicação Microsoft. Por favor, tente novamente.';
+            webviewContainer.appendChild(errorMsg);
+          }
+        });
+
+        webview.addEventListener('crashed', () => {
+          console.error('Microsoft Office webview crashed');
+          if (loadAttempts < maxLoadAttempts) {
+            loadAttempts++;
+            console.log(`Tentativa ${loadAttempts} de ${maxLoadAttempts} para recriar Microsoft Office após crash...`);
+            setTimeout(() => {
+              createWebview(webviewId, url);
+            }, 2000 * loadAttempts);
+          }
+        });
+
+        webview.addEventListener('will-navigate', (event) => {
+          console.log('Microsoft Office navigation:', event.url);
+          if (event.url.includes('office.com') || event.url.includes('microsoft.com')) {
+            event.preventDefault();
+            webview.loadURL(event.url);
+          }
+        });
+
+        webview.addEventListener('new-window', (event) => {
+          console.log('Microsoft Office new window:', event.url);
+          if (event.url.includes('office.com') || event.url.includes('microsoft.com')) {
+            event.preventDefault();
+            webview.loadURL(event.url);
+          }
+        });
+
+        // Timeout para verificar se a página carregou
+        loadTimeout = setTimeout(() => {
+          if (webview.getURL() === 'about:blank' || webview.getURL() === '') {
+            console.log('Microsoft Office webview timeout, attempting reload...');
+            if (loadAttempts < maxLoadAttempts) {
+              loadAttempts++;
+              webview.reload();
+            }
+          }
+        }, 10000);
+
+        // Monitorar mudanças de URL
+        webview.addEventListener('did-navigate', (event) => {
+          console.log('Microsoft Office navigated to:', event.url);
+          if (event.url.includes('office.com') || event.url.includes('microsoft.com')) {
+            clearTimeout(loadTimeout);
+          }
+        });
+
+        // Monitorar erros de console
+        webview.addEventListener('console-message', (event) => {
+          console.log('Microsoft Office console:', event.message);
+        });
+
+        // Monitorar erros de renderização
+        webview.addEventListener('render-process-gone', (event) => {
+          console.error('Microsoft Office render process gone:', event.reason);
+          if (loadAttempts < maxLoadAttempts) {
+            loadAttempts++;
+            setTimeout(() => {
+              createWebview(webviewId, url);
+            }, 2000 * loadAttempts);
+          }
+        });
+      }
       // Configurações específicas para LinkedIn (mantendo o código existente)
       else if (url && url.includes('linkedin.com')) {
         console.log('Configurando webview do LinkedIn...');
@@ -242,6 +459,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.electronAPI.send('hide-slack-view');
       }
       // --- Fim Slack ---
+
+      // --- Teams como BrowserView ---
+      if (webviewId === 'webview-teams') {
+        document.querySelectorAll('.webview').forEach(w => w.classList.remove('active'));
+        window.electronAPI.send('show-teams-view');
+        currentWebview = null;
+        return;
+      } else {
+        window.electronAPI.send('hide-teams-view');
+      }
+      // --- Fim Teams ---
 
       // Criar ou obter webview
       let webview = document.getElementById(webviewId);
@@ -492,6 +720,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (linkedInBtnReload) {
               window.electronAPI.send('reload-linkedin-view');
             }
+            // Também destruir o BrowserView do Slack se estiver ativo
+            const slackBtn = document.querySelector('.nav-button[data-id="webview-slack"].active, .nav-button[data-id="webview-slack"].opened');
+            if (slackBtn) {
+              window.electronAPI.send('destroy-slack-view');
+              slackBtn.classList.remove('active', 'opened');
+            }
+            // Também destruir o BrowserView do Teams se estiver ativo
+            const teamsBtn = document.querySelector('.nav-button[data-id="webview-teams"].active, .nav-button[data-id="webview-teams"].opened');
+            if (teamsBtn) {
+              window.electronAPI.send('destroy-teams-view');
+              teamsBtn.classList.remove('active', 'opened');
+            }
             break;
 
           case 'close-all':
@@ -529,6 +769,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 window.electronAPI.send('destroy-slack-view');
                 slackBtn.classList.remove('active', 'opened');
               }
+              // Também destruir o BrowserView do Teams se estiver ativo
+              const teamsBtn = document.querySelector('.nav-button[data-id="webview-teams"].active, .nav-button[data-id="webview-teams"].opened');
+              if (teamsBtn) {
+                window.electronAPI.send('destroy-teams-view');
+                teamsBtn.classList.remove('active', 'opened');
+              }
               document.querySelectorAll('.nav-button').forEach(b => {
                 if (b.id !== 'home-button') {
                   b.classList.remove('opened');
@@ -547,6 +793,8 @@ document.addEventListener('DOMContentLoaded', async () => {
               window.electronAPI.send('reload-linkedin-view');
             } else if (currentViewId === 'webview-slack') {
               window.electronAPI.send('reload-slack-view');
+            } else if (currentViewId === 'webview-teams') {
+              window.electronAPI.send('reload-teams-view');
             } else {
               const targetReload = document.getElementById(currentViewId);
               if (targetReload?.reload && isWebviewActive(currentViewId)) {
@@ -574,9 +822,17 @@ document.addEventListener('DOMContentLoaded', async () => {
               const homeButton = document.getElementById('home-button');
               if (homeButton) homeButton.classList.add('active');
               showWebview('webview-home', 'home-button');
+            } else if (currentViewId === 'webview-teams') {
+              const button = document.querySelector(`.nav-button[data-id="webview-teams"]`);
+              if (button) button.classList.remove('opened', 'active');
+              window.electronAPI.send('destroy-teams-view');
+              document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+              const homeButton = document.getElementById('home-button');
+              if (homeButton) homeButton.classList.add('active');
+              showWebview('webview-home', 'home-button');
             } else {
               const targetClose = document.getElementById(currentViewId);
-              if (targetClose && isWebviewActive(currentViewId)) {
+              if (targetClose) {
                 const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
                 if (button) {
                   button.classList.remove('opened', 'active');
@@ -621,6 +877,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       const button = document.querySelector(`.nav-button[data-id="webview-linkedin"]`);
       return button && button.classList.contains('active');
     }
+    if (webviewId === 'webview-slack') {
+      // Considera Slack ativo se o botão está ativo
+      const button = document.querySelector(`.nav-button[data-id="webview-slack"]`);
+      return button && button.classList.contains('active');
+    }
+    if (webviewId === 'webview-teams') {
+      // Considera Teams ativo se o botão está ativo
+      const button = document.querySelector(`.nav-button[data-id="webview-teams"]`);
+      return button && button.classList.contains('active');
+    }
     const webview = document.getElementById(webviewId);
     return webview && (webview.classList.contains('active') || webview.classList.contains('opened'));
   };
@@ -629,7 +895,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Para BrowserView, sempre mostra o menu
     if (
       currentViewId === 'webview-linkedin' ||
-      currentViewId === 'webview-slack'
+      currentViewId === 'webview-slack' ||
+      currentViewId === 'webview-teams'
     ) {
       window.electronAPI.send('show-context-menu-window', {
         x,
@@ -677,6 +944,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           const linkedInActive = document.querySelector('.nav-button[data-id="webview-linkedin"].active, .nav-button[data-id="webview-linkedin"].opened');
           // Verificar também o Slack
           const slackActive = document.querySelector('.nav-button[data-id="webview-slack"].active, .nav-button[data-id="webview-slack"].opened');
+          // Verificar também o Teams
+          const teamsActive = document.querySelector('.nav-button[data-id="webview-teams"].active, .nav-button[data-id="webview-teams"].opened');
           // Verificar também os botões que estão marcados como abertos
           const hasOtherWebviews = Array.from(webviews).some(webview => {
             const isOther = webview.id !== 'webview-home' && webview.id !== 'webview-settings';
@@ -685,8 +954,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isWebviewActive = webview.classList.contains('active') || webview.classList.contains('opened');
             return isOther && (isButtonOpened || isWebviewActive);
           });
-          // Só mostrar o menu se houver outras webviews abertas OU LinkedIn ativo OU Slack ativo
-          if (!hasOtherWebviews && !linkedInActive && !slackActive) {
+          // Só mostrar o menu se houver outras webviews abertas OU LinkedIn ativo OU Slack ativo OU Teams ativo
+          if (!hasOtherWebviews && !linkedInActive && !slackActive && !teamsActive) {
             return;
           }
         }
@@ -698,7 +967,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isWebviewActiveFlag = webview && (webview.classList.contains('active') || webview.classList.contains('opened'));
 
         // Permitir menu para LinkedIn ou Slack se botão estiver ativo
-        if (isButtonActive || isWebviewActiveFlag || webviewId === 'webview-linkedin' || webviewId === 'webview-slack') {
+        if (isButtonActive || isWebviewActiveFlag || webviewId === 'webview-linkedin' || webviewId === 'webview-slack' || webviewId === 'webview-teams') {
           showContextMenu(e.clientX, e.clientY, webviewId);
         } 
       });
@@ -708,10 +977,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Permitir menu de contexto para LinkedIn ou Slack quando ativo
       const isLinkedInActive = document.querySelector('.nav-button[data-id="webview-linkedin"].active');
       const isSlackActive = document.querySelector('.nav-button[data-id="webview-slack"].active');
+      const isTeamsActive = document.querySelector('.nav-button[data-id="webview-teams"].active');
       if (
         e.target.tagName === 'WEBVIEW' ||
         (isLinkedInActive && e.target.closest('.webview-wrapper')) ||
-        (isSlackActive && e.target.closest('.webview-wrapper'))
+        (isSlackActive && e.target.closest('.webview-wrapper')) ||
+        (isTeamsActive && e.target.closest('.webview-wrapper'))
       ) {
         e.preventDefault();
         e.stopPropagation();
@@ -722,11 +993,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           webviewId = 'webview-linkedin';
         } else if (isSlackActive) {
           webviewId = 'webview-slack';
+        } else if (isTeamsActive) {
+          webviewId = 'webview-teams';
         }
         const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
         const isButtonOpened = button && button.classList.contains('opened');
         const isWebviewActiveFlag = e.target.classList.contains('active') || e.target.classList.contains('opened');
-        if (isButtonOpened || isWebviewActiveFlag || webviewId === 'webview-linkedin' || webviewId === 'webview-slack') {
+        if (isButtonOpened || isWebviewActiveFlag || webviewId === 'webview-linkedin' || webviewId === 'webview-slack' || webviewId === 'webview-teams') {
           showContextMenu(e.clientX, e.clientY, webviewId);
         }
       }
@@ -977,7 +1250,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Adicionar listener para comandos do menu de contexto nativo
   window.electronAPI.on('context-menu-command', async (event, data) => {
     const { command, currentViewId, x, y } = data || {};
-    if (typeof x === 'number' && typeof y === 'number' && (currentViewId === 'webview-linkedin' || currentViewId === 'webview-slack')) {
+    if (typeof x === 'number' && typeof y === 'number' && (currentViewId === 'webview-linkedin' || currentViewId === 'webview-slack' || currentViewId === 'webview-teams')) {
       showContextMenu(x, y, currentViewId);
       return;
     }
@@ -993,6 +1266,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const linkedInBtnReload = document.querySelector('.nav-button[data-id="webview-linkedin"].active, .nav-button[data-id="webview-linkedin"].opened');
         if (linkedInBtnReload) {
           window.electronAPI.send('reload-linkedin-view');
+        }
+        // Também destruir o BrowserView do Slack se estiver ativo
+        const slackBtn = document.querySelector('.nav-button[data-id="webview-slack"].active, .nav-button[data-id="webview-slack"].opened');
+        if (slackBtn) {
+          window.electronAPI.send('destroy-slack-view');
+          slackBtn.classList.remove('active', 'opened');
+        }
+        // Também destruir o BrowserView do Teams se estiver ativo
+        const teamsBtn = document.querySelector('.nav-button[data-id="webview-teams"].active, .nav-button[data-id="webview-teams"].opened');
+        if (teamsBtn) {
+          window.electronAPI.send('destroy-teams-view');
+          teamsBtn.classList.remove('active', 'opened');
         }
         break;
       case 'close-all': {
@@ -1029,6 +1314,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.electronAPI.send('destroy-slack-view');
             slackBtn.classList.remove('active', 'opened');
           }
+          // Também destruir o BrowserView do Teams se estiver ativo
+          const teamsBtn = document.querySelector('.nav-button[data-id="webview-teams"].active, .nav-button[data-id="webview-teams"].opened');
+          if (teamsBtn) {
+            window.electronAPI.send('destroy-teams-view');
+            teamsBtn.classList.remove('active', 'opened');
+          }
           document.querySelectorAll('.nav-button').forEach(b => {
             if (b.id !== 'home-button') {
               b.classList.remove('opened');
@@ -1047,6 +1338,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           window.electronAPI.send('reload-linkedin-view');
         } else if (currentViewId === 'webview-slack') {
           window.electronAPI.send('reload-slack-view');
+        } else if (currentViewId === 'webview-teams') {
+          window.electronAPI.send('reload-teams-view');
         } else {
           const targetReload = document.getElementById(currentViewId);
           if (targetReload?.reload) {
@@ -1069,6 +1362,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           const button = document.querySelector(`.nav-button[data-id="webview-slack"]`);
           if (button) button.classList.remove('opened', 'active');
           window.electronAPI.send('destroy-slack-view');
+          document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+          const homeButton = document.getElementById('home-button');
+          if (homeButton) homeButton.classList.add('active');
+          showWebview('webview-home', 'home-button');
+        } else if (currentViewId === 'webview-teams') {
+          const button = document.querySelector(`.nav-button[data-id="webview-teams"]`);
+          if (button) button.classList.remove('opened', 'active');
+          window.electronAPI.send('destroy-teams-view');
           document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
           const homeButton = document.getElementById('home-button');
           if (homeButton) homeButton.classList.add('active');
