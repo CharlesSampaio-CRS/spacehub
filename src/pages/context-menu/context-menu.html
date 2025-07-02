@@ -89,16 +89,30 @@
   <div class="context-menu" id="menu"></div>
   <script>
     const { ipcRenderer } = require('electron');
-    function applyTheme() {
-      const isDark = localStorage.getItem('darkMode') === 'true';
-      if (isDark) {
-        document.body.classList.add('dark-mode');
+    function applyTheme(isDark) {
+      if (typeof isDark === 'boolean') {
+        if (isDark) {
+          document.body.classList.add('dark-mode');
+        } else {
+          document.body.classList.remove('dark-mode');
+        }
       } else {
-        document.body.classList.remove('dark-mode');
+        // fallback para localStorage
+        const isDarkLocal = localStorage.getItem('darkMode') === 'true';
+        if (isDarkLocal) {
+          document.body.classList.add('dark-mode');
+        } else {
+          document.body.classList.remove('dark-mode');
+        }
       }
     }
+    // Recebe tema via IPC
+    ipcRenderer.on('set-dark-mode', (event, isDark) => {
+      applyTheme(isDark);
+    });
+    // fallback inicial
     applyTheme();
-    window.addEventListener('storage', applyTheme);
+    window.addEventListener('storage', () => applyTheme());
 
     // Renderiza o menu conforme o tipo
     function renderMenu(type = 'other') {
