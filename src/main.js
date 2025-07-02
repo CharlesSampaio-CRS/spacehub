@@ -1041,8 +1041,8 @@ function showContextMenuWindow(x, y, currentViewId) {
   const menuWindow = new BrowserWindow({
     width: 200,
     height: 100,
-    x: Math.round(x),
-    y: Math.round(y),
+    x: Math.round(x + 32),
+    y: Math.round(y + 32),
     frame: false,
     transparent: true,
     alwaysOnTop: true,
