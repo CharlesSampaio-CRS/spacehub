@@ -89,7 +89,6 @@
   <div class="context-menu" id="menu"></div>
   <script>
     const { ipcRenderer } = require('electron');
-    // Detectar tema do localStorage
     function applyTheme() {
       const isDark = localStorage.getItem('darkMode') === 'true';
       if (isDark) {
@@ -101,13 +100,10 @@
     applyTheme();
     window.addEventListener('storage', applyTheme);
 
-    // Montar menu dinamicamente
-    function renderMenu() {
-      const params = new URLSearchParams(window.location.search);
-      const isHome = params.get('home') === '1';
+    // Renderiza o menu conforme o tipo
+    function renderMenu(type = 'other') {
       const menu = document.getElementById('menu');
-      menu.innerHTML = '';
-      if (isHome) {
+      if (type === 'home') {
         menu.innerHTML = `
           <div class="context-menu-item" data-command="reload-all">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -132,15 +128,21 @@
           </div>
         `;
       }
-      // Adicionar listeners
-      menu.querySelectorAll('.context-menu-item').forEach(item => {
+      // Adiciona listeners
+      document.querySelectorAll('.context-menu-item').forEach(item => {
         item.addEventListener('click', () => {
           ipcRenderer.send('context-menu-command', item.dataset.command);
           window.close();
         });
       });
     }
-    renderMenu();
+
+    // Recebe tipo do menu via IPC
+    ipcRenderer.on('set-current-view', (event, currentViewId) => {
+      renderMenu(currentViewId === 'webview-home' ? 'home' : 'other');
+    });
+    // Renderiza padrão (caso não chegue evento)
+    renderMenu('other');
     window.addEventListener('blur', () => window.close());
   </script>
 </body>

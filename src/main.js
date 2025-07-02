@@ -1046,6 +1046,7 @@ function showContextMenuWindow(x, y, currentViewId) {
 
   menuWindow.once('ready-to-show', () => {
     menuWindow.show();
+    menuWindow.webContents.send('set-current-view', currentViewId);
   });
 
   // Fecha ao perder o foco
@@ -1056,7 +1057,7 @@ function showContextMenuWindow(x, y, currentViewId) {
   // Salva referência global para fechar depois
   global.contextMenuWindow = menuWindow;
 
-  // Você pode passar o currentViewId para o menu via IPC se quiser
+  // Também envia o id ao carregar (fallback)
   menuWindow.webContents.on('did-finish-load', () => {
     menuWindow.webContents.send('set-current-view', currentViewId);
   });

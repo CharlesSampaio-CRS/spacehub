@@ -588,9 +588,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   button.classList.remove('opened', 'active');
                 }
                 targetClose.remove();
-                document.querySelectorAll('.nav-button').forEach(btn => {
-                  btn.classList.remove('active');
-                });
+                document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
                 const homeButton = document.getElementById('home-button');
                 if (homeButton) {
                   homeButton.classList.add('active');
@@ -665,36 +663,22 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        // Se for o botão home, verificar se existem outras webviews abertas
+        // Se for o botão home, verificar se existem outras webviews abertas OU LinkedIn ativo
         if (webviewId === 'webview-home') {
           // Verificar todas as webviews existentes
           const webviews = document.querySelectorAll('webview');
-          
+          // Verificar também o LinkedIn
+          const linkedInActive = document.querySelector('.nav-button[data-id="webview-linkedin"].active, .nav-button[data-id="webview-linkedin"].opened');
           // Verificar também os botões que estão marcados como abertos
-          const openButtons = document.querySelectorAll('.nav-button.opened');
-          
           const hasOtherWebviews = Array.from(webviews).some(webview => {
             const isOther = webview.id !== 'webview-home' && webview.id !== 'webview-settings';
-            // Verificar se a webview existe no DOM e se seu botão correspondente está marcado como aberto
             const button = document.querySelector(`.nav-button[data-id="${webview.id}"]`);
             const isButtonOpened = button && button.classList.contains('opened');
             const isWebviewActive = webview.classList.contains('active') || webview.classList.contains('opened');
-            
-            console.log('Verificando webview:', {
-              id: webview.id,
-              isOther,
-              isButtonOpened,
-              isWebviewActive,
-              buttonClasses: button ? button.className : 'no button',
-              webviewClasses: webview.className
-            });
-            
             return isOther && (isButtonOpened || isWebviewActive);
           });
-          
-          
-          // Só mostrar o menu se houver outras webviews abertas
-          if (!hasOtherWebviews) {
+          // Só mostrar o menu se houver outras webviews abertas OU LinkedIn ativo
+          if (!hasOtherWebviews && !linkedInActive) {
             return;
           }
         }
@@ -977,41 +961,36 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         });
         break;
-      case 'close-all': {
-        const currentLanguage = document.documentElement.lang;
-        const translations = {
-          'pt-BR': {
-            'close_all_confirmation': 'Tem certeza que deseja fechar todas as abas?'
-          },
-          'en-US': {
-            'close_all_confirmation': 'Are you sure you want to close all tabs?'
-          }
-        };
-        const t = translations[currentLanguage] || translations['en-US'];
-        showConfirmationDialog(t['close_all_confirmation'], () => {
-          document.querySelectorAll('webview').forEach(w => {
-            if (w.id !== 'webview-home' && (w.classList.contains('active') || w.classList.contains('opened'))) {
-              w.remove();
-              const button = document.querySelector(`.nav-button[data-id="${w.id}"]`);
-              if (button) {
-                button.classList.remove('active', 'opened');
-              }
+      case 'close-all':
+        // Confirmação opcional pode ser adicionada aqui
+        document.querySelectorAll('webview').forEach(w => {
+          if (w.id !== 'webview-home' && (w.classList.contains('active') || w.classList.contains('opened'))) {
+            w.remove();
+            const button = document.querySelector(`.nav-button[data-id="${w.id}"]`);
+            if (button) {
+              button.classList.remove('active', 'opened');
             }
-          });
-          document.querySelectorAll('.nav-button').forEach(b => {
-            if (b.id !== 'home-button') {
-              b.classList.remove('opened');
-            }
-          });
-          if (currentWebview && currentWebview.id !== 'webview-home') {
-            currentWebview = null;
-            document.getElementById('active-view-name').textContent = '';
           }
-          showWebview('webview-home', 'home-button');
         });
+        // Também destruir o BrowserView do LinkedIn se estiver ativo
+        const linkedInBtn = document.querySelector('.nav-button[data-id="webview-linkedin"].active, .nav-button[data-id="webview-linkedin"].opened');
+        if (linkedInBtn) {
+          window.electronAPI.send('destroy-linkedin-view');
+          linkedInBtn.classList.remove('active', 'opened');
+        }
+        document.querySelectorAll('.nav-button').forEach(b => {
+          if (b.id !== 'home-button') {
+            b.classList.remove('opened');
+          }
+        });
+        if (currentWebview && currentWebview.id !== 'webview-home') {
+          currentWebview = null;
+          document.getElementById('active-view-name').textContent = '';
+        }
+        showWebview('webview-home', 'home-button');
         break;
-      }
       case 'reload-current':
+        if (!currentViewId) return;
         if (currentViewId === 'webview-linkedin') {
           window.electronAPI.send('reload-linkedin-view');
         } else {
@@ -1022,6 +1001,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         break;
       case 'close-current':
+        if (!currentViewId) return;
         if (currentViewId === 'webview-linkedin') {
           // Remove botão ativo
           const button = document.querySelector(`.nav-button[data-id="webview-linkedin"]`);
@@ -1035,11 +1015,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           const targetClose = document.getElementById(currentViewId);
           if (targetClose) {
             const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
-            if (button) button.classList.remove('opened', 'active');
+            if (button) {
+              button.classList.remove('opened', 'active');
+            }
             targetClose.remove();
             document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
             const homeButton = document.getElementById('home-button');
-            if (homeButton) homeButton.classList.add('active');
+            if (homeButton) {
+              homeButton.classList.add('active');
+            }
             showWebview('webview-home', 'home-button');
           }
         }
