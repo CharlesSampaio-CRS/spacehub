@@ -559,9 +559,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           case 'reload-current':
             console.log('Executando reload-current para:', currentViewId);
-            const targetReload = document.getElementById(currentViewId);
-            if (targetReload?.reload && isWebviewActive(currentViewId)) {
-              targetReload.reload();
+            if (currentViewId === 'webview-linkedin') {
+              window.electronAPI.send('reload-linkedin-view');
+            } else {
+              const targetReload = document.getElementById(currentViewId);
+              if (targetReload?.reload && isWebviewActive(currentViewId)) {
+                targetReload.reload();
+              }
             }
             break;
 
@@ -634,10 +638,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Se for LinkedIn, NÃO esconder mais o BrowserView
-    // if (currentViewId === 'webview-linkedin') {
-    //   window.electronAPI.send('hide-linkedin-view-temporary');
-    // }
+    // Se for LinkedIn, esconder temporariamente o BrowserView
+    if (currentViewId === 'webview-linkedin') {
+      window.electronAPI.send('hide-linkedin-view-temporary');
+    }
 
     const existingMenu = document.querySelector('.context-menu');
     if (existingMenu) {
@@ -874,12 +878,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     profileButton?.addEventListener('click', (e) => {
       e.stopPropagation();
       profileMenu.classList.toggle('show');
+      // Se LinkedIn está ativo, esconder BrowserView
+      const isLinkedInActive = document.querySelector('.nav-button[data-id="webview-linkedin"].active');
+      if (profileMenu.classList.contains('show') && isLinkedInActive) {
+        window.electronAPI.send('hide-linkedin-view-temporary');
+      } else if (!profileMenu.classList.contains('show') && isLinkedInActive) {
+        window.electronAPI.send('restore-linkedin-view');
+      }
     });
 
     // Fechar menu ao clicar fora
     document.addEventListener('click', (e) => {
       if (!profileMenu?.contains(e.target) && !profileButton?.contains(e.target)) {
-        profileMenu?.classList.remove('show');
+        if (profileMenu.classList.contains('show')) {
+          profileMenu?.classList.remove('show');
+          // Se LinkedIn está ativo, restaurar BrowserView
+          const isLinkedInActive = document.querySelector('.nav-button[data-id="webview-linkedin"].active');
+          if (isLinkedInActive) {
+            window.electronAPI.send('restore-linkedin-view');
+          }
+        }
       }
     });
 

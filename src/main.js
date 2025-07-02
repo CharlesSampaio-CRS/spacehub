@@ -1005,3 +1005,9 @@ ipcMain.on('destroy-linkedin-view', () => {
     if (mainWindow) mainWindow.setBrowserView(null);
   }
 });
+
+ipcMain.on('reload-linkedin-view', () => {
+  if (linkedInView) {
+    linkedInView.webContents.reload();
+  }
+});
