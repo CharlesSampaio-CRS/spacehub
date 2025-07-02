@@ -965,7 +965,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Adicionar listener para comandos do menu de contexto nativo
-  window.electronAPI.on('context-menu-command', (event, data) => {
+  window.electronAPI.on('context-menu-command', async (event, data) => {
     const { command, currentViewId } = data || {};
     if (!command) return;
     switch (command) {
@@ -981,34 +981,47 @@ document.addEventListener('DOMContentLoaded', async () => {
           window.electronAPI.send('reload-linkedin-view');
         }
         break;
-      case 'close-all':
-        // Confirmação opcional pode ser adicionada aqui
-        document.querySelectorAll('webview').forEach(w => {
-          if (w.id !== 'webview-home' && (w.classList.contains('active') || w.classList.contains('opened'))) {
-            w.remove();
-            const button = document.querySelector(`.nav-button[data-id="${w.id}"]`);
-            if (button) {
-              button.classList.remove('active', 'opened');
+      case 'close-all': {
+        // Adiciona confirmação igual ao menu HTML
+        const currentLanguage = document.documentElement.lang;
+        const translations = {
+          'pt-BR': {
+            'close_all_confirmation': 'Tem certeza que deseja fechar todas as abas?'
+          },
+          'en-US': {
+            'close_all_confirmation': 'Are you sure you want to close all tabs?'
+          }
+        };
+        const t = translations[currentLanguage] || translations['en-US'];
+        showConfirmationDialog(t['close_all_confirmation'], () => {
+          document.querySelectorAll('webview').forEach(w => {
+            if (w.id !== 'webview-home' && (w.classList.contains('active') || w.classList.contains('opened'))) {
+              w.remove();
+              const button = document.querySelector(`.nav-button[data-id="${w.id}"]`);
+              if (button) {
+                button.classList.remove('active', 'opened');
+              }
             }
+          });
+          // Também destruir o BrowserView do LinkedIn se estiver ativo
+          const linkedInBtn = document.querySelector('.nav-button[data-id="webview-linkedin"].active, .nav-button[data-id="webview-linkedin"].opened');
+          if (linkedInBtn) {
+            window.electronAPI.send('destroy-linkedin-view');
+            linkedInBtn.classList.remove('active', 'opened');
           }
-        });
-        // Também destruir o BrowserView do LinkedIn se estiver ativo
-        const linkedInBtn = document.querySelector('.nav-button[data-id="webview-linkedin"].active, .nav-button[data-id="webview-linkedin"].opened');
-        if (linkedInBtn) {
-          window.electronAPI.send('destroy-linkedin-view');
-          linkedInBtn.classList.remove('active', 'opened');
-        }
-        document.querySelectorAll('.nav-button').forEach(b => {
-          if (b.id !== 'home-button') {
-            b.classList.remove('opened');
+          document.querySelectorAll('.nav-button').forEach(b => {
+            if (b.id !== 'home-button') {
+              b.classList.remove('opened');
+            }
+          });
+          if (currentWebview && currentWebview.id !== 'webview-home') {
+            currentWebview = null;
+            document.getElementById('active-view-name').textContent = '';
           }
+          showWebview('webview-home', 'home-button');
         });
-        if (currentWebview && currentWebview.id !== 'webview-home') {
-          currentWebview = null;
-          document.getElementById('active-view-name').textContent = '';
-        }
-        showWebview('webview-home', 'home-button');
         break;
+      }
       case 'reload-current':
         if (!currentViewId) return;
         if (currentViewId === 'webview-linkedin') {
@@ -1052,12 +1065,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Listener para ações do menu de usuário nativo
-  window.electronAPI.on('profile-menu-action', (event, action) => {
+  window.electronAPI.on('profile-menu-action', async (event, action) => {
+    // Garante que o objeto translations está disponível
+    const translations = {
+      'pt-BR': {
+        'logout_confirmation': 'Tem certeza que deseja sair?',
+        'Confirmação': 'Confirmação',
+        'Confirmar': 'Confirmar',
+        'Cancelar': 'Cancelar'
+      },
+      'en-US': {
+        'logout_confirmation': 'Are you sure you want to logout?',
+        'Confirmação': 'Confirmation',
+        'Confirmar': 'Confirm',
+        'Cancelar': 'Cancel'
+      }
+    };
     if (action === 'settings') {
       showWebview('webview-settings', 'settings-button');
     } else if (action === 'logout') {
-      // Reaproveita a lógica de logout já existente
-      profileMenu?.classList.remove('show');
       const currentLanguage = document.documentElement.lang;
       showConfirmationDialog(translations[currentLanguage]?.logout_confirmation || 'Tem certeza que deseja sair?', async () => {
         try {
