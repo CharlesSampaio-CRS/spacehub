@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Menu de Contexto</title>
+  <style>
+    :root {
+      --menu-bg-light: #fff;
+      --menu-bg-dark: #23272e;
+      --menu-border-light: #e0e0e0;
+      --menu-border-dark: #2c313a;
+      --menu-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      --menu-radius: 12px;
+      --menu-item-hover-light: #f5f5f5;
+      --menu-item-hover-dark: #31343b;
+      --menu-color-light: #222;
+      --menu-color-dark: #f5f5f5;
+      --menu-icon-size: 18px;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    .context-menu {
+      background: var(--menu-bg-light);
+      color: var(--menu-color-light);
+      border-radius: var(--menu-radius);
+      box-shadow: var(--menu-shadow);
+      min-width: 200px;
+      max-width: 260px;
+      padding: 4px 0;
+      border: 1px solid var(--menu-border-light);
+      animation: fadeIn 0.18s cubic-bezier(.4,0,.2,1);
+      transition: background 0.2s, color 0.2s;
+      overflow: hidden;
+      max-height: 100vh;
+    }
+    .dark-mode .context-menu {
+      background: var(--menu-bg-dark);
+      color: var(--menu-color-dark);
+      border: 1px solid var(--menu-border-dark);
+    }
+    .context-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 22px 10px 18px;
+      cursor: pointer;
+      font-size: 15px;
+      border: none;
+      background: none;
+      outline: none;
+      transition: background 0.18s, color 0.18s;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .context-menu-item svg {
+      width: var(--menu-icon-size);
+      height: var(--menu-icon-size);
+      flex-shrink: 0;
+      opacity: 0.85;
+    }
+    .context-menu-item:hover {
+      background: var(--menu-item-hover-light);
+    }
+    .dark-mode .context-menu-item:hover {
+      background: var(--menu-item-hover-dark);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+      to   { opacity: 1; transform: none; }
+    }
+    .context-menu-separator {
+      height: 1px;
+      background: #e0e0e0;
+      margin: 4px 0;
+    }
+    .dark-mode .context-menu-separator {
+      background: #2c313a;
+    }
+  </style>
+</head>
+<body>
+  <div class="context-menu" id="menu"></div>
+  <script>
+    const { ipcRenderer } = require('electron');
+    function applyTheme(isDark) {
+      if (typeof isDark === 'boolean') {
+        if (isDark) {
+          document.body.classList.add('dark-mode');
+        } else {
+          document.body.classList.remove('dark-mode');
+        }
+      } else {
+        // fallback para localStorage
+        const isDarkLocal = localStorage.getItem('darkMode') === 'true';
+        if (isDarkLocal) {
+          document.body.classList.add('dark-mode');
+        } else {
+          document.body.classList.remove('dark-mode');
+        }
+      }
+    }
+    // Recebe tema via IPC
+    ipcRenderer.on('set-dark-mode', (event, isDark) => {
+      applyTheme(isDark);
+    });
+    // fallback inicial
+    applyTheme();
+    window.addEventListener('storage', () => applyTheme());
+
+    // Renderiza o menu conforme o tipo
+    function renderMenu(type = 'other') {
+      const menu = document.getElementById('menu');
+      if (type === 'home') {
+        menu.innerHTML = `
+          <div class="context-menu-item" data-command="reload-all">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Atualizar Todos</span>
+          </div>
+          <div class="context-menu-separator"></div>
+          <div class="context-menu-item" data-command="close-all">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Fechar Todos</span>
+          </div>
+        `;
+      } else {
+        menu.innerHTML = `
+          <div class="context-menu-item" data-command="reload-current">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Atualizar</span>
+          </div>
+          <div class="context-menu-separator"></div>
+          <div class="context-menu-item" data-command="close-current">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Fechar</span>
+          </div>
+        `;
+      }
+      // Adiciona listeners
+      document.querySelectorAll('.context-menu-item').forEach(item => {
+        item.addEventListener('click', () => {
+          ipcRenderer.send('context-menu-command', item.dataset.command);
+          window.close();
+        });
+      });
+    }
+
+    // Recebe tipo do menu via IPC
+    ipcRenderer.on('set-current-view', (event, currentViewId) => {
+      renderMenu(currentViewId === 'webview-home' ? 'home' : 'other');
+    });
+    // Renderiza padrão (caso não chegue evento)
+    renderMenu('other');
+    window.addEventListener('blur', () => window.close());
+  </script>
+</body>
+</html> 

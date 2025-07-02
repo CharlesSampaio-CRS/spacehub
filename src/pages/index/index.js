@@ -242,6 +242,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         button.setAttribute('data-id', webviewId);
       }
 
+      // --- LinkedIn como BrowserView ---
+      if (webviewId === 'webview-linkedin') {
+        // Esconde todas as webviews
+        document.querySelectorAll('.webview').forEach(w => w.classList.remove('active'));
+        // Mostra o BrowserView do LinkedIn
+        window.electronAPI.send('show-linkedin-view');
+        // Atualiza o título
+        const titleElement = document.getElementById('active-view-name');
+        titleElement.textContent = 'LinkedIn';
+        titleElement.setAttribute('data-translate', 'LinkedIn');
+        // Traduzir o título imediatamente
+        const currentLanguage = document.documentElement.lang;
+        if (typeof translations !== 'undefined' && translations[currentLanguage] && translations[currentLanguage]['LinkedIn']) {
+          titleElement.textContent = translations[currentLanguage]['LinkedIn'];
+        }
+        currentWebview = null;
+        return;
+      } else {
+        // Ao trocar para outro app, esconde o BrowserView do LinkedIn
+        window.electronAPI.send('hide-linkedin-view');
+      }
+      // --- Fim LinkedIn ---
+
       // Criar ou obter webview
       let webview = document.getElementById(webviewId);
       if (!webview) {
@@ -496,6 +519,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 w.reload();
               }
             });
+            // Também recarregar o BrowserView do LinkedIn se estiver ativo/aberto
+            const linkedInBtnReload = document.querySelector('.nav-button[data-id="webview-linkedin"].active, .nav-button[data-id="webview-linkedin"].opened');
+            if (linkedInBtnReload) {
+              window.electronAPI.send('reload-linkedin-view');
+            }
             break;
 
           case 'close-all':
@@ -536,29 +564,42 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           case 'reload-current':
             console.log('Executando reload-current para:', currentViewId);
-            const targetReload = document.getElementById(currentViewId);
-            if (targetReload?.reload && isWebviewActive(currentViewId)) {
-              targetReload.reload();
+            if (currentViewId === 'webview-linkedin') {
+              window.electronAPI.send('reload-linkedin-view');
+            } else {
+              const targetReload = document.getElementById(currentViewId);
+              if (targetReload?.reload && isWebviewActive(currentViewId)) {
+                targetReload.reload();
+              }
             }
             break;
 
           case 'close-current':
             console.log('Executando close-current para:', currentViewId);
-            const targetClose = document.getElementById(currentViewId);
-            if (targetClose && isWebviewActive(currentViewId)) {
-              const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
-              if (button) {
-                button.classList.remove('opened', 'active');
-              }
-              targetClose.remove();
-              document.querySelectorAll('.nav-button').forEach(btn => {
-                btn.classList.remove('active');
-              });
+            if (currentViewId === 'webview-linkedin') {
+              // Remove botão ativo
+              const button = document.querySelector(`.nav-button[data-id="webview-linkedin"]`);
+              if (button) button.classList.remove('opened', 'active');
+              window.electronAPI.send('destroy-linkedin-view');
+              document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
               const homeButton = document.getElementById('home-button');
-              if (homeButton) {
-                homeButton.classList.add('active');
-              }
+              if (homeButton) homeButton.classList.add('active');
               showWebview('webview-home', 'home-button');
+            } else {
+              const targetClose = document.getElementById(currentViewId);
+              if (targetClose && isWebviewActive(currentViewId)) {
+                const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+                if (button) {
+                  button.classList.remove('opened', 'active');
+                }
+                targetClose.remove();
+                document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+                const homeButton = document.getElementById('home-button');
+                if (homeButton) {
+                  homeButton.classList.add('active');
+                }
+                showWebview('webview-home', 'home-button');
+              }
             }
             break;
         }
@@ -569,6 +610,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!menu.contains(e.target)) {
         menu.remove();
         document.removeEventListener('click', closeMenu);
+        if (currentViewId === 'webview-linkedin') {
+          // Só restaura se o LinkedIn ainda estiver ativo
+          const isLinkedInActive = document.querySelector('.nav-button[data-id="webview-linkedin"].active');
+          if (isLinkedInActive) {
+            window.electronAPI.send('restore-linkedin-view');
+          }
+        }
       }
     };
 
@@ -577,7 +625,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 100);
   };
 
+  // Adaptação para considerar LinkedIn ativo mesmo sem webview
   const isWebviewActive = (webviewId) => {
+    if (webviewId === 'webview-linkedin') {
+      // Considera LinkedIn ativo se o botão está ativo
+      const button = document.querySelector(`.nav-button[data-id="webview-linkedin"]`);
+      return button && button.classList.contains('active');
+    }
     const webview = document.getElementById(webviewId);
     return webview && (webview.classList.contains('active') || webview.classList.contains('opened'));
   };
@@ -587,18 +641,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const existingMenu = document.querySelector('.context-menu');
-    if (existingMenu) {
-      existingMenu.remove();
-    }
-
-    const menu = document.createElement('div');
-    menu.className = 'context-menu';
-    menu.innerHTML = await getMenuTemplate(currentViewId);
-    
-    setupMenuPosition(menu, x, y);
-    document.body.appendChild(menu);
-    setupMenuEvents(menu, currentViewId);
+    // Agora, ao invés de criar o menu HTML, envie para o main process abrir a janela de menu
+    window.electronAPI.send('show-context-menu-window', {
+      x,
+      y,
+      currentViewId
+    });
   };
 
   // Context Menu e comunicação com main process
@@ -620,36 +668,22 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        // Se for o botão home, verificar se existem outras webviews abertas
+        // Se for o botão home, verificar se existem outras webviews abertas OU LinkedIn ativo
         if (webviewId === 'webview-home') {
           // Verificar todas as webviews existentes
           const webviews = document.querySelectorAll('webview');
-          
+          // Verificar também o LinkedIn
+          const linkedInActive = document.querySelector('.nav-button[data-id="webview-linkedin"].active, .nav-button[data-id="webview-linkedin"].opened');
           // Verificar também os botões que estão marcados como abertos
-          const openButtons = document.querySelectorAll('.nav-button.opened');
-          
           const hasOtherWebviews = Array.from(webviews).some(webview => {
             const isOther = webview.id !== 'webview-home' && webview.id !== 'webview-settings';
-            // Verificar se a webview existe no DOM e se seu botão correspondente está marcado como aberto
             const button = document.querySelector(`.nav-button[data-id="${webview.id}"]`);
             const isButtonOpened = button && button.classList.contains('opened');
             const isWebviewActive = webview.classList.contains('active') || webview.classList.contains('opened');
-            
-            console.log('Verificando webview:', {
-              id: webview.id,
-              isOther,
-              isButtonOpened,
-              isWebviewActive,
-              buttonClasses: button ? button.className : 'no button',
-              webviewClasses: webview.className
-            });
-            
             return isOther && (isButtonOpened || isWebviewActive);
           });
-          
-          
-          // Só mostrar o menu se houver outras webviews abertas
-          if (!hasOtherWebviews) {
+          // Só mostrar o menu se houver outras webviews abertas OU LinkedIn ativo
+          if (!hasOtherWebviews && !linkedInActive) {
             return;
           }
         }
@@ -658,26 +692,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
         const isButtonActive = button && (button.classList.contains('active') || button.classList.contains('opened'));
         const webview = document.getElementById(webviewId);
-        const isWebviewActive = webview && (webview.classList.contains('active') || webview.classList.contains('opened'));
+        const isWebviewActiveFlag = webview && (webview.classList.contains('active') || webview.classList.contains('opened'));
 
-        if (isButtonActive || isWebviewActive) {
+        // Permitir menu para LinkedIn se botão estiver ativo
+        if (isButtonActive || isWebviewActiveFlag || webviewId === 'webview-linkedin') {
           showContextMenu(e.clientX, e.clientY, webviewId);
         } 
       });
     }
 
     document.addEventListener('contextmenu', (e) => {
-      if (e.target.tagName === 'WEBVIEW') {
+      // Permitir menu de contexto para LinkedIn quando ativo
+      const isLinkedInActive = document.querySelector('.nav-button[data-id="webview-linkedin"].active');
+      if (e.target.tagName === 'WEBVIEW' || (isLinkedInActive && e.target.closest('.webview-wrapper'))) {
         e.preventDefault();
         e.stopPropagation();
-        const webviewId = e.target.id;
-        
+        let webviewId;
+        if (e.target.tagName === 'WEBVIEW') {
+          webviewId = e.target.id;
+        } else if (isLinkedInActive) {
+          webviewId = 'webview-linkedin';
+        }
         const button = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
         const isButtonOpened = button && button.classList.contains('opened');
-        const isWebviewActive = e.target.classList.contains('active') || e.target.classList.contains('opened');
-      
-        
-        if (isButtonOpened || isWebviewActive) {
+        const isWebviewActiveFlag = e.target.classList.contains('active') || e.target.classList.contains('opened');
+        if (isButtonOpened || isWebviewActiveFlag || webviewId === 'webview-linkedin') {
           showContextMenu(e.clientX, e.clientY, webviewId);
         }
       }
@@ -816,13 +855,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Toggle do menu
     profileButton?.addEventListener('click', (e) => {
       e.stopPropagation();
-      profileMenu.classList.toggle('show');
+      // Pega posição do botão para posicionar o menu
+      const rect = profileButton.getBoundingClientRect();
+      // Pega limites da content (área principal)
+      const content = document.querySelector('.content') || document.body;
+      const contentRect = content.getBoundingClientRect();
+      // Calcula posição inicial (centralizado abaixo do avatar)
+      let x = Math.round(rect.left + rect.width / 2 - 130 + 30); // 130 = metade do menu (260px), +32px para mais dentro
+      let y = Math.round(rect.bottom + 90); // 16px de espaçamento para mais pra baixo
+      // Garante que o menu não saia da content
+      x = Math.max(contentRect.left + 32, Math.min(x, contentRect.right - 260 - 32));
+      y = Math.max(contentRect.top + 8, Math.min(y, contentRect.bottom - 180 - 8));
+      // Pega dados do usuário
+      const user = {
+        name: document.getElementById('profile-menu-name')?.textContent || 'Usuário',
+        email: document.getElementById('profile-menu-email')?.textContent || 'usuario@email.com',
+        avatar: document.getElementById('profile-menu-avatar')?.src || ''
+      };
+      window.electronAPI.send('show-profile-menu-window', { x, y, user });
     });
 
     // Fechar menu ao clicar fora
     document.addEventListener('click', (e) => {
       if (!profileMenu?.contains(e.target) && !profileButton?.contains(e.target)) {
-        profileMenu?.classList.remove('show');
+        if (profileMenu.classList.contains('show')) {
+          profileMenu?.classList.remove('show');
+          // Se LinkedIn está ativo, restaurar BrowserView
+          const isLinkedInActive = document.querySelector('.nav-button[data-id="webview-linkedin"].active');
+          if (isLinkedInActive) {
+            window.electronAPI.send('restore-linkedin-view');
+          }
+        }
       }
     });
 
@@ -899,6 +962,122 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.electronAPI.onLanguageChanged((language) => {
     document.documentElement.lang = language;
     translatePage(language);
+  });
+
+  // Adicionar listener para comandos do menu de contexto nativo
+  window.electronAPI.on('context-menu-command', (event, data) => {
+    const { command, currentViewId } = data || {};
+    if (!command) return;
+    switch (command) {
+      case 'reload-all':
+        document.querySelectorAll('webview').forEach(w => {
+          if (w.classList.contains('active') || w.classList.contains('opened')) {
+            w.reload();
+          }
+        });
+        // Também recarregar o BrowserView do LinkedIn se estiver ativo/aberto
+        const linkedInBtnReload = document.querySelector('.nav-button[data-id="webview-linkedin"].active, .nav-button[data-id="webview-linkedin"].opened');
+        if (linkedInBtnReload) {
+          window.electronAPI.send('reload-linkedin-view');
+        }
+        break;
+      case 'close-all':
+        // Confirmação opcional pode ser adicionada aqui
+        document.querySelectorAll('webview').forEach(w => {
+          if (w.id !== 'webview-home' && (w.classList.contains('active') || w.classList.contains('opened'))) {
+            w.remove();
+            const button = document.querySelector(`.nav-button[data-id="${w.id}"]`);
+            if (button) {
+              button.classList.remove('active', 'opened');
+            }
+          }
+        });
+        // Também destruir o BrowserView do LinkedIn se estiver ativo
+        const linkedInBtn = document.querySelector('.nav-button[data-id="webview-linkedin"].active, .nav-button[data-id="webview-linkedin"].opened');
+        if (linkedInBtn) {
+          window.electronAPI.send('destroy-linkedin-view');
+          linkedInBtn.classList.remove('active', 'opened');
+        }
+        document.querySelectorAll('.nav-button').forEach(b => {
+          if (b.id !== 'home-button') {
+            b.classList.remove('opened');
+          }
+        });
+        if (currentWebview && currentWebview.id !== 'webview-home') {
+          currentWebview = null;
+          document.getElementById('active-view-name').textContent = '';
+        }
+        showWebview('webview-home', 'home-button');
+        break;
+      case 'reload-current':
+        if (!currentViewId) return;
+        if (currentViewId === 'webview-linkedin') {
+          window.electronAPI.send('reload-linkedin-view');
+        } else {
+          const targetReload = document.getElementById(currentViewId);
+          if (targetReload?.reload) {
+            targetReload.reload();
+          }
+        }
+        break;
+      case 'close-current':
+        if (!currentViewId) return;
+        if (currentViewId === 'webview-linkedin') {
+          // Remove botão ativo
+          const button = document.querySelector(`.nav-button[data-id="webview-linkedin"]`);
+          if (button) button.classList.remove('opened', 'active');
+          window.electronAPI.send('destroy-linkedin-view');
+          document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+          const homeButton = document.getElementById('home-button');
+          if (homeButton) homeButton.classList.add('active');
+          showWebview('webview-home', 'home-button');
+        } else {
+          const targetClose = document.getElementById(currentViewId);
+          if (targetClose) {
+            const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+            if (button) {
+              button.classList.remove('opened', 'active');
+            }
+            targetClose.remove();
+            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+            const homeButton = document.getElementById('home-button');
+            if (homeButton) {
+              homeButton.classList.add('active');
+            }
+            showWebview('webview-home', 'home-button');
+          }
+        }
+        break;
+    }
+  });
+
+  // Listener para ações do menu de usuário nativo
+  window.electronAPI.on('profile-menu-action', (event, action) => {
+    if (action === 'settings') {
+      showWebview('webview-settings', 'settings-button');
+    } else if (action === 'logout') {
+      // Reaproveita a lógica de logout já existente
+      profileMenu?.classList.remove('show');
+      const currentLanguage = document.documentElement.lang;
+      showConfirmationDialog(translations[currentLanguage]?.logout_confirmation || 'Tem certeza que deseja sair?', async () => {
+        try {
+          const rememberLogin = localStorage.getItem('rememberLogin') === 'true';
+          if (!rememberLogin) {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            localStorage.removeItem('userUuid');
+            localStorage.removeItem('rememberedEmail');
+            localStorage.removeItem('rememberedPassword');
+            localStorage.removeItem('rememberLogin');
+          }
+          await window.electronAPI.invoke('logout');
+          await window.electronAPI.invoke('create-login-window');
+          window.electronAPI.invoke('close-current-window');
+        } catch (error) {
+          console.error('Erro ao fazer logout:', error);
+        }
+      });
+    }
   });
 
   // Inicialização

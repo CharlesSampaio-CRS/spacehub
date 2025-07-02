@@ -1,5 +1,5 @@
 const path = require('path');
-const { app, BrowserWindow, ipcMain, Menu, session, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, session, shell, BrowserView } = require('electron');
 const Store = require('electron-store');
 const axios = require('axios');
 const qs = require('querystring');
@@ -16,6 +16,7 @@ let mainWindow, loginWindow, registerWindow, authWindow;
 let isUpdating = false;
 let updateAvailableWindow = null;
 let updateReadyWindow = null;
+let linkedInView = null;
 
 global.sharedObject = {
   env: {
@@ -129,7 +130,7 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
-  mainWindow.setMenu(null);
+  //mainWindow.setMenu(null);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url) && !url.includes('linkedin.com')) {
@@ -161,6 +162,53 @@ function createMainWindow() {
       checkForUpdates();
     }, 1800000); 
   });  
+
+  mainWindow.on('resize', () => {
+    if (linkedInView) {
+      mainWindow.webContents.executeJavaScript(`
+        (function() {
+          const el = document.querySelector('.webview-wrapper');
+          if (!el) return null;
+          const rect = el.getBoundingClientRect();
+          return {
+            x: rect.x + 8,
+            y: rect.y + 8,
+            width: rect.width - 16,
+            height: rect.height - 16
+          };
+        })();
+      `).then(bounds => {
+        if (bounds && bounds.width && bounds.height) {
+          linkedInView.setBounds({
+            x: Math.round(bounds.x),
+            y: Math.round(bounds.y),
+            width: Math.round(bounds.width),
+            height: Math.round(bounds.height)
+          });
+        } else {
+          const winBounds = mainWindow.getBounds();
+          linkedInView.setBounds({ x: 200, y: 0, width: winBounds.width - 200, height: winBounds.height });
+        }
+      });
+    }
+  });
+
+  mainWindow.on('minimize', () => {
+    if (global.profileMenuWindow && !global.profileMenuWindow.isDestroyed()) {
+      global.profileMenuWindow.close();
+    }
+    if (global.contextMenuWindow && !global.contextMenuWindow.isDestroyed()) {
+      global.contextMenuWindow.close();
+    }
+  });
+  mainWindow.on('maximize', () => {
+    if (global.profileMenuWindow && !global.profileMenuWindow.isDestroyed()) {
+      global.profileMenuWindow.close();
+    }
+    if (global.contextMenuWindow && !global.contextMenuWindow.isDestroyed()) {
+      global.contextMenuWindow.close();
+    }
+  });
 }
 
 function createLoginWindow() {
@@ -856,4 +904,244 @@ ipcMain.on('create-webview', (event, webviewId, url) => {
     url,
     isLinkedIn: url.includes('linkedin.com')
   });
+});
+
+// Cria o BrowserView do LinkedIn
+function createLinkedInView() {
+  if (linkedInView) return linkedInView;
+  linkedInView = new BrowserView({
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      partition: 'persist:mainSession',
+      webSecurity: false,
+      allowRunningInsecureContent: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  });
+  linkedInView.webContents.loadURL('https://www.linkedin.com/');
+  return linkedInView;
+}
+
+// Mostra o BrowserView do LinkedIn
+function showLinkedInView() {
+  if (!mainWindow) return;
+  if (!linkedInView) createLinkedInView();
+
+  // Ajuste: use o container .webview-wrapper e adicione padding de 8px
+  mainWindow.webContents.executeJavaScript(`
+    (function() {
+      const el = document.querySelector('.webview-wrapper');
+      if (!el) return null;
+      const rect = el.getBoundingClientRect();
+      return {
+        x: rect.x + 8,
+        y: rect.y + 8,
+        width: rect.width - 16,
+        height: rect.height - 16
+      };
+    })();
+  `).then(bounds => {
+    if (bounds && bounds.width && bounds.height) {
+      mainWindow.setBrowserView(linkedInView);
+      linkedInView.setBounds({
+        x: Math.round(bounds.x),
+        y: Math.round(bounds.y),
+        width: Math.round(bounds.width),
+        height: Math.round(bounds.height)
+      });
+      linkedInView.setAutoResize({ width: true, height: true });
+    } else {
+      // fallback para ocupar quase toda a janela, exceto sidebar
+      const winBounds = mainWindow.getBounds();
+      mainWindow.setBrowserView(linkedInView);
+      linkedInView.setBounds({ x: 200, y: 0, width: winBounds.width - 200, height: winBounds.height });
+      linkedInView.setAutoResize({ width: true, height: true });
+    }
+  });
+}
+
+// Esconde o BrowserView do LinkedIn
+function hideLinkedInView() {
+  if (!mainWindow) return;
+  mainWindow.setBrowserView(null);
+}
+
+ipcMain.on('show-linkedin-view', () => {
+  showLinkedInView();
+});
+ipcMain.on('hide-linkedin-view', () => {
+  hideLinkedInView();
+});
+
+// Handler para esconder temporariamente o BrowserView do LinkedIn
+ipcMain.on('hide-linkedin-view-temporary', () => {
+  if (mainWindow && linkedInView) {
+    mainWindow.setBrowserView(null);
+  }
+});
+
+// Handler para restaurar o BrowserView do LinkedIn
+ipcMain.on('restore-linkedin-view', () => {
+  if (mainWindow && linkedInView) {
+    // Checa se o LinkedIn ainda está ativo (opcional: pode receber um flag do renderer)
+    mainWindow.setBrowserView(linkedInView);
+    // Recalcula o bounds
+    mainWindow.webContents.executeJavaScript(`
+      (function() {
+        const el = document.querySelector('.webview-wrapper');
+        if (!el) return null;
+        const rect = el.getBoundingClientRect();
+        return {
+          x: rect.x + 8,
+          y: rect.y + 8,
+          width: rect.width - 16,
+          height: rect.height - 16
+        };
+      })();
+    `).then(bounds => {
+      if (bounds && bounds.width && bounds.height) {
+        linkedInView.setBounds({
+          x: Math.round(bounds.x),
+          y: Math.round(bounds.y),
+          width: Math.round(bounds.width),
+          height: Math.round(bounds.height)
+        });
+      } else {
+        const winBounds = mainWindow.getBounds();
+        linkedInView.setBounds({ x: 200, y: 0, width: winBounds.width - 200, height: winBounds.height });
+      }
+    });
+  }
+});
+
+ipcMain.on('destroy-linkedin-view', () => {
+  if (linkedInView) {
+    linkedInView.webContents.destroy();
+    linkedInView = null;
+    if (mainWindow) mainWindow.setBrowserView(null);
+  }
+});
+
+ipcMain.on('reload-linkedin-view', () => {
+  if (linkedInView) {
+    linkedInView.webContents.reload();
+  }
+});
+
+ipcMain.on('show-context-menu-window', (event, { x, y, currentViewId }) => {
+  global.lastContextMenuViewId = currentViewId;
+  showContextMenuWindow(x, y, currentViewId);
+});
+
+function showContextMenuWindow(x, y, currentViewId) {
+  if (global.contextMenuWindow && !global.contextMenuWindow.isDestroyed()) {
+    global.contextMenuWindow.close();
+  }
+  const menuWindow = new BrowserWindow({
+    width: 200,
+    height: 100,
+    x: Math.round(x + 32),
+    y: Math.round(y + 32),
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    resizable: false,
+    show: false,
+    skipTaskbar: true,
+    focusable: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      backgroundThrottling: false,
+    }
+  });
+
+  menuWindow.loadFile(path.join(__dirname, 'pages/context-menu/context-menu.html'));
+
+  menuWindow.once('ready-to-show', () => {
+    menuWindow.show();
+    menuWindow.webContents.send('set-current-view', currentViewId);
+    // Envia o tema
+    const isDark = store.get('darkMode') === true;
+    menuWindow.webContents.send('set-dark-mode', isDark);
+  });
+
+  // Fecha ao perder o foco (cobre clique fora, minimizar, trocar de app, etc)
+  menuWindow.on('blur', () => {
+    if (!menuWindow.isDestroyed()) menuWindow.close();
+  });
+
+  global.contextMenuWindow = menuWindow;
+
+  menuWindow.webContents.on('did-finish-load', () => {
+    menuWindow.webContents.send('set-current-view', currentViewId);
+    // Envia o tema novamente para garantir
+    const isDark = store.get('darkMode') === true;
+    menuWindow.webContents.send('set-dark-mode', isDark);
+  });
+}
+
+ipcMain.on('context-menu-command', (event, command) => {
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.send('context-menu-command', { command, currentViewId: global.lastContextMenuViewId });
+  }
+});
+
+ipcMain.on('show-profile-menu-window', (event, { x, y, user }) => {
+  showProfileMenuWindow(x, y, user);
+});
+
+function showProfileMenuWindow(x, y, user) {
+  if (global.profileMenuWindow && !global.profileMenuWindow.isDestroyed()) {
+    global.profileMenuWindow.close();
+  }
+  const menuWindow = new BrowserWindow({
+    width: 260,
+    height: 180,
+    x: Math.round(x),
+    y: Math.round(y),
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    resizable: false,
+    show: false,
+    skipTaskbar: true,
+    focusable: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      backgroundThrottling: false,
+    }
+  });
+
+  menuWindow.loadFile(path.join(__dirname, 'pages/profile-menu/profile-menu.html'));
+
+  menuWindow.once('ready-to-show', () => {
+    menuWindow.show();
+    menuWindow.webContents.send('set-profile-data', user);
+    // Envia o tema
+    const isDark = store.get('darkMode') === true;
+    menuWindow.webContents.send('set-dark-mode', isDark);
+  });
+
+  // Fecha ao perder o foco (cobre clique fora, minimizar, trocar de app, etc)
+  menuWindow.on('blur', () => {
+    if (!menuWindow.isDestroyed()) menuWindow.close();
+  });
+
+  global.profileMenuWindow = menuWindow;
+
+  menuWindow.webContents.on('did-finish-load', () => {
+    menuWindow.webContents.send('set-profile-data', user);
+    // Envia o tema novamente para garantir
+    const isDark = store.get('darkMode') === true;
+    menuWindow.webContents.send('set-dark-mode', isDark);
+  });
+}
+
+ipcMain.on('profile-menu-action', (event, action) => {
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.send('profile-menu-action', action);
+  }
 });
