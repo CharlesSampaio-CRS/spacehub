@@ -1234,6 +1234,18 @@ function createSlackView() {
       slackView.webContents.loadURL(url);
     }
   });
+
+  slackView.webContents.on('context-menu', (event, params) => {
+    if (mainWindow) {
+      mainWindow.webContents.send('context-menu-command', {
+        command: null,
+        currentViewId: 'webview-slack',
+        x: params.x,
+        y: params.y
+      });
+    }
+  });
+
   return slackView;
 }
 
