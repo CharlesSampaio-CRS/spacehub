@@ -13,43 +13,43 @@ const loadApplications = async () => {
   const auth = await getAuthData();
   if (!auth) return;
 
-  fetch(`https://spaceapp-digital-api.onrender.com/spaces/${auth.userUuid}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${auth.token}`
-    }
-  })
-    .then(response => response.json())
-    .then(data => {
-      if (!Array.isArray(data.data.applications)) return;
+  try {
+    const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${auth.userUuid}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${auth.token}`
+      }
+    });
+    const data = await response.json();
+    if (!Array.isArray(data.data.applications)) return;
 
-      const listContainer = document.getElementById("applicationsList");
-      listContainer.innerHTML = "";
+    const listContainer = document.getElementById("applicationsList");
+    listContainer.innerHTML = "";
+    data.data.applications
+      .sort((a, b) => b.active - a.active)
+      .forEach(app => {
+        const isChecked = app.active == true;
+        const appItem = document.createElement("div");
+        appItem.classList.add("application-item");
 
-      data.data.applications
-        .sort((a, b) => b.active - a.active)
-        .forEach(app => {
-          const appItem = document.createElement("div");
-          appItem.classList.add("application-item");
-
-          appItem.innerHTML = `
-            <div class="application-info">
-              <img src="${app.icon}" alt="${app.application}" width="32" height="32" />
-              <p><strong>${app.application}</strong></p>
-            </div>
-            <div class="application-toggle">
-              <label class="toggle-switch">
-                <input type="checkbox" ${app.active ? "checked" : ""} id="toggle-${app.uuid}" />
-                <span class="slider"></span>
-              </label>
-            </div>
-          `;
-
-          listContainer.appendChild(appItem);
-        });
-    })
-    .catch(error => console.error('Erro ao carregar aplicações:', error));
+        appItem.innerHTML = `
+          <div class="application-info">
+            <img src="${app.icon}" alt="${app.application}" width="32" height="32" />
+            <p><strong>${app.application}</strong></p>
+          </div>
+          <div class="application-toggle">
+            <label class="toggle-switch">
+              <input type="checkbox" ${isChecked ? 'checked' : ''} id="toggle-${app.uuid}" />
+              <span class="slider"></span>
+            </label>
+          </div>
+        `;
+        listContainer.appendChild(appItem);
+      });
+  } catch (error) {
+    console.error('Erro ao carregar aplicações:', error);
+  }
 };
 
 const updateApplications = async () => {
@@ -68,17 +68,12 @@ const updateApplications = async () => {
       applications
     };
 
-    // Printar o token enviado
-    console.log('Token enviado no header Authorization:', auth.token);
-
-    // Desabilitar o botão de salvar
     const saveButton = document.getElementById("saveButton");
     if (saveButton) {
       saveButton.disabled = true;
     }
 
-    // Enviar requisição PUT para salvar as configurações
-    const res = await fetch('http://localhost:3000/spaces', {
+    const res = await fetch('https://spaceapp-digital-api.onrender.com/spaces', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -106,7 +101,6 @@ const updateApplications = async () => {
       saveButton.disabled = false;
     }
   }
-  loadApplications();
 };
 
 const loadUserInfo = async () => {
@@ -573,3 +567,8 @@ async function checkForUpdates() {
     });
   }
 }
+
+window.electronAPI.on('reload-applications', () => {
+  // Função que recarrega as aplicações do menu lateral
+  carregarAplicacoesSidebar();
+});

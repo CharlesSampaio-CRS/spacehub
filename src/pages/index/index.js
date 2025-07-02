@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       .then(data => {
         if (Array.isArray(data.data.applications)) {
           data.data.applications.forEach(app => {
-            if (app.active) {
+            if (app.active == true) {
               const appId = `webview-${app.application.toLowerCase()}`;
               const buttonId = `${app.application.toLowerCase()}-button`;
 
@@ -403,28 +403,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateBadge();
   };
 
-  const setupMenus = () => {
-    const menuBtn = document.getElementById("menu-button");
-    const menu = document.getElementById("dropdown-menu");
-    const bell = document.getElementById("notification-bell");
-    const notifMenu = document.getElementById("notification-menu");
-
-    menuBtn?.addEventListener("click", () => menu.classList.toggle("show"));
-    bell?.addEventListener("click", () => {
-      notifMenu.classList.toggle("show");
-      menu.classList.remove("show");
-    });
-
-    document.querySelectorAll('.dropdown-item').forEach(item => {
-      item.addEventListener('click', () => menu.classList.remove("show"));
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!menu.contains(e.target) && !menuBtn.contains(e.target)) menu.classList.remove("show");
-      if (!notifMenu.contains(e.target) && !bell.contains(e.target)) notifMenu.classList.remove("show");
-    });
-  };
-
   const setupSidebarScroll = () => {
     document.getElementById('sidebar')?.addEventListener('wheel', (e) => {
       e.preventDefault();
@@ -432,10 +410,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
-  const hasOpenWebviews = () => {
-    const webviews = document.querySelectorAll('webview');
-    return Array.from(webviews).some(webview => webview.id !== 'webview-home' && webview.id !== 'webview-settings');
-  };
 
   const getMenuTemplate = async (currentViewId) => {
     const currentLanguage = await window.electronAPI.getLanguage();
