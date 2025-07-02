@@ -519,6 +519,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 w.reload();
               }
             });
+            // Também recarregar o BrowserView do LinkedIn se estiver ativo/aberto
+            const linkedInBtnReload = document.querySelector('.nav-button[data-id="webview-linkedin"].active, .nav-button[data-id="webview-linkedin"].opened');
+            if (linkedInBtnReload) {
+              window.electronAPI.send('reload-linkedin-view');
+            }
             break;
 
           case 'close-all':
@@ -960,6 +965,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             w.reload();
           }
         });
+        // Também recarregar o BrowserView do LinkedIn se estiver ativo/aberto
+        const linkedInBtnReload = document.querySelector('.nav-button[data-id="webview-linkedin"].active, .nav-button[data-id="webview-linkedin"].opened');
+        if (linkedInBtnReload) {
+          window.electronAPI.send('reload-linkedin-view');
+        }
         break;
       case 'close-all':
         // Confirmação opcional pode ser adicionada aqui
