@@ -244,15 +244,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // --- LinkedIn como BrowserView ---
       if (webviewId === 'webview-linkedin') {
-        // Esconde todas as webviews
         document.querySelectorAll('.webview').forEach(w => w.classList.remove('active'));
-        // Mostra o BrowserView do LinkedIn
         window.electronAPI.send('show-linkedin-view');
-        // Atualiza o título
         const titleElement = document.getElementById('active-view-name');
         titleElement.textContent = 'LinkedIn';
         titleElement.setAttribute('data-translate', 'LinkedIn');
-        // Traduzir o título imediatamente
         const currentLanguage = document.documentElement.lang;
         if (typeof translations !== 'undefined' && translations[currentLanguage] && translations[currentLanguage]['LinkedIn']) {
           titleElement.textContent = translations[currentLanguage]['LinkedIn'];
@@ -260,10 +256,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentWebview = null;
         return;
       } else {
-        // Ao trocar para outro app, esconde o BrowserView do LinkedIn
         window.electronAPI.send('hide-linkedin-view');
       }
       // --- Fim LinkedIn ---
+
+      // --- Slack como BrowserView ---
+      if (webviewId === 'webview-slack') {
+        document.querySelectorAll('.webview').forEach(w => w.classList.remove('active'));
+        window.electronAPI.send('show-slack-view');
+        const titleElement = document.getElementById('active-view-name');
+        titleElement.textContent = 'Slack';
+        titleElement.setAttribute('data-translate', 'Slack');
+        const currentLanguage = document.documentElement.lang;
+        if (typeof translations !== 'undefined' && translations[currentLanguage] && translations[currentLanguage]['Slack']) {
+          titleElement.textContent = translations[currentLanguage]['Slack'];
+        }
+        currentWebview = null;
+        return;
+      } else {
+        window.electronAPI.send('hide-slack-view');
+      }
+      // --- Fim Slack ---
 
       // Criar ou obter webview
       let webview = document.getElementById(webviewId);
@@ -275,12 +288,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         webview.classList.add('active');
         updateActiveViewTitle(webview);
         currentWebview = webview;
-
-        // Atualizar o botão correspondente na sidebar
         const sidebarButton = document.querySelector(`.nav-button[data-id="${webviewId}"]`);
         if (sidebarButton) {
           sidebarButton.classList.add('active');
-          // Adicionar opened apenas se não for o botão home
           if (sidebarButton.id !== 'home-button') {
             sidebarButton.classList.add('opened');
           }
@@ -566,6 +576,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('Executando reload-current para:', currentViewId);
             if (currentViewId === 'webview-linkedin') {
               window.electronAPI.send('reload-linkedin-view');
+            } else if (currentViewId === 'webview-slack') {
+              window.electronAPI.send('reload-slack-view');
             } else {
               const targetReload = document.getElementById(currentViewId);
               if (targetReload?.reload && isWebviewActive(currentViewId)) {
@@ -581,6 +593,14 @@ document.addEventListener('DOMContentLoaded', async () => {
               const button = document.querySelector(`.nav-button[data-id="webview-linkedin"]`);
               if (button) button.classList.remove('opened', 'active');
               window.electronAPI.send('destroy-linkedin-view');
+              document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+              const homeButton = document.getElementById('home-button');
+              if (homeButton) homeButton.classList.add('active');
+              showWebview('webview-home', 'home-button');
+            } else if (currentViewId === 'webview-slack') {
+              const button = document.querySelector(`.nav-button[data-id="webview-slack"]`);
+              if (button) button.classList.remove('opened', 'active');
+              window.electronAPI.send('destroy-slack-view');
               document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
               const homeButton = document.getElementById('home-button');
               if (homeButton) homeButton.classList.add('active');
@@ -1026,6 +1046,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!currentViewId) return;
         if (currentViewId === 'webview-linkedin') {
           window.electronAPI.send('reload-linkedin-view');
+        } else if (currentViewId === 'webview-slack') {
+          window.electronAPI.send('reload-slack-view');
         } else {
           const targetReload = document.getElementById(currentViewId);
           if (targetReload?.reload) {
@@ -1040,6 +1062,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           const button = document.querySelector(`.nav-button[data-id="webview-linkedin"]`);
           if (button) button.classList.remove('opened', 'active');
           window.electronAPI.send('destroy-linkedin-view');
+          document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+          const homeButton = document.getElementById('home-button');
+          if (homeButton) homeButton.classList.add('active');
+          showWebview('webview-home', 'home-button');
+        } else if (currentViewId === 'webview-slack') {
+          const button = document.querySelector(`.nav-button[data-id="webview-slack"]`);
+          if (button) button.classList.remove('opened', 'active');
+          window.electronAPI.send('destroy-slack-view');
           document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
           const homeButton = document.getElementById('home-button');
           if (homeButton) homeButton.classList.add('active');

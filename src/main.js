@@ -17,6 +17,7 @@ let isUpdating = false;
 let updateAvailableWindow = null;
 let updateReadyWindow = null;
 let linkedInView = null;
+let slackView = null;
 
 global.sharedObject = {
   env: {
@@ -1143,5 +1144,83 @@ function showProfileMenuWindow(x, y, user) {
 ipcMain.on('profile-menu-action', (event, action) => {
   if (mainWindow && mainWindow.webContents) {
     mainWindow.webContents.send('profile-menu-action', action);
+  }
+});
+
+// Cria o BrowserView do Slack
+function createSlackView() {
+  if (slackView) return slackView;
+  slackView = new BrowserView({
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      partition: 'persist:mainSession',
+      webSecurity: false,
+      allowRunningInsecureContent: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  });
+  // Definir user agent moderno para Slack
+  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
+  slackView.webContents.setUserAgent(userAgent);
+  slackView.webContents.loadURL('https://app.slack.com/client');
+  return slackView;
+}
+
+function showSlackView() {
+  if (!mainWindow) return;
+  if (!slackView) createSlackView();
+  mainWindow.webContents.executeJavaScript(`
+    (function() {
+      const el = document.querySelector('.webview-wrapper');
+      if (!el) return null;
+      const rect = el.getBoundingClientRect();
+      return {
+        x: rect.x + 8,
+        y: rect.y + 8,
+        width: rect.width - 16,
+        height: rect.height - 16
+      };
+    })();
+  `).then(bounds => {
+    if (bounds && bounds.width && bounds.height) {
+      mainWindow.setBrowserView(slackView);
+      slackView.setBounds({
+        x: Math.round(bounds.x),
+        y: Math.round(bounds.y),
+        width: Math.round(bounds.width),
+        height: Math.round(bounds.height)
+      });
+      slackView.setAutoResize({ width: true, height: true });
+    } else {
+      const winBounds = mainWindow.getBounds();
+      mainWindow.setBrowserView(slackView);
+      slackView.setBounds({ x: 200, y: 0, width: winBounds.width - 200, height: winBounds.height });
+      slackView.setAutoResize({ width: true, height: true });
+    }
+  });
+}
+
+function hideSlackView() {
+  if (!mainWindow) return;
+  mainWindow.setBrowserView(null);
+}
+
+ipcMain.on('show-slack-view', () => {
+  showSlackView();
+});
+ipcMain.on('hide-slack-view', () => {
+  hideSlackView();
+});
+ipcMain.on('destroy-slack-view', () => {
+  if (slackView) {
+    slackView.webContents.destroy();
+    slackView = null;
+    if (mainWindow) mainWindow.setBrowserView(null);
+  }
+});
+ipcMain.on('reload-slack-view', () => {
+  if (slackView) {
+    slackView.webContents.reload();
   }
 });
