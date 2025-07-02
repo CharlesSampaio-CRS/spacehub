@@ -1185,8 +1185,45 @@ function createSlackView() {
         preload: path.join(__dirname, 'preload.js')
       }
     });
+    win.setMenu(null);
     win.webContents.setUserAgent(userAgent);
     win.loadURL(url);
+
+    // Detecta navegação para um workspace e recarrega o slackView principal
+    function handleSlackWorkspaceNav(event, navUrl) {
+      if (navUrl && navUrl.startsWith('https://app.slack.com/client/')) {
+        if (event && event.preventDefault) event.preventDefault();
+        if (slackView) {
+          slackView.webContents.loadURL(navUrl);
+        }
+        win.close();
+      }
+    }
+    win.webContents.on('will-navigate', handleSlackWorkspaceNav);
+    win.webContents.on('did-navigate', handleSlackWorkspaceNav);
+    win.webContents.on('will-redirect', handleSlackWorkspaceNav);
+    win.webContents.on('did-navigate-in-page', handleSlackWorkspaceNav);
+
+    // Fallback: polling da URL a cada 500ms
+    let lastUrl = '';
+    const urlPoll = setInterval(() => {
+      const currentUrl = win.webContents.getURL();
+      if (
+        currentUrl &&
+        currentUrl.startsWith('https://app.slack.com/client/') &&
+        currentUrl !== lastUrl
+      ) {
+        lastUrl = currentUrl;
+        if (slackView) {
+          slackView.webContents.loadURL(currentUrl);
+        }
+        win.close();
+        clearInterval(urlPoll);
+      }
+    }, 500);
+
+    win.on('closed', () => clearInterval(urlPoll));
+
     return { action: 'deny' };
   });
 
