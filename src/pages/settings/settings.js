@@ -22,12 +22,12 @@ const loadApplications = async () => {
   })
     .then(response => response.json())
     .then(data => {
-      if (!Array.isArray(data.applications)) return;
+      if (!Array.isArray(data.data.applications)) return;
 
       const listContainer = document.getElementById("applicationsList");
       listContainer.innerHTML = "";
 
-      data.applications
+      data.data.applications
         .sort((a, b) => b.active - a.active)
         .forEach(app => {
           const appItem = document.createElement("div");
@@ -68,6 +68,9 @@ const updateApplications = async () => {
       applications
     };
 
+    // Printar o token enviado
+    console.log('Token enviado no header Authorization:', auth.token);
+
     // Desabilitar o botão de salvar
     const saveButton = document.getElementById("saveButton");
     if (saveButton) {
@@ -75,7 +78,7 @@ const updateApplications = async () => {
     }
 
     // Enviar requisição PUT para salvar as configurações
-    const res = await fetch('https://spaceapp-digital-api.onrender.com/spaces', {
+    const res = await fetch('http://localhost:3000/spaces', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -84,12 +87,18 @@ const updateApplications = async () => {
       body: JSON.stringify(payload)
     });
 
+    // Tentar logar o corpo da resposta
+    let responseBody;
+    try {
+      responseBody = await res.json();
+    } catch (e) {}
+
     if (!res.ok) {
-      throw new Error('Erro ao salvar as configurações');
+      alert('Erro ao salvar as configurações: ' + (responseBody?.message || res.status));
     }
+
     await window.electronAPI.send('reload-applications');
   } catch (error) {
-    console.error('Erro ao salvar configurações:', error);
     alert('Erro ao salvar as configurações.');
   } finally {
     const saveButton = document.getElementById("saveButton");
@@ -112,15 +121,27 @@ const loadUserInfo = async () => {
     }
   })
     .then(res => res.json())
-    .then(data => {
-      if (data?.name && data?.email && data?.plan) {
-        document.getElementById("userType").textContent = data.type || "Desconhecido";
-        document.getElementById("userName").textContent = data.name;
-        document.getElementById("userEmail").textContent = data.email;
-        document.getElementById("userPlan").textContent = data.plan;
+    .then(data => {      const user = data?.data || data;
+      const typeElem = document.getElementById("userType");
+      const nameElem = document.getElementById("userName");
+      const emailElem = document.getElementById("userEmail");
+      const planElem = document.getElementById("userPlan");
+      if (!typeElem || !nameElem || !emailElem || !planElem) {
+        console.error('Elementos de usuário não encontrados no DOM.');
+        return;
       }
+      // Preenche os campos, mesmo que estejam vazios
+      typeElem.textContent = user.type || "Desconhecido";
+      nameElem.textContent = user.name || "-";
+      emailElem.textContent = user.email || "-";
+      planElem.textContent = user.plan || "-";
     })
-    .catch(error => console.error('Erro ao carregar dados do usuário:', error));
+    .catch(error => {
+      console.error('Erro ao carregar dados do usuário:', error);
+      // Opcional: exibir mensagem de erro na interface
+      const nameElem = document.getElementById("userName");
+      if (nameElem) nameElem.textContent = "Erro ao carregar usuário";
+    });
 };
 
 const setupDarkModeToggle = () => {

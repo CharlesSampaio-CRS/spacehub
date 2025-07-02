@@ -3,6 +3,8 @@ async function login() {
   const password = document.getElementById('password').value;
   const rememberMe = document.getElementById('rememberMe').checked;
 
+  console.log(email, password, rememberMe);
+
   if (!email || !password) {
     Swal.fire({
       icon: 'error',

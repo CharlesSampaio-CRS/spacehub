@@ -129,7 +129,7 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
-  mainWindow.setMenu(null);
+  //mainWindow.setMenu(null);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url) && !url.includes('linkedin.com')) {
@@ -179,7 +179,7 @@ function createLoginWindow() {
     }
   });
 
-  loginWindow.setMenu(null);
+  //loginWindow.setMenu(null);
   loginWindow.loadFile(path.join(__dirname, 'pages/login/login.html'));
   loginWindow.on('closed', () => { loginWindow = null; });
 }
@@ -696,27 +696,20 @@ ipcMain.handle('login', async (event, { email, password }) => {
     let token = null;
     if (data && data.token) {
       token = data.token;
-      console.log('Token encontrado em: data.token');
     } else if (data && data.data && data.data.token) {
       token = data.data.token;
-      console.log('Token encontrado em: data.data.token');
     } else if (data && data.access_token) {
       token = data.access_token;
-      console.log('Token encontrado em: data.access_token');
     } else if (data && data.data && data.data.access_token) {
       token = data.data.access_token;
-      console.log('Token encontrado em: data.data.access_token');
     }
 
-    console.log('Token final extraído (login normal):', token ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
 
     if (!token) {
-      console.log('Estrutura da resposta do login normal não contém token:', data);
       throw new Error('Token de autenticação não recebido no login normal');
     }
 
-    // Criar sessão específica para o email
-    const sessionInfo = createUserSession(email);
+    createUserSession(email);
 
     return data;
   } catch (error) {
@@ -734,8 +727,7 @@ ipcMain.handle('register', async (event, { name, email, password }) => {
       password
     });
 
-    // Criar sessão específica para o email registrado
-    const sessionInfo = createUserSession(email);
+    createUserSession(email);
 
     return { status: 201, data };
   } catch (error) {

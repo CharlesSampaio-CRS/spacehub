@@ -305,8 +305,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     })
       .then(response => response.json())
       .then(data => {
-        if (Array.isArray(data.applications)) {
-          data.applications.forEach(app => {
+        if (Array.isArray(data.data.applications)) {
+          data.data.applications.forEach(app => {
             if (app.active) {
               const appId = `webview-${app.application.toLowerCase()}`;
               const buttonId = `${app.application.toLowerCase()}-button`;
@@ -797,18 +797,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  // Adicionar função para limpar sessão do usuário
-  const clearUserSession = async () => {
-    try {
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (user) {
-        await window.electronAPI.clearUserSession(user.id);
-      }
-    } catch (error) {
-      console.error('Erro ao limpar sessão do usuário:', error);
-    }
-  };
-
   const setupProfileMenu = async () => {
     const profileButton = document.getElementById('profile-button');
     const profileMenu = document.getElementById('profile-menu');
@@ -831,19 +819,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (response.ok) {
           const userData = await response.json();
+          const firstName = userData.data.name ? userData.data.name.split(' ')[0] : 'Usuário';
           
-          // Pegar apenas o primeiro nome
-          const firstName = userData.name ? userData.name.split(' ')[0] : 'Usuário';
-          
-          // Atualizar informações no menu
           document.getElementById('profile-name').textContent = firstName;
-          document.getElementById('profile-menu-name').textContent = userData.name || 'Usuário';
-          document.getElementById('profile-menu-email').textContent = userData.email || 'usuario@email.com';
+          document.getElementById('profile-menu-name').textContent = userData.data.name || 'Usuário';
+          document.getElementById('profile-menu-email').textContent = userData.data.email || 'usuario@email.com';
           
           // Atualizar avatares se houver
-          if (userData.avatar) {
-            document.getElementById('profile-avatar').src = userData.avatar;
-            document.getElementById('profile-menu-avatar').src = userData.avatar;
+          if (userData.data.avatar) {
+            document.getElementById('profile-avatar').src = userData.data.avatar;
+            document.getElementById('profile-menu-avatar').src = userData.data.avatar;
           }
 
           // Salvar dados do usuário no localStorage
