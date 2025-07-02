@@ -1164,6 +1164,39 @@ function createSlackView() {
   const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
   slackView.webContents.setUserAgent(userAgent);
   slackView.webContents.loadURL('https://app.slack.com/client');
+
+  // Handler para novas janelas
+  slackView.webContents.setWindowOpenHandler(({ url }) => {
+    const isSlack = url.startsWith('https://app.slack.com/');
+    if (!isSlack) {
+      shell.openExternal(url);
+      return { action: 'deny' };
+    }
+    // Abrir em nova BrowserWindow com user agent moderno
+    const win = new BrowserWindow({
+      width: 1000,
+      height: 700,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        partition: 'persist:mainSession',
+        webSecurity: false,
+        allowRunningInsecureContent: true,
+        preload: path.join(__dirname, 'preload.js')
+      }
+    });
+    win.webContents.setUserAgent(userAgent);
+    win.loadURL(url);
+    return { action: 'deny' };
+  });
+
+  // Garantir que ao selecionar um workspace, a navegação seja carregada na tela principal
+  slackView.webContents.on('will-navigate', (event, url) => {
+    if (url.startsWith('https://app.slack.com/client/')) {
+      event.preventDefault();
+      slackView.webContents.loadURL(url);
+    }
+  });
   return slackView;
 }
 
