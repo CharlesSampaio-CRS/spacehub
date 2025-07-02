@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('Configurando webview do WhatsApp...');
         webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
         webview.setAttribute('webpreferences', 'contextIsolation=no, nodeIntegration=no, webSecurity=no, allowRunningInsecureContent=yes');
+        webview.setAttribute('allowpopups', 'true');
         
         // Eventos específicos para WhatsApp
         webview.addEventListener('dom-ready', () => {
@@ -73,6 +74,108 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (errorCode === -3 || errorCode === -102) {
             setTimeout(() => webview.reload(), 2000);
           }
+        });
+
+        // Handler para abrir links externos do WhatsApp
+        webview.addEventListener('new-window', (event) => {
+          console.log('WhatsApp new window:', event.url);
+          const url = event.url;
+          
+          // Verificar se é um link do WhatsApp ou relacionado
+          if (url.includes('web.whatsapp.com') || url.includes('wa.me')) {
+            // Links internos do WhatsApp - abrir na mesma webview
+            event.preventDefault();
+            webview.loadURL(url);
+          } else if (url.startsWith('http://') || url.startsWith('https://')) {
+            // Links externos - abrir no navegador padrão
+            event.preventDefault();
+            window.electronAPI.send('open-external-link', url);
+          } else if (url.startsWith('tel:') || url.startsWith('mailto:') || url.startsWith('sms:') || 
+                     url.startsWith('geo:') || url.startsWith('maps:') || url.startsWith('instagram://') ||
+                     url.startsWith('youtube://') || url.startsWith('twitter://') || url.startsWith('facebook://')) {
+            // Links de aplicativos específicos - abrir no aplicativo padrão
+            event.preventDefault();
+            window.electronAPI.send('open-external-link', url);
+          }
+        });
+
+        // Handler para navegação dentro do WhatsApp
+        webview.addEventListener('will-navigate', (event) => {
+          console.log('WhatsApp navigation:', event.url);
+          const url = event.url;
+          
+          // Permitir navegação interna do WhatsApp
+          if (url.includes('web.whatsapp.com') || url.includes('wa.me')) {
+            // Navegação interna - permitir
+            return;
+          } else if (url.startsWith('http://') || url.startsWith('https://')) {
+            // Links externos - abrir no navegador padrão
+            event.preventDefault();
+            window.electronAPI.send('open-external-link', url);
+          } else if (url.startsWith('tel:') || url.startsWith('mailto:') || url.startsWith('sms:') || 
+                     url.startsWith('geo:') || url.startsWith('maps:') || url.startsWith('instagram://') ||
+                     url.startsWith('youtube://') || url.startsWith('twitter://') || url.startsWith('facebook://')) {
+            // Links de aplicativos específicos - abrir no aplicativo padrão
+            event.preventDefault();
+            window.electronAPI.send('open-external-link', url);
+          }
+        });
+
+        // Handler para links de mídia e arquivos
+        webview.addEventListener('will-navigate-in-page', (event) => {
+          console.log('WhatsApp in-page navigation:', event.url);
+          const url = event.url;
+          
+          // Verificar se é um link de mídia ou arquivo
+          if (url && (url.includes('blob:') || url.includes('data:') || url.includes('file:'))) {
+            // Links de mídia internos - permitir
+            return;
+          }
+        });
+
+        // Handler para download de arquivos
+        webview.addEventListener('will-download', (event, item, webContents) => {
+          console.log('WhatsApp download detected:', item.getFilename());
+          // Permitir download de arquivos do WhatsApp
+          // O arquivo será salvo na pasta de downloads padrão
+        });
+
+        // Handler para links de mídia compartilhada
+        webview.addEventListener('dom-ready', () => {
+          // Injetar script para melhorar a experiência de links
+          webview.executeJavaScript(`
+            // Interceptar cliques em links para melhor controle
+            document.addEventListener('click', function(e) {
+              const link = e.target.closest('a');
+              if (link && link.href) {
+                const url = link.href;
+                
+                // Se for um link externo, abrir no navegador padrão
+                if (!url.includes('web.whatsapp.com') && !url.includes('wa.me') && 
+                    (url.startsWith('http://') || url.startsWith('https://'))) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  // Enviar para o processo principal abrir externamente
+                  window.electronAPI.send('open-external-link', url);
+                  return false;
+                }
+              }
+            }, true);
+            
+            // Melhorar a experiência de visualização de mídia
+            document.addEventListener('DOMContentLoaded', function() {
+              // Aguardar carregamento completo da página
+              setTimeout(function() {
+                // Verificar se há elementos de mídia que precisam de ajustes
+                const mediaElements = document.querySelectorAll('img, video, audio');
+                mediaElements.forEach(function(element) {
+                  element.style.maxWidth = '100%';
+                  element.style.height = 'auto';
+                });
+              }, 1000);
+            });
+          `);
         });
 
         // Monitorar erros de console do WhatsApp

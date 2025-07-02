@@ -19,6 +19,7 @@ let updateReadyWindow = null;
 let linkedInView = null;
 let slackView = null;
 let teamsView = null;
+let externalLinkWindows = new Map(); // Para gerenciar janelas de links externos
 
 global.sharedObject = {
   env: {
@@ -140,6 +141,19 @@ function createMainWindow() {
       return { action: 'deny' };
     }
     return { action: 'allow' };
+  });
+
+  // Configurar handler específico para webviews
+  mainWindow.webContents.on('new-window', (event, navigationUrl) => {
+    // Verificar se é um link do WhatsApp
+    if (navigationUrl.includes('web.whatsapp.com') || navigationUrl.includes('wa.me')) {
+      // Links internos do WhatsApp - permitir
+      return;
+    } else if (/^https?:\/\//.test(navigationUrl)) {
+      // Links externos - abrir no navegador padrão
+      event.preventDefault();
+      shell.openExternal(navigationUrl);
+    }
   });
 
   mainWindow.on('close', () => {
@@ -515,6 +529,24 @@ ipcMain.on('clear-sessions', async (event) => {
   }
 });
 
+ipcMain.on('open-external-link', (event, url) => {
+  if (/^https?:\/\//.test(url)) {
+    // Abrir links HTTP/HTTPS em janela do Electron
+    createExternalLinkWindow(url, 'Link Externo');
+  } else if (url.startsWith('tel:') || 
+             url.startsWith('mailto:') || 
+             url.startsWith('sms:') || 
+             url.startsWith('geo:') || 
+             url.startsWith('maps:') ||
+             url.startsWith('instagram://') ||
+             url.startsWith('youtube://') ||
+             url.startsWith('twitter://') ||
+             url.startsWith('facebook://')) {
+    // Links de aplicativos específicos ainda abrem no aplicativo padrão
+    shell.openExternal(url);
+  }
+});
+
 ipcMain.on('open-external', (event, url) => {
   if (/^https?:\/\//.test(url)) shell.openExternal(url);
 });
@@ -672,7 +704,16 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  if (process.platform !== 'darwin') {
+    // Fechar todas as janelas de links externos antes de sair
+    closeAllExternalLinkWindows();
+    app.quit();
+  }
+});
+
+app.on('before-quit', () => {
+  // Fechar todas as janelas de links externos antes de sair
+  closeAllExternalLinkWindows();
 });
 
 ipcMain.on('dark-mode-changed', (event, isDark) => {
@@ -715,6 +756,36 @@ const createUserSession = (email) => {
     } else {
       callback(false);
     }
+  });
+
+  // Configurar gerenciamento de downloads
+  userSession.on('will-download', (event, item, webContents) => {
+    // Configurar o caminho de download padrão
+    const downloadsPath = app.getPath('downloads');
+    const fileName = item.getFilename();
+    const filePath = path.join(downloadsPath, fileName);
+    
+    item.setSavePath(filePath);
+    
+    item.on('updated', (event, state) => {
+      if (state === 'interrupted') {
+        console.log('Download foi interrompido');
+      } else if (state === 'progressing') {
+        if (item.isPaused()) {
+          console.log('Download pausado');
+        } else {
+          console.log(`Download em progresso: ${item.getReceivedBytes()}/${item.getTotalBytes()}`);
+        }
+      }
+    });
+    
+    item.once('done', (event, state) => {
+      if (state === 'completed') {
+        console.log(`Download concluído: ${filePath}`);
+      } else {
+        console.log(`Download falhou: ${state}`);
+      }
+    });
   });
 
   // Configurar gerenciamento de cookies
@@ -1530,4 +1601,229 @@ ipcMain.on('destroy-teams-view', () => {
     }
     teamsView = null;
   }
+});
+
+// Função para criar janela de link externo
+function createExternalLinkWindow(url, title = 'Link Externo') {
+  // Verificar se já existe uma janela para este URL
+  if (externalLinkWindows.has(url)) {
+    const existingWindow = externalLinkWindows.get(url);
+    if (!existingWindow.isDestroyed()) {
+      existingWindow.focus();
+      return existingWindow;
+    } else {
+      externalLinkWindows.delete(url);
+    }
+  }
+
+  // Criar nova janela
+  const linkWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    title: title,
+    icon: path.join(__dirname, 'assets', 'spacehub.png'),
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+      partition: 'persist:mainSession',
+      webSecurity: false,
+      allowRunningInsecureContent: true,
+      experimentalFeatures: true,
+      plugins: true,
+      webgl: true,
+      enableRemoteModule: false,
+      nodeIntegrationInSubFrames: true,
+      backgroundThrottling: false
+    }
+  });
+
+  // Ocultar menu da janela
+  linkWindow.setMenu(null);
+
+  // Configurar user agent moderno
+  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
+  linkWindow.webContents.setUserAgent(userAgent);
+
+  // Carregar a URL
+  linkWindow.loadURL(url);
+
+  // Configurar handler para novas janelas (evitar recursão infinita)
+  linkWindow.webContents.setWindowOpenHandler(({ url: newUrl }) => {
+    if (/^https?:\/\//.test(newUrl)) {
+      createExternalLinkWindow(newUrl, 'Nova Janela');
+      return { action: 'deny' };
+    }
+    return { action: 'allow' };
+  });
+
+  // Configurar atalhos de teclado
+  linkWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.control || input.meta) {
+      switch (input.key.toLowerCase()) {
+        case 'w':
+          event.preventDefault();
+          linkWindow.close();
+          break;
+        case 'r':
+          event.preventDefault();
+          linkWindow.webContents.reload();
+          break;
+        case 'l':
+          event.preventDefault();
+          linkWindow.webContents.focus();
+          break;
+      }
+    }
+  });
+
+  // Configurar handler para navegação
+  linkWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+    // Permitir navegação normal
+    console.log('Navegando para:', navigationUrl);
+  });
+
+  // Configurar menu de contexto para a janela
+  linkWindow.webContents.on('context-menu', (event, params) => {
+    const menu = Menu.buildFromTemplate([
+      {
+        label: 'Voltar',
+        accelerator: 'Alt+Left',
+        click: () => {
+          if (linkWindow.webContents.canGoBack()) {
+            linkWindow.webContents.goBack();
+          }
+        }
+      },
+      {
+        label: 'Avançar',
+        accelerator: 'Alt+Right',
+        click: () => {
+          if (linkWindow.webContents.canGoForward()) {
+            linkWindow.webContents.goForward();
+          }
+        }
+      },
+      { type: 'separator' },
+      {
+        label: 'Recarregar',
+        accelerator: 'CmdOrCtrl+R',
+        click: () => {
+          linkWindow.webContents.reload();
+        }
+      },
+      {
+        label: 'Parar',
+        accelerator: 'Escape',
+        click: () => {
+          linkWindow.webContents.stop();
+        }
+      },
+      { type: 'separator' },
+      {
+        label: 'Abrir no Navegador',
+        click: () => {
+          shell.openExternal(url);
+        }
+      },
+      { type: 'separator' },
+      {
+        label: 'Fechar',
+        accelerator: 'CmdOrCtrl+W',
+        click: () => {
+          linkWindow.close();
+        }
+      }
+    ]);
+    menu.popup({ window: linkWindow });
+  });
+
+  // Configurar handler para downloads
+  linkWindow.webContents.on('will-download', (event, item, webContents) => {
+    const downloadsPath = app.getPath('downloads');
+    const fileName = item.getFilename();
+    const filePath = path.join(downloadsPath, fileName);
+    
+    item.setSavePath(filePath);
+    
+    item.on('updated', (event, state) => {
+      if (state === 'interrupted') {
+        console.log('Download foi interrompido');
+      } else if (state === 'progressing') {
+        if (item.isPaused()) {
+          console.log('Download pausado');
+        } else {
+          console.log(`Download em progresso: ${item.getReceivedBytes()}/${item.getTotalBytes()}`);
+        }
+      }
+    });
+    
+    item.once('done', (event, state) => {
+      if (state === 'completed') {
+        console.log(`Download concluído: ${filePath}`);
+      } else {
+        console.log(`Download falhou: ${state}`);
+      }
+    });
+  });
+
+  // Configurar handler para fechamento da janela
+  linkWindow.on('closed', () => {
+    externalLinkWindows.delete(url);
+  });
+
+  // Armazenar referência da janela
+  externalLinkWindows.set(url, linkWindow);
+
+  // Mostrar a janela
+  linkWindow.show();
+
+  return linkWindow;
+}
+
+// Função para fechar todas as janelas de links externos
+function closeAllExternalLinkWindows() {
+  for (const [url, window] of externalLinkWindows.entries()) {
+    if (!window.isDestroyed()) {
+      window.close();
+    }
+  }
+  externalLinkWindows.clear();
+}
+
+// Handler para fechar uma janela de link externo específica
+ipcMain.handle('close-external-link-window', (event, url) => {
+  if (externalLinkWindows.has(url)) {
+    const window = externalLinkWindows.get(url);
+    if (!window.isDestroyed()) {
+      window.close();
+    }
+    externalLinkWindows.delete(url);
+    return { success: true };
+  }
+  return { success: false, error: 'Window not found' };
+});
+
+// Handler para listar janelas de links externos abertas
+ipcMain.handle('get-external-link-windows', () => {
+  const windows = [];
+  for (const [url, window] of externalLinkWindows.entries()) {
+    if (!window.isDestroyed()) {
+      windows.push({
+        url,
+        title: window.getTitle(),
+        isVisible: window.isVisible()
+      });
+    }
+  }
+  return windows;
+});
+
+// Handler para abrir link externo em janela do Electron
+ipcMain.handle('open-external-link-window', (event, url, title) => {
+  if (/^https?:\/\//.test(url)) {
+    const window = createExternalLinkWindow(url, title || 'Link Externo');
+    return { success: true, windowId: window.id };
+  }
+  return { success: false, error: 'Invalid URL' };
 });
