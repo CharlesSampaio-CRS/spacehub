@@ -968,8 +968,49 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Adicionar listener para comandos do menu de contexto nativo
   window.electronAPI.on('context-menu-command', (event, data) => {
     const { command, currentViewId } = data || {};
-    if (!command || !currentViewId) return;
+    if (!command) return;
     switch (command) {
+      case 'reload-all':
+        document.querySelectorAll('webview').forEach(w => {
+          if (w.classList.contains('active') || w.classList.contains('opened')) {
+            w.reload();
+          }
+        });
+        break;
+      case 'close-all': {
+        const currentLanguage = document.documentElement.lang;
+        const translations = {
+          'pt-BR': {
+            'close_all_confirmation': 'Tem certeza que deseja fechar todas as abas?'
+          },
+          'en-US': {
+            'close_all_confirmation': 'Are you sure you want to close all tabs?'
+          }
+        };
+        const t = translations[currentLanguage] || translations['en-US'];
+        showConfirmationDialog(t['close_all_confirmation'], () => {
+          document.querySelectorAll('webview').forEach(w => {
+            if (w.id !== 'webview-home' && (w.classList.contains('active') || w.classList.contains('opened'))) {
+              w.remove();
+              const button = document.querySelector(`.nav-button[data-id="${w.id}"]`);
+              if (button) {
+                button.classList.remove('active', 'opened');
+              }
+            }
+          });
+          document.querySelectorAll('.nav-button').forEach(b => {
+            if (b.id !== 'home-button') {
+              b.classList.remove('opened');
+            }
+          });
+          if (currentWebview && currentWebview.id !== 'webview-home') {
+            currentWebview = null;
+            document.getElementById('active-view-name').textContent = '';
+          }
+          showWebview('webview-home', 'home-button');
+        });
+        break;
+      }
       case 'reload-current':
         if (currentViewId === 'webview-linkedin') {
           window.electronAPI.send('reload-linkedin-view');
