@@ -129,7 +129,7 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
-  //mainWindow.setMenu(null);
+  mainWindow.setMenu(null);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url) && !url.includes('linkedin.com')) {
@@ -179,7 +179,7 @@ function createLoginWindow() {
     }
   });
 
-  //loginWindow.setMenu(null);
+  loginWindow.setMenu(null);
   loginWindow.loadFile(path.join(__dirname, 'pages/login/login.html'));
   loginWindow.on('closed', () => { loginWindow = null; });
 }
