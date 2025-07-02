@@ -192,6 +192,23 @@ function createMainWindow() {
       });
     }
   });
+
+  mainWindow.on('minimize', () => {
+    if (global.profileMenuWindow && !global.profileMenuWindow.isDestroyed()) {
+      global.profileMenuWindow.close();
+    }
+    if (global.contextMenuWindow && !global.contextMenuWindow.isDestroyed()) {
+      global.contextMenuWindow.close();
+    }
+  });
+  mainWindow.on('maximize', () => {
+    if (global.profileMenuWindow && !global.profileMenuWindow.isDestroyed()) {
+      global.profileMenuWindow.close();
+    }
+    if (global.contextMenuWindow && !global.contextMenuWindow.isDestroyed()) {
+      global.contextMenuWindow.close();
+    }
+  });
 }
 
 function createLoginWindow() {
@@ -1018,11 +1035,9 @@ ipcMain.on('show-context-menu-window', (event, { x, y, currentViewId }) => {
 });
 
 function showContextMenuWindow(x, y, currentViewId) {
-  // Fecha menu antigo se existir
   if (global.contextMenuWindow && !global.contextMenuWindow.isDestroyed()) {
     global.contextMenuWindow.close();
   }
-
   const menuWindow = new BrowserWindow({
     width: 200,
     height: 100,
@@ -1049,15 +1064,13 @@ function showContextMenuWindow(x, y, currentViewId) {
     menuWindow.webContents.send('set-current-view', currentViewId);
   });
 
-  // Fecha ao perder o foco
+  // Fecha ao perder o foco (cobre clique fora, minimizar, trocar de app, etc)
   menuWindow.on('blur', () => {
     if (!menuWindow.isDestroyed()) menuWindow.close();
   });
 
-  // Salva referência global para fechar depois
   global.contextMenuWindow = menuWindow;
 
-  // Também envia o id ao carregar (fallback)
   menuWindow.webContents.on('did-finish-load', () => {
     menuWindow.webContents.send('set-current-view', currentViewId);
   });
@@ -1077,7 +1090,6 @@ function showProfileMenuWindow(x, y, user) {
   if (global.profileMenuWindow && !global.profileMenuWindow.isDestroyed()) {
     global.profileMenuWindow.close();
   }
-
   const menuWindow = new BrowserWindow({
     width: 260,
     height: 180,
@@ -1104,6 +1116,7 @@ function showProfileMenuWindow(x, y, user) {
     menuWindow.webContents.send('set-profile-data', user);
   });
 
+  // Fecha ao perder o foco (cobre clique fora, minimizar, trocar de app, etc)
   menuWindow.on('blur', () => {
     if (!menuWindow.isDestroyed()) menuWindow.close();
   });
