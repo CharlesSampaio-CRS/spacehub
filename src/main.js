@@ -1011,3 +1011,59 @@ ipcMain.on('reload-linkedin-view', () => {
     linkedInView.webContents.reload();
   }
 });
+
+ipcMain.on('show-context-menu-window', (event, { x, y, currentViewId }) => {
+  global.lastContextMenuViewId = currentViewId;
+  showContextMenuWindow(x, y, currentViewId);
+});
+
+function showContextMenuWindow(x, y, currentViewId) {
+  // Fecha menu antigo se existir
+  if (global.contextMenuWindow && !global.contextMenuWindow.isDestroyed()) {
+    global.contextMenuWindow.close();
+  }
+
+  const menuWindow = new BrowserWindow({
+    width: 200,
+    height: 100,
+    x: Math.round(x),
+    y: Math.round(y),
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    resizable: false,
+    show: false,
+    skipTaskbar: true,
+    focusable: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      backgroundThrottling: false,
+    }
+  });
+
+  menuWindow.loadFile(path.join(__dirname, 'pages/context-menu/context-menu.html'));
+
+  menuWindow.once('ready-to-show', () => {
+    menuWindow.show();
+  });
+
+  // Fecha ao perder o foco
+  menuWindow.on('blur', () => {
+    if (!menuWindow.isDestroyed()) menuWindow.close();
+  });
+
+  // Salva referência global para fechar depois
+  global.contextMenuWindow = menuWindow;
+
+  // Você pode passar o currentViewId para o menu via IPC se quiser
+  menuWindow.webContents.on('did-finish-load', () => {
+    menuWindow.webContents.send('set-current-view', currentViewId);
+  });
+}
+
+ipcMain.on('context-menu-command', (event, command) => {
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.send('context-menu-command', { command, currentViewId: global.lastContextMenuViewId });
+  }
+});

@@ -638,23 +638,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Se for LinkedIn, esconder temporariamente o BrowserView
-    if (currentViewId === 'webview-linkedin') {
-      window.electronAPI.send('hide-linkedin-view-temporary');
-    }
-
-    const existingMenu = document.querySelector('.context-menu');
-    if (existingMenu) {
-      existingMenu.remove();
-    }
-
-    const menu = document.createElement('div');
-    menu.className = 'context-menu';
-    menu.innerHTML = await getMenuTemplate(currentViewId);
-    
-    setupMenuPosition(menu, x, y);
-    document.body.appendChild(menu);
-    setupMenuEvents(menu, currentViewId);
+    // Agora, ao invés de criar o menu HTML, envie para o main process abrir a janela de menu
+    window.electronAPI.send('show-context-menu-window', {
+      x,
+      y,
+      currentViewId
+    });
   };
 
   // Context Menu e comunicação com main process
@@ -974,6 +963,47 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.electronAPI.onLanguageChanged((language) => {
     document.documentElement.lang = language;
     translatePage(language);
+  });
+
+  // Adicionar listener para comandos do menu de contexto nativo
+  window.electronAPI.on('context-menu-command', (event, data) => {
+    const { command, currentViewId } = data || {};
+    if (!command || !currentViewId) return;
+    switch (command) {
+      case 'reload-current':
+        if (currentViewId === 'webview-linkedin') {
+          window.electronAPI.send('reload-linkedin-view');
+        } else {
+          const targetReload = document.getElementById(currentViewId);
+          if (targetReload?.reload) {
+            targetReload.reload();
+          }
+        }
+        break;
+      case 'close-current':
+        if (currentViewId === 'webview-linkedin') {
+          // Remove botão ativo
+          const button = document.querySelector(`.nav-button[data-id="webview-linkedin"]`);
+          if (button) button.classList.remove('opened', 'active');
+          window.electronAPI.send('destroy-linkedin-view');
+          document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+          const homeButton = document.getElementById('home-button');
+          if (homeButton) homeButton.classList.add('active');
+          showWebview('webview-home', 'home-button');
+        } else {
+          const targetClose = document.getElementById(currentViewId);
+          if (targetClose) {
+            const button = document.querySelector(`.nav-button[data-id="${currentViewId}"]`);
+            if (button) button.classList.remove('opened', 'active');
+            targetClose.remove();
+            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+            const homeButton = document.getElementById('home-button');
+            if (homeButton) homeButton.classList.add('active');
+            showWebview('webview-home', 'home-button');
+          }
+        }
+        break;
+    }
   });
 
   // Inicialização
