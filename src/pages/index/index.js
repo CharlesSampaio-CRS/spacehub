@@ -634,10 +634,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Se for LinkedIn, esconder temporariamente o BrowserView
-    if (currentViewId === 'webview-linkedin') {
-      window.electronAPI.send('hide-linkedin-view-temporary');
-    }
+    // Se for LinkedIn, NÃO esconder mais o BrowserView
+    // if (currentViewId === 'webview-linkedin') {
+    //   window.electronAPI.send('hide-linkedin-view-temporary');
+    // }
 
     const existingMenu = document.querySelector('.context-menu');
     if (existingMenu) {
