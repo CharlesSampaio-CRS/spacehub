@@ -140,6 +140,32 @@
   </div>
   <script>
     const { ipcRenderer } = require('electron');
+    let currentLanguage = 'pt-BR';
+    let translations = {
+      'pt-BR': {
+        'Configurações': 'Configurações',
+        'Sair': 'Sair'
+      },
+      'en-US': {
+        'Configurações': 'Settings',
+        'Sair': 'Logout'
+      }
+    };
+    ipcRenderer.on('set-language', (event, lang) => {
+      currentLanguage = lang;
+      renderMenu();
+    });
+    ipcRenderer.on('set-translations', (event, t) => {
+      translations = t;
+      renderMenu();
+    });
+    function renderMenu() {
+      const t = translations[currentLanguage] || translations['pt-BR'];
+      document.querySelector('[data-action="settings"] span').textContent = t['Configurações'];
+      document.querySelector('[data-action="logout"] span').textContent = t['Sair'];
+    }
+    // Chame renderMenu() no início e sempre que receber idioma novo
+    renderMenu();
     function applyTheme(isDark) {
       if (typeof isDark === 'boolean') {
         if (isDark) {

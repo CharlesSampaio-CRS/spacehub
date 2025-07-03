@@ -89,6 +89,29 @@
   <div class="context-menu" id="menu"></div>
   <script>
     const { ipcRenderer } = require('electron');
+    let currentLanguage = 'pt-BR';
+    let translations = {
+      'pt-BR': {
+        'Atualizar Todos': 'Atualizar Todos',
+        'Fechar Todos': 'Fechar Todos',
+        'Atualizar': 'Atualizar',
+        'Fechar': 'Fechar'
+      },
+      'en-US': {
+        'Atualizar Todos': 'Refresh All',
+        'Fechar Todos': 'Close All',
+        'Atualizar': 'Refresh',
+        'Fechar': 'Close'
+      }
+    };
+    ipcRenderer.on('set-language', (event, lang) => {
+      currentLanguage = lang;
+      renderMenu(window.currentMenuType || 'other');
+    });
+    ipcRenderer.on('set-translations', (event, t) => {
+      translations = t;
+      renderMenu(window.currentMenuType || 'other');
+    });
     function applyTheme(isDark) {
       if (typeof isDark === 'boolean') {
         if (isDark) {
@@ -114,31 +137,32 @@
     applyTheme();
     window.addEventListener('storage', () => applyTheme());
 
-    // Renderiza o menu conforme o tipo
     function renderMenu(type = 'other') {
+      window.currentMenuType = type;
+      const t = translations[currentLanguage] || translations['pt-BR'];
       const menu = document.getElementById('menu');
       if (type === 'home') {
         menu.innerHTML = `
           <div class="context-menu-item" data-command="reload-all">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Atualizar Todos</span>
+            <span>${t['Atualizar Todos']}</span>
           </div>
           <div class="context-menu-separator"></div>
           <div class="context-menu-item" data-command="close-all">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Fechar Todos</span>
+            <span>${t['Fechar Todos']}</span>
           </div>
         `;
       } else {
         menu.innerHTML = `
           <div class="context-menu-item" data-command="reload-current">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 20v-6h6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Atualizar</span>
+            <span>${t['Atualizar']}</span>
           </div>
           <div class="context-menu-separator"></div>
           <div class="context-menu-item" data-command="close-current">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Fechar</span>
+            <span>${t['Fechar']}</span>
           </div>
         `;
       }
