@@ -43,10 +43,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       webview.className = 'webview w-100 h-100 active';
       webview.src = url || '../../pages/home/home.html';
 
-      // Configurações comuns para todas as webviews
+      // Configurações comuns para todas as webviews (otimizadas para performance)
       webview.setAttribute('preload', '../../preload.js');
       webview.setAttribute('partition', 'persist:mainSession');
-      webview.setAttribute('webpreferences', 'allowRunningInsecureContent=yes, experimentalFeatures=yes, webSecurity=no, plugins=yes, webgl=yes, nodeIntegrationInSubFrames=yes, backgroundThrottling=no');
+      webview.setAttribute('webpreferences', 'allowRunningInsecureContent=yes, webSecurity=no, plugins=yes, webgl=yes, backgroundThrottling=no');
 
       // Configurações específicas para WhatsApp
       if (url && url.includes('web.whatsapp.com')) {
@@ -1158,15 +1158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
-  // Limpar cache periodicamente
-  setInterval(() => {
-    webviewCache.forEach((webview, id) => {
-      if (webview && !webview.isDestroyed() && !webview.classList.contains('active')) {
-        webview.remove();
-        webviewCache.delete(id);
-      }
-    });
-  }, 300000); // A cada 5 minutos
+  // Remover limpeza periódica de cache para melhor performance
 
   // Adicionar função para gerenciar sessão do usuário
   const setupUserSession = async () => {

@@ -124,16 +124,10 @@ function createMainWindow() {
 
   mainWindow.webContents.setFrameRate(60);
   mainWindow.webContents.setBackgroundThrottling(false);
-  
-  setInterval(() => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.session.clearCache();
-    }
-  }, 3600000);
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
-  //mainWindow.setMenu(null);
+  mainWindow.setMenu(null);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url) && !url.includes('linkedin.com')) {
@@ -172,11 +166,6 @@ function createMainWindow() {
   mainWindow.webContents.once('did-finish-load', () => {
     const isDarkMode = store.get('darkMode') === true;
     mainWindow.webContents.send('dark-mode-changed', isDarkMode);
-    
-    checkForUpdates(); 
-    setInterval(() => {
-      checkForUpdates();
-    }, 1800000); 
   });  
 
   mainWindow.on('resize', () => {
@@ -699,8 +688,7 @@ app.whenReady().then(() => {
     error: (message) => console.error('AutoUpdater:', message)
   };
 
-  // Initial update check
-  autoUpdater.checkForUpdates();
+  // Remover verificação inicial de atualizações para melhor performance
 });
 
 app.on('window-all-closed', () => {
@@ -758,75 +746,18 @@ const createUserSession = (email) => {
     }
   });
 
-  // Configurar gerenciamento de downloads
+  // Configurar gerenciamento de downloads (simplificado)
   userSession.on('will-download', (event, item, webContents) => {
-    // Configurar o caminho de download padrão
     const downloadsPath = app.getPath('downloads');
     const fileName = item.getFilename();
     const filePath = path.join(downloadsPath, fileName);
-    
     item.setSavePath(filePath);
-    
-    item.on('updated', (event, state) => {
-      if (state === 'interrupted') {
-        console.log('Download foi interrompido');
-      } else if (state === 'progressing') {
-        if (item.isPaused()) {
-          console.log('Download pausado');
-        } else {
-          console.log(`Download em progresso: ${item.getReceivedBytes()}/${item.getTotalBytes()}`);
-        }
-      }
-    });
-    
-    item.once('done', (event, state) => {
-      if (state === 'completed') {
-        console.log(`Download concluído: ${filePath}`);
-      } else {
-        console.log(`Download falhou: ${state}`);
-      }
-    });
   });
 
-  // Configurar gerenciamento de cookies
-  userSession.cookies.on('changed', (event, cookie, cause, removed) => {
-    if (removed) {
-      console.log(`Cookie removido: ${cookie.name}`);
-    } else {
-      console.log(`Cookie modificado: ${cookie.name}`);
-    }
-  });
+  // Remover limpeza periódica para melhor performance
 
-  // Configurar limpeza periódica do cache e dados
-  setInterval(async () => {
-    try {
-      await userSession.clearCache();
-      await userSession.clearStorageData({
-        storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
-      });
-      console.log(`Cache e dados limpos para sessão: ${email}`);
-    } catch (error) {
-      console.error(`Erro ao limpar cache da sessão ${email}:`, error);
-    }
-  }, 3600000); // A cada hora
-
-  // Configurar proteção contra vazamento de memória
+  // Configurar preload script
   userSession.setPreloads([path.join(__dirname, 'preload.js')]);
-
-  // Configurar limites de memória através do BrowserWindow
-  const tempWindow = new BrowserWindow({
-    show: false,
-    webPreferences: {
-      session: userSession
-    }
-  });
-  
-  // Configurar limites de memória para a janela
-  tempWindow.webContents.setFrameRate(30); // Reduzir taxa de quadros para economizar memória
-  tempWindow.webContents.setBackgroundThrottling(true); // Habilitar throttling em segundo plano
-  
-  // Fechar a janela temporária após a configuração
-  tempWindow.close();
 
   userSessions.set(email, userSession);
   return { sessionId: `persist:user_${email}` };
@@ -1330,25 +1261,25 @@ function createSlackView() {
     win.webContents.on('will-redirect', handleSlackWorkspaceNav);
     win.webContents.on('did-navigate-in-page', handleSlackWorkspaceNav);
 
-    // Fallback: polling da URL a cada 500ms
-    let lastUrl = '';
-    const urlPoll = setInterval(() => {
-      const currentUrl = win.webContents.getURL();
-      if (
-        currentUrl &&
-        currentUrl.startsWith('https://app.slack.com/client/') &&
-        currentUrl !== lastUrl
-      ) {
-        lastUrl = currentUrl;
-        if (slackView) {
-          slackView.webContents.loadURL(currentUrl);
-        }
-        win.close();
-        clearInterval(urlPoll);
+      // Fallback: polling da URL a cada 1s (reduzido para melhor performance)
+  let lastUrl = '';
+  const urlPoll = setInterval(() => {
+    const currentUrl = win.webContents.getURL();
+    if (
+      currentUrl &&
+      currentUrl.startsWith('https://app.slack.com/client/') &&
+      currentUrl !== lastUrl
+    ) {
+      lastUrl = currentUrl;
+      if (slackView) {
+        slackView.webContents.loadURL(currentUrl);
       }
-    }, 500);
+      win.close();
+      clearInterval(urlPoll);
+    }
+  }, 1000);
 
-    win.on('closed', () => clearInterval(urlPoll));
+  win.on('closed', () => clearInterval(urlPoll));
 
     return { action: 'deny' };
   });
@@ -1495,7 +1426,7 @@ function createTeamsView() {
     win.webContents.on('will-redirect', handleTeamsWorkspaceNav);
     win.webContents.on('did-navigate-in-page', handleTeamsWorkspaceNav);
 
-    // Fallback: polling da URL a cada 500ms
+    // Fallback: polling da URL a cada 1s (reduzido para melhor performance)
     let lastUrl = '';
     const urlPoll = setInterval(() => {
       const currentUrl = win.webContents.getURL();
@@ -1511,7 +1442,7 @@ function createTeamsView() {
         win.close();
         clearInterval(urlPoll);
       }
-    }, 500);
+    }, 1000);
 
     win.on('closed', () => clearInterval(urlPoll));
 
@@ -1648,7 +1579,7 @@ function createExternalLinkWindow(url, title = 'Link Externo') {
   // Carregar a URL
   linkWindow.loadURL(url);
 
-  // Configurar handler para novas janelas (evitar recursão infinita)
+  // Configurar handler para novas janelas (simplificado)
   linkWindow.webContents.setWindowOpenHandler(({ url: newUrl }) => {
     if (/^https?:\/\//.test(newUrl)) {
       createExternalLinkWindow(newUrl, 'Nova Janela');
@@ -1657,114 +1588,34 @@ function createExternalLinkWindow(url, title = 'Link Externo') {
     return { action: 'allow' };
   });
 
-  // Configurar atalhos de teclado
-  linkWindow.webContents.on('before-input-event', (event, input) => {
-    if (input.control || input.meta) {
-      switch (input.key.toLowerCase()) {
-        case 'w':
-          event.preventDefault();
-          linkWindow.close();
-          break;
-        case 'r':
-          event.preventDefault();
-          linkWindow.webContents.reload();
-          break;
-        case 'l':
-          event.preventDefault();
-          linkWindow.webContents.focus();
-          break;
-      }
-    }
-  });
-
-  // Configurar handler para navegação
-  linkWindow.webContents.on('will-navigate', (event, navigationUrl) => {
-    // Permitir navegação normal
-    console.log('Navegando para:', navigationUrl);
-  });
-
-  // Configurar menu de contexto para a janela
+  // Configurar menu de contexto simplificado
   linkWindow.webContents.on('context-menu', (event, params) => {
     const menu = Menu.buildFromTemplate([
       {
-        label: 'Voltar',
-        accelerator: 'Alt+Left',
-        click: () => {
-          if (linkWindow.webContents.canGoBack()) {
-            linkWindow.webContents.goBack();
-          }
-        }
-      },
-      {
-        label: 'Avançar',
-        accelerator: 'Alt+Right',
-        click: () => {
-          if (linkWindow.webContents.canGoForward()) {
-            linkWindow.webContents.goForward();
-          }
-        }
-      },
-      { type: 'separator' },
-      {
         label: 'Recarregar',
         accelerator: 'CmdOrCtrl+R',
-        click: () => {
-          linkWindow.webContents.reload();
-        }
+        click: () => linkWindow.webContents.reload()
       },
-      {
-        label: 'Parar',
-        accelerator: 'Escape',
-        click: () => {
-          linkWindow.webContents.stop();
-        }
-      },
-      { type: 'separator' },
       {
         label: 'Abrir no Navegador',
-        click: () => {
-          shell.openExternal(url);
-        }
+        click: () => shell.openExternal(url)
       },
       { type: 'separator' },
       {
         label: 'Fechar',
         accelerator: 'CmdOrCtrl+W',
-        click: () => {
-          linkWindow.close();
-        }
+        click: () => linkWindow.close()
       }
     ]);
     menu.popup({ window: linkWindow });
   });
 
-  // Configurar handler para downloads
+  // Configurar handler para downloads (simplificado)
   linkWindow.webContents.on('will-download', (event, item, webContents) => {
     const downloadsPath = app.getPath('downloads');
     const fileName = item.getFilename();
     const filePath = path.join(downloadsPath, fileName);
-    
     item.setSavePath(filePath);
-    
-    item.on('updated', (event, state) => {
-      if (state === 'interrupted') {
-        console.log('Download foi interrompido');
-      } else if (state === 'progressing') {
-        if (item.isPaused()) {
-          console.log('Download pausado');
-        } else {
-          console.log(`Download em progresso: ${item.getReceivedBytes()}/${item.getTotalBytes()}`);
-        }
-      }
-    });
-    
-    item.once('done', (event, state) => {
-      if (state === 'completed') {
-        console.log(`Download concluído: ${filePath}`);
-      } else {
-        console.log(`Download falhou: ${state}`);
-      }
-    });
   });
 
   // Configurar handler para fechamento da janela
