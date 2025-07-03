@@ -17,6 +17,9 @@ let isUpdating = false;
 let updateAvailableWindow = null;
 let updateReadyWindow = null;
 let linkedInView = null;
+let slackView = null;
+let teamsView = null;
+let externalLinkWindows = new Map(); // Para gerenciar janelas de links externos
 
 global.sharedObject = {
   env: {
@@ -121,12 +124,6 @@ function createMainWindow() {
 
   mainWindow.webContents.setFrameRate(60);
   mainWindow.webContents.setBackgroundThrottling(false);
-  
-  setInterval(() => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.session.clearCache();
-    }
-  }, 3600000);
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
@@ -138,6 +135,19 @@ function createMainWindow() {
       return { action: 'deny' };
     }
     return { action: 'allow' };
+  });
+
+  // Configurar handler específico para webviews
+  mainWindow.webContents.on('new-window', (event, navigationUrl) => {
+    // Verificar se é um link do WhatsApp
+    if (navigationUrl.includes('web.whatsapp.com') || navigationUrl.includes('wa.me')) {
+      // Links internos do WhatsApp - permitir
+      return;
+    } else if (/^https?:\/\//.test(navigationUrl)) {
+      // Links externos - abrir no navegador padrão
+      event.preventDefault();
+      shell.openExternal(navigationUrl);
+    }
   });
 
   mainWindow.on('close', () => {
@@ -156,11 +166,6 @@ function createMainWindow() {
   mainWindow.webContents.once('did-finish-load', () => {
     const isDarkMode = store.get('darkMode') === true;
     mainWindow.webContents.send('dark-mode-changed', isDarkMode);
-    
-    checkForUpdates(); 
-    setInterval(() => {
-      checkForUpdates();
-    }, 1800000); 
   });  
 
   mainWindow.on('resize', () => {
@@ -188,6 +193,60 @@ function createMainWindow() {
         } else {
           const winBounds = mainWindow.getBounds();
           linkedInView.setBounds({ x: 200, y: 0, width: winBounds.width - 200, height: winBounds.height });
+        }
+      });
+    }
+    if (slackView) {
+      mainWindow.webContents.executeJavaScript(`
+        (function() {
+          const el = document.querySelector('.webview-wrapper');
+          if (!el) return null;
+          const rect = el.getBoundingClientRect();
+          return {
+            x: rect.x + 8,
+            y: rect.y + 8,
+            width: rect.width - 16,
+            height: rect.height - 16
+          };
+        })();
+      `).then(bounds => {
+        if (bounds && bounds.width && bounds.height) {
+          slackView.setBounds({
+            x: Math.round(bounds.x),
+            y: Math.round(bounds.y),
+            width: Math.round(bounds.width),
+            height: Math.round(bounds.height)
+          });
+        } else {
+          const winBounds = mainWindow.getBounds();
+          slackView.setBounds({ x: 200, y: 0, width: winBounds.width - 200, height: winBounds.height });
+        }
+      });
+    }
+    if (teamsView) {
+      mainWindow.webContents.executeJavaScript(`
+        (function() {
+          const el = document.querySelector('.webview-wrapper');
+          if (!el) return null;
+          const rect = el.getBoundingClientRect();
+          return {
+            x: rect.x + 8,
+            y: rect.y + 8,
+            width: rect.width - 16,
+            height: rect.height - 16
+          };
+        })();
+      `).then(bounds => {
+        if (bounds && bounds.width && bounds.height) {
+          teamsView.setBounds({
+            x: Math.round(bounds.x),
+            y: Math.round(bounds.y),
+            width: Math.round(bounds.width),
+            height: Math.round(bounds.height)
+          });
+        } else {
+          const winBounds = mainWindow.getBounds();
+          teamsView.setBounds({ x: 200, y: 0, width: winBounds.width - 200, height: winBounds.height });
         }
       });
     }
@@ -459,6 +518,24 @@ ipcMain.on('clear-sessions', async (event) => {
   }
 });
 
+ipcMain.on('open-external-link', (event, url) => {
+  if (/^https?:\/\//.test(url)) {
+    // Abrir links HTTP/HTTPS em janela do Electron
+    createExternalLinkWindow(url, 'Link Externo');
+  } else if (url.startsWith('tel:') || 
+             url.startsWith('mailto:') || 
+             url.startsWith('sms:') || 
+             url.startsWith('geo:') || 
+             url.startsWith('maps:') ||
+             url.startsWith('instagram://') ||
+             url.startsWith('youtube://') ||
+             url.startsWith('twitter://') ||
+             url.startsWith('facebook://')) {
+    // Links de aplicativos específicos ainda abrem no aplicativo padrão
+    shell.openExternal(url);
+  }
+});
+
 ipcMain.on('open-external', (event, url) => {
   if (/^https?:\/\//.test(url)) shell.openExternal(url);
 });
@@ -611,12 +688,20 @@ app.whenReady().then(() => {
     error: (message) => console.error('AutoUpdater:', message)
   };
 
-  // Initial update check
-  autoUpdater.checkForUpdates();
+  // Remover verificação inicial de atualizações para melhor performance
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  if (process.platform !== 'darwin') {
+    // Fechar todas as janelas de links externos antes de sair
+    closeAllExternalLinkWindows();
+    app.quit();
+  }
+});
+
+app.on('before-quit', () => {
+  // Fechar todas as janelas de links externos antes de sair
+  closeAllExternalLinkWindows();
 });
 
 ipcMain.on('dark-mode-changed', (event, isDark) => {
@@ -661,45 +746,18 @@ const createUserSession = (email) => {
     }
   });
 
-  // Configurar gerenciamento de cookies
-  userSession.cookies.on('changed', (event, cookie, cause, removed) => {
-    if (removed) {
-      console.log(`Cookie removido: ${cookie.name}`);
-    } else {
-      console.log(`Cookie modificado: ${cookie.name}`);
-    }
+  // Configurar gerenciamento de downloads (simplificado)
+  userSession.on('will-download', (event, item, webContents) => {
+    const downloadsPath = app.getPath('downloads');
+    const fileName = item.getFilename();
+    const filePath = path.join(downloadsPath, fileName);
+    item.setSavePath(filePath);
   });
 
-  // Configurar limpeza periódica do cache e dados
-  setInterval(async () => {
-    try {
-      await userSession.clearCache();
-      await userSession.clearStorageData({
-        storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'],
-      });
-      console.log(`Cache e dados limpos para sessão: ${email}`);
-    } catch (error) {
-      console.error(`Erro ao limpar cache da sessão ${email}:`, error);
-    }
-  }, 3600000); // A cada hora
+  // Remover limpeza periódica para melhor performance
 
-  // Configurar proteção contra vazamento de memória
+  // Configurar preload script
   userSession.setPreloads([path.join(__dirname, 'preload.js')]);
-
-  // Configurar limites de memória através do BrowserWindow
-  const tempWindow = new BrowserWindow({
-    show: false,
-    webPreferences: {
-      session: userSession
-    }
-  });
-  
-  // Configurar limites de memória para a janela
-  tempWindow.webContents.setFrameRate(30); // Reduzir taxa de quadros para economizar memória
-  tempWindow.webContents.setBackgroundThrottling(true); // Habilitar throttling em segundo plano
-  
-  // Fechar a janela temporária após a configuração
-  tempWindow.close();
 
   userSessions.set(email, userSession);
   return { sessionId: `persist:user_${email}` };
@@ -1144,4 +1202,479 @@ ipcMain.on('profile-menu-action', (event, action) => {
   if (mainWindow && mainWindow.webContents) {
     mainWindow.webContents.send('profile-menu-action', action);
   }
+});
+
+// Cria o BrowserView do Slack
+function createSlackView() {
+  if (slackView) return slackView;
+  slackView = new BrowserView({
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      partition: 'persist:mainSession',
+      webSecurity: false,
+      allowRunningInsecureContent: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  });
+  // Definir user agent moderno para Slack
+  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
+  slackView.webContents.setUserAgent(userAgent);
+  slackView.webContents.loadURL('https://app.slack.com/client');
+
+  // Handler para novas janelas
+  slackView.webContents.setWindowOpenHandler(({ url }) => {
+    const isSlack = url.startsWith('https://app.slack.com/');
+    if (!isSlack) {
+      shell.openExternal(url);
+      return { action: 'deny' };
+    }
+    // Abrir em nova BrowserWindow com user agent moderno
+    const win = new BrowserWindow({
+      width: 1000,
+      height: 700,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        partition: 'persist:mainSession',
+        webSecurity: false,
+        allowRunningInsecureContent: true,
+        preload: path.join(__dirname, 'preload.js')
+      }
+    });
+    win.setMenu(null);
+    win.webContents.setUserAgent(userAgent);
+    win.loadURL(url);
+
+    // Detecta navegação para um workspace e recarrega o slackView principal
+    function handleSlackWorkspaceNav(event, navUrl) {
+      if (navUrl && navUrl.startsWith('https://app.slack.com/client/')) {
+        if (event && event.preventDefault) event.preventDefault();
+        if (slackView) {
+          slackView.webContents.loadURL(navUrl);
+        }
+        win.close();
+      }
+    }
+    win.webContents.on('will-navigate', handleSlackWorkspaceNav);
+    win.webContents.on('did-navigate', handleSlackWorkspaceNav);
+    win.webContents.on('will-redirect', handleSlackWorkspaceNav);
+    win.webContents.on('did-navigate-in-page', handleSlackWorkspaceNav);
+
+      // Fallback: polling da URL a cada 1s (reduzido para melhor performance)
+  let lastUrl = '';
+  const urlPoll = setInterval(() => {
+    const currentUrl = win.webContents.getURL();
+    if (
+      currentUrl &&
+      currentUrl.startsWith('https://app.slack.com/client/') &&
+      currentUrl !== lastUrl
+    ) {
+      lastUrl = currentUrl;
+      if (slackView) {
+        slackView.webContents.loadURL(currentUrl);
+      }
+      win.close();
+      clearInterval(urlPoll);
+    }
+  }, 1000);
+
+  win.on('closed', () => clearInterval(urlPoll));
+
+    return { action: 'deny' };
+  });
+
+  // Garantir que ao selecionar um workspace, a navegação seja carregada na tela principal
+  slackView.webContents.on('will-navigate', (event, url) => {
+    if (url.startsWith('https://app.slack.com/client/')) {
+      event.preventDefault();
+      slackView.webContents.loadURL(url);
+    }
+  });
+
+  slackView.webContents.on('context-menu', (event, params) => {
+    if (mainWindow) {
+      mainWindow.webContents.send('context-menu-command', {
+        command: null,
+        currentViewId: 'webview-slack',
+        x: params.x,
+        y: params.y
+      });
+    }
+  });
+
+  return slackView;
+}
+
+function showSlackView() {
+  if (!mainWindow) return;
+  if (!slackView) createSlackView();
+  mainWindow.webContents.executeJavaScript(`
+    (function() {
+      const el = document.querySelector('.webview-wrapper');
+      if (!el) return null;
+      const rect = el.getBoundingClientRect();
+      return {
+        x: rect.x + 8,
+        y: rect.y + 8,
+        width: rect.width - 16,
+        height: rect.height - 16
+      };
+    })();
+  `).then(bounds => {
+    if (bounds && bounds.width && bounds.height) {
+      mainWindow.setBrowserView(slackView);
+      slackView.setBounds({
+        x: Math.round(bounds.x),
+        y: Math.round(bounds.y),
+        width: Math.round(bounds.width),
+        height: Math.round(bounds.height)
+      });
+      slackView.setAutoResize({ width: true, height: true });
+    } else {
+      const winBounds = mainWindow.getBounds();
+      mainWindow.setBrowserView(slackView);
+      slackView.setBounds({ x: 200, y: 0, width: winBounds.width - 200, height: winBounds.height });
+      slackView.setAutoResize({ width: true, height: true });
+    }
+  });
+}
+
+function hideSlackView() {
+  if (mainWindow && slackView) {
+    mainWindow.removeBrowserView(slackView);
+  }
+}
+
+ipcMain.on('show-slack-view', () => {
+  showSlackView();
+});
+
+ipcMain.on('hide-slack-view', () => {
+  hideSlackView();
+});
+
+ipcMain.on('reload-slack-view', () => {
+  if (slackView) {
+    slackView.webContents.reload();
+  }
+});
+
+ipcMain.on('destroy-slack-view', () => {
+  if (slackView) {
+    if (mainWindow) {
+      mainWindow.removeBrowserView(slackView);
+    }
+    slackView = null;
+  }
+});
+
+// Cria o BrowserView do Teams
+function createTeamsView() {
+  if (teamsView) return teamsView;
+  teamsView = new BrowserView({
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      partition: 'persist:mainSession',
+      webSecurity: false,
+      allowRunningInsecureContent: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  });
+  // Definir user agent moderno para Teams
+  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
+  teamsView.webContents.setUserAgent(userAgent);
+  teamsView.webContents.loadURL('https://teams.microsoft.com');
+
+  // Handler para novas janelas
+  teamsView.webContents.setWindowOpenHandler(({ url }) => {
+    const isTeams = url.startsWith('https://teams.microsoft.com/');
+    if (!isTeams) {
+      shell.openExternal(url);
+      return { action: 'deny' };
+    }
+    // Abrir em nova BrowserWindow com user agent moderno
+    const win = new BrowserWindow({
+      width: 1000,
+      height: 700,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        partition: 'persist:mainSession',
+        webSecurity: false,
+        allowRunningInsecureContent: true,
+        preload: path.join(__dirname, 'preload.js')
+      }
+    });
+    win.setMenu(null);
+    win.webContents.setUserAgent(userAgent);
+    win.loadURL(url);
+
+    // Detecta navegação para um workspace e recarrega o teamsView principal
+    function handleTeamsWorkspaceNav(event, navUrl) {
+      if (navUrl && navUrl.startsWith('https://teams.microsoft.com/')) {
+        if (event && event.preventDefault) event.preventDefault();
+        if (teamsView) {
+          teamsView.webContents.loadURL(navUrl);
+        }
+        win.close();
+      }
+    }
+    win.webContents.on('will-navigate', handleTeamsWorkspaceNav);
+    win.webContents.on('did-navigate', handleTeamsWorkspaceNav);
+    win.webContents.on('will-redirect', handleTeamsWorkspaceNav);
+    win.webContents.on('did-navigate-in-page', handleTeamsWorkspaceNav);
+
+    // Fallback: polling da URL a cada 1s (reduzido para melhor performance)
+    let lastUrl = '';
+    const urlPoll = setInterval(() => {
+      const currentUrl = win.webContents.getURL();
+      if (
+        currentUrl &&
+        currentUrl.startsWith('https://teams.microsoft.com/') &&
+        currentUrl !== lastUrl
+      ) {
+        lastUrl = currentUrl;
+        if (teamsView) {
+          teamsView.webContents.loadURL(currentUrl);
+        }
+        win.close();
+        clearInterval(urlPoll);
+      }
+    }, 1000);
+
+    win.on('closed', () => clearInterval(urlPoll));
+
+    return { action: 'deny' };
+  });
+
+  // Garantir que ao selecionar um workspace, a navegação seja carregada na tela principal
+  teamsView.webContents.on('will-navigate', (event, url) => {
+    if (url.startsWith('https://teams.microsoft.com/')) {
+      event.preventDefault();
+      teamsView.webContents.loadURL(url);
+    }
+  });
+
+  teamsView.webContents.on('context-menu', (event, params) => {
+    if (mainWindow) {
+      mainWindow.webContents.send('context-menu-command', {
+        command: null,
+        currentViewId: 'webview-teams',
+        x: params.x,
+        y: params.y
+      });
+    }
+  });
+
+  return teamsView;
+}
+
+function showTeamsView() {
+  if (!mainWindow) return;
+  if (!teamsView) createTeamsView();
+  mainWindow.webContents.executeJavaScript(`
+    (function() {
+      const el = document.querySelector('.webview-wrapper');
+      if (!el) return null;
+      const rect = el.getBoundingClientRect();
+      return {
+        x: rect.x + 8,
+        y: rect.y + 8,
+        width: rect.width - 16,
+        height: rect.height - 16
+      };
+    })();
+  `).then(bounds => {
+    if (bounds && bounds.width && bounds.height) {
+      mainWindow.setBrowserView(teamsView);
+      teamsView.setBounds({
+        x: Math.round(bounds.x),
+        y: Math.round(bounds.y),
+        width: Math.round(bounds.width),
+        height: Math.round(bounds.height)
+      });
+      teamsView.setAutoResize({ width: true, height: true });
+    } else {
+      const winBounds = mainWindow.getBounds();
+      mainWindow.setBrowserView(teamsView);
+      teamsView.setBounds({ x: 200, y: 0, width: winBounds.width - 200, height: winBounds.height });
+      teamsView.setAutoResize({ width: true, height: true });
+    }
+  });
+}
+
+function hideTeamsView() {
+  if (mainWindow && teamsView) {
+    mainWindow.removeBrowserView(teamsView);
+  }
+}
+
+ipcMain.on('show-teams-view', () => {
+  showTeamsView();
+});
+
+ipcMain.on('hide-teams-view', () => {
+  hideTeamsView();
+});
+
+ipcMain.on('reload-teams-view', () => {
+  if (teamsView) {
+    teamsView.webContents.reload();
+  }
+});
+
+ipcMain.on('destroy-teams-view', () => {
+  if (teamsView) {
+    if (mainWindow) {
+      mainWindow.removeBrowserView(teamsView);
+    }
+    teamsView = null;
+  }
+});
+
+// Função para criar janela de link externo
+function createExternalLinkWindow(url, title = 'Link Externo') {
+  // Verificar se já existe uma janela para este URL
+  if (externalLinkWindows.has(url)) {
+    const existingWindow = externalLinkWindows.get(url);
+    if (!existingWindow.isDestroyed()) {
+      existingWindow.focus();
+      return existingWindow;
+    } else {
+      externalLinkWindows.delete(url);
+    }
+  }
+
+  // Criar nova janela
+  const linkWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    title: title,
+    icon: path.join(__dirname, 'assets', 'spacehub.png'),
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+      partition: 'persist:mainSession',
+      webSecurity: false,
+      allowRunningInsecureContent: true,
+      experimentalFeatures: true,
+      plugins: true,
+      webgl: true,
+      enableRemoteModule: false,
+      nodeIntegrationInSubFrames: true,
+      backgroundThrottling: false
+    }
+  });
+
+  // Ocultar menu da janela
+  linkWindow.setMenu(null);
+
+  // Configurar user agent moderno
+  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
+  linkWindow.webContents.setUserAgent(userAgent);
+
+  // Carregar a URL
+  linkWindow.loadURL(url);
+
+  // Configurar handler para novas janelas (simplificado)
+  linkWindow.webContents.setWindowOpenHandler(({ url: newUrl }) => {
+    if (/^https?:\/\//.test(newUrl)) {
+      createExternalLinkWindow(newUrl, 'Nova Janela');
+      return { action: 'deny' };
+    }
+    return { action: 'allow' };
+  });
+
+  // Configurar menu de contexto simplificado
+  linkWindow.webContents.on('context-menu', (event, params) => {
+    const menu = Menu.buildFromTemplate([
+      {
+        label: 'Recarregar',
+        accelerator: 'CmdOrCtrl+R',
+        click: () => linkWindow.webContents.reload()
+      },
+      {
+        label: 'Abrir no Navegador',
+        click: () => shell.openExternal(url)
+      },
+      { type: 'separator' },
+      {
+        label: 'Fechar',
+        accelerator: 'CmdOrCtrl+W',
+        click: () => linkWindow.close()
+      }
+    ]);
+    menu.popup({ window: linkWindow });
+  });
+
+  // Configurar handler para downloads (simplificado)
+  linkWindow.webContents.on('will-download', (event, item, webContents) => {
+    const downloadsPath = app.getPath('downloads');
+    const fileName = item.getFilename();
+    const filePath = path.join(downloadsPath, fileName);
+    item.setSavePath(filePath);
+  });
+
+  // Configurar handler para fechamento da janela
+  linkWindow.on('closed', () => {
+    externalLinkWindows.delete(url);
+  });
+
+  // Armazenar referência da janela
+  externalLinkWindows.set(url, linkWindow);
+
+  // Mostrar a janela
+  linkWindow.show();
+
+  return linkWindow;
+}
+
+// Função para fechar todas as janelas de links externos
+function closeAllExternalLinkWindows() {
+  for (const [url, window] of externalLinkWindows.entries()) {
+    if (!window.isDestroyed()) {
+      window.close();
+    }
+  }
+  externalLinkWindows.clear();
+}
+
+// Handler para fechar uma janela de link externo específica
+ipcMain.handle('close-external-link-window', (event, url) => {
+  if (externalLinkWindows.has(url)) {
+    const window = externalLinkWindows.get(url);
+    if (!window.isDestroyed()) {
+      window.close();
+    }
+    externalLinkWindows.delete(url);
+    return { success: true };
+  }
+  return { success: false, error: 'Window not found' };
+});
+
+// Handler para listar janelas de links externos abertas
+ipcMain.handle('get-external-link-windows', () => {
+  const windows = [];
+  for (const [url, window] of externalLinkWindows.entries()) {
+    if (!window.isDestroyed()) {
+      windows.push({
+        url,
+        title: window.getTitle(),
+        isVisible: window.isVisible()
+      });
+    }
+  }
+  return windows;
+});
+
+// Handler para abrir link externo em janela do Electron
+ipcMain.handle('open-external-link-window', (event, url, title) => {
+  if (/^https?:\/\//.test(url)) {
+    const window = createExternalLinkWindow(url, title || 'Link Externo');
+    return { success: true, windowId: window.id };
+  }
+  return { success: false, error: 'Invalid URL' };
 });
