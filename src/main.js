@@ -1697,3 +1697,18 @@ ipcMain.handle('open-external-link-window', (event, url, title) => {
   }
   return { success: false, error: 'Invalid URL' };
 });
+
+ipcMain.handle('check-for-updates', async () => {
+  return new Promise((resolve, reject) => {
+    autoUpdater.once('update-available', (info) => {
+      resolve(info.version || true);
+    });
+    autoUpdater.once('update-not-available', () => {
+      resolve(null);
+    });
+    autoUpdater.once('error', (err) => {
+      reject(err);
+    });
+    autoUpdater.checkForUpdates();
+  });
+});

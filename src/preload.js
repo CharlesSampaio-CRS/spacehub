@@ -25,7 +25,7 @@ const windowAPI = {
 };
 
 const updateAPI = {
-  checkForUpdates: () => ipcRenderer.send('check-for-updates'),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   restartForUpdate: () => ipcRenderer.send('restart-for-update'),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   downloadUpdate: () => ipcRenderer.send('download-update'),
