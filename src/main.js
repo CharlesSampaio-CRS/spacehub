@@ -1123,6 +1123,11 @@ function showContextMenuWindow(x, y, currentViewId) {
     // Envia o tema
     const isDark = store.get('darkMode') === true;
     menuWindow.webContents.send('set-dark-mode', isDark);
+    // Envia idioma e traduções
+    const language = store.get('language') || 'pt-BR';
+    menuWindow.webContents.send('set-language', language);
+    const translations = require(path.join(__dirname, 'pages/home/translations.js'));
+    menuWindow.webContents.send('set-translations', translations);
   });
 
   // Fecha ao perder o foco (cobre clique fora, minimizar, trocar de app, etc)
@@ -1134,9 +1139,13 @@ function showContextMenuWindow(x, y, currentViewId) {
 
   menuWindow.webContents.on('did-finish-load', () => {
     menuWindow.webContents.send('set-current-view', currentViewId);
-    // Envia o tema novamente para garantir
     const isDark = store.get('darkMode') === true;
     menuWindow.webContents.send('set-dark-mode', isDark);
+    // Envia idioma e traduções novamente
+    const language = store.get('language') || 'pt-BR';
+    menuWindow.webContents.send('set-language', language);
+    const translations = require(path.join(__dirname, 'pages/home/translations.js'));
+    menuWindow.webContents.send('set-translations', translations);
   });
 }
 
@@ -1181,6 +1190,11 @@ function showProfileMenuWindow(x, y, user) {
     // Envia o tema
     const isDark = store.get('darkMode') === true;
     menuWindow.webContents.send('set-dark-mode', isDark);
+    // Envia idioma e traduções
+    const language = store.get('language') || 'pt-BR';
+    menuWindow.webContents.send('set-language', language);
+    const translations = require(path.join(__dirname, 'pages/home/translations.js'));
+    menuWindow.webContents.send('set-translations', translations);
   });
 
   // Fecha ao perder o foco (cobre clique fora, minimizar, trocar de app, etc)
@@ -1195,6 +1209,11 @@ function showProfileMenuWindow(x, y, user) {
     // Envia o tema novamente para garantir
     const isDark = store.get('darkMode') === true;
     menuWindow.webContents.send('set-dark-mode', isDark);
+    // Envia idioma e traduções novamente
+    const language = store.get('language') || 'pt-BR';
+    menuWindow.webContents.send('set-language', language);
+    const translations = require(path.join(__dirname, 'pages/home/translations.js'));
+    menuWindow.webContents.send('set-translations', translations);
   });
 }
 
