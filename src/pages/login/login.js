@@ -195,6 +195,22 @@ const validateForm = () => {
   });
 };
 
+// Função auxiliar para ativar/desativar loading no botão de login
+function setLoginButtonLoading(isLoading, loadingText) {
+  const loginButton = document.getElementById('loginButton');
+  if (!loginButton) return;
+  if (isLoading) {
+    loginButton.disabled = true;
+    loginButton.dataset.originalText = loginButton.textContent;
+    loginButton.textContent = loadingText || 'Entrando...';
+    loginButton.classList.add('loading');
+  } else {
+    loginButton.disabled = false;
+    loginButton.textContent = loginButton.dataset.originalText || 'Entrar';
+    loginButton.classList.remove('loading');
+  }
+}
+
 // Carregar dados do LocalStorage ao iniciar
 window.addEventListener('DOMContentLoaded', () => {
   const emailInput = document.getElementById('email');
@@ -234,19 +250,37 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Ação para login com Google
-  document.getElementById('googleLogin')?.addEventListener('click', () => {
+  document.getElementById('googleLogin')?.addEventListener('click', async () => {
+    // Obter idioma atual para traduzir o texto do botão
+    const currentLanguage = await window.electronAPI.getLanguage();
+    const loadingTexts = {
+      'pt-BR': 'Entrando...',
+      'en-US': 'Signing in...'
+    };
+    setLoginButtonLoading(true, loadingTexts[currentLanguage] || 'Entrando...');
     window.electronAPI.send('start-google-login');
   });
 
   // Ação para login com LinkedIn (desabilitado - em breve)
-  document.getElementById('linkedinLogin')?.addEventListener('click', () => {
-    Swal.fire({
-      icon: 'info',
-      title: 'Em breve',
-      text: 'O login com LinkedIn estará disponível em breve!',
-      confirmButtonColor: '#3085d6',
-      confirmButtonText: 'OK'
-    });
+  document.getElementById('linkedinLogin')?.addEventListener('click', async () => {
+    // Obter idioma atual para traduzir o texto do botão
+    const currentLanguage = await window.electronAPI.getLanguage();
+    const loadingTexts = {
+      'pt-BR': 'Entrando...',
+      'en-US': 'Signing in...'
+    };
+    setLoginButtonLoading(true, loadingTexts[currentLanguage] || 'Entrando...');
+    // Simula login LinkedIn (remover o Swal.fire e colocar chamada real quando disponível)
+    setTimeout(() => {
+      setLoginButtonLoading(false);
+      Swal.fire({
+        icon: 'info',
+        title: 'Em breve',
+        text: 'O login com LinkedIn estará disponível em breve!',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'OK'
+      });
+    }, 1200);
   });
 
   // Eventos de resposta de login com Google
@@ -272,6 +306,7 @@ window.addEventListener('DOMContentLoaded', () => {
         confirmButtonText: 'OK'
       });
     }
+    setLoginButtonLoading(false);
   });
 
   window.electronAPI.on('google-login-failed', async (event, message) => {
@@ -282,6 +317,7 @@ window.addEventListener('DOMContentLoaded', () => {
       confirmButtonColor: '#d33',
       confirmButtonText: 'OK'
     });
+    setLoginButtonLoading(false);
   });
 
   // Evento para abrir tela de registro
