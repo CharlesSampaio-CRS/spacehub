@@ -563,15 +563,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       // --- Fim Slack ---
 
-      // --- Teams como BrowserView ---
-      if (webviewId === 'webview-teams') {
-        document.querySelectorAll('.webview').forEach(w => w.classList.remove('active'));
-        window.electronAPI.send('show-teams-view');
-        currentWebview = null;
-        return;
-      } else {
-        window.electronAPI.send('hide-teams-view');
-      }
+      // --- Teams como Webview ---
+      // Remover bloco especial para Teams, tratar como qualquer outro app
       // --- Fim Teams ---
 
       // Criar ou obter webview
