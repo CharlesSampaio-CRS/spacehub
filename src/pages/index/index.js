@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('Configurando webview do Teams...');
         webview.setAttribute('allowpopups', 'true');
         webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
-        webview.setAttribute('webpreferences', 'contextIsolation=no, nodeIntegration=no, webSecurity=no, allowRunningInsecureContent=yes, experimentalFeatures=yes, plugins=yes, webgl=yes');
+        webview.setAttribute('webpreferences', 'contextIsolation=no, nodeIntegration=no, webSecurity=no, allowRunningInsecureContent=yes, backgroundThrottling=yes');
         
         let loadAttempts = 0;
         const maxLoadAttempts = 3;
