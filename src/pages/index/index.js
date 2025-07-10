@@ -968,10 +968,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           document.getElementById('profile-menu-email').textContent = userData.data.email || 'usuario@email.com';
           
           // Atualizar avatares se houver
-          if (userData.data.avatar) {
-            document.getElementById('profile-avatar').src = userData.data.avatar;
-            document.getElementById('profile-menu-avatar').src = userData.data.avatar;
-          }
+          let avatarSrc = '../../assets/avatarrobot.png';
+          
+          document.getElementById('profile-avatar').src = avatarSrc;
+          document.getElementById('profile-menu-avatar').src = avatarSrc;
 
           // Salvar dados do usuário no localStorage
           localStorage.setItem('user', JSON.stringify(userData));
