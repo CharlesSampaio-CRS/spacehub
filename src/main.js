@@ -407,8 +407,7 @@ ipcMain.on('start-google-login', () => {
       const loginRes = await axios.post('https://spaceapp-digital-api.onrender.com/login', {
         email, password: fakePassword
       });
-
-      const token = loginRes.data.data.token;
+      const token = loginRes.data.token;
 
       if (!token) {
         throw new Error('Token de autenticação não recebido');
