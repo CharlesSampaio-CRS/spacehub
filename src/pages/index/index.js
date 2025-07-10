@@ -637,6 +637,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Garante que todos os botões (exceto o Home) tenham draggable=true
     navSection.querySelectorAll('.nav-button:not(#home-button)').forEach(btn => {
       btn.setAttribute('draggable', 'true');
+      // Reatribui o listener de clique
+      const appId = btn.getAttribute('data-id');
+      const buttonId = btn.id;
+      btn.onclick = () => showWebview(appId, buttonId);
     });
 
     let dragged = null;
