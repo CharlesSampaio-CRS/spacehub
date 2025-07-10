@@ -597,6 +597,112 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ... e similares em showWebview, updateActiveViewTitle, createWebview, etc.
   };
 
+  // Funções para persistência da ordem dos botões
+  function saveAppButtonOrder(order) {
+    localStorage.setItem('appButtonOrder', JSON.stringify(order));
+  }
+
+  function getAppButtonOrder() {
+    try {
+      return JSON.parse(localStorage.getItem('appButtonOrder')) || [];
+    } catch {
+      return [];
+    }
+  }
+
+  function applyAppButtonOrder(navSection) {
+    const order = getAppButtonOrder();
+    if (!order.length) return;
+    // Seleciona todos os botões exceto o home
+    const buttons = Array.from(navSection.querySelectorAll('.nav-button:not(#home-button)'));
+    // Ordena os botões conforme o array salvo
+    order.forEach(buttonId => {
+      const btn = buttons.find(b => b.id === buttonId);
+      if (btn) navSection.appendChild(btn);
+    });
+  }
+
+  function updateAndSaveAppButtonOrder(navSection) {
+    // Salva a ordem atual dos botões exceto o home
+    const order = Array.from(navSection.querySelectorAll('.nav-button:not(#home-button)')).map(btn => btn.id);
+    saveAppButtonOrder(order);
+  }
+
+  function setupAppButtonDragAndDrop(navSection) {
+    // Remove event listeners antigos (clonando o node)
+    const newNavSection = navSection.cloneNode(true);
+    navSection.parentNode.replaceChild(newNavSection, navSection);
+    navSection = newNavSection;
+
+    // Garante que todos os botões (exceto o Home) tenham draggable=true
+    navSection.querySelectorAll('.nav-button:not(#home-button)').forEach(btn => {
+      btn.setAttribute('draggable', 'true');
+    });
+
+    let dragged = null;
+    let dragOverBtn = null;
+
+    navSection.addEventListener('dragstart', (e) => {
+      if (e.target.classList.contains('nav-button') && e.target.id !== 'home-button') {
+        dragged = e.target;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', e.target.id);
+        setTimeout(() => e.target.classList.add('dragging'), 0);
+      }
+    });
+
+    navSection.addEventListener('dragend', (e) => {
+      if (dragged) dragged.classList.remove('dragging');
+      if (dragOverBtn) dragOverBtn.classList.remove('drag-over');
+      dragged = null;
+      dragOverBtn = null;
+    });
+
+    navSection.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (!dragged) return;
+      const afterElement = getDragAfterElement(navSection, e.clientY);
+      if (afterElement && afterElement !== dragged && afterElement.id !== 'home-button') {
+        navSection.insertBefore(dragged, afterElement);
+        if (dragOverBtn && dragOverBtn !== afterElement) dragOverBtn.classList.remove('drag-over');
+        dragOverBtn = afterElement;
+        dragOverBtn.classList.add('drag-over');
+      } else if (!afterElement && dragged) {
+        navSection.appendChild(dragged);
+        if (dragOverBtn) dragOverBtn.classList.remove('drag-over');
+        dragOverBtn = null;
+      }
+    });
+
+    navSection.addEventListener('dragleave', (e) => {
+      if (dragOverBtn) dragOverBtn.classList.remove('drag-over');
+      dragOverBtn = null;
+    });
+
+    navSection.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (dragOverBtn) dragOverBtn.classList.remove('drag-over');
+      // Remove .dragging de todos os botões antes de clonar
+      navSection.querySelectorAll('.nav-button.dragging').forEach(btn => btn.classList.remove('dragging'));
+      updateAndSaveAppButtonOrder(navSection);
+      // Reaplica drag-and-drop para garantir que funcione após reordenação
+      setTimeout(() => setupAppButtonDragAndDrop(navSection), 0);
+    });
+  }
+
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.nav-button:not(#home-button):not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: -Infinity }).element;
+  }
+
   const loadWithToken = (token, userUuid) => {
     const navSection = document.getElementById('nav-section');
     if (navSection) {
@@ -621,19 +727,38 @@ document.addEventListener('DOMContentLoaded', async () => {
       .then(response => response.json())
       .then(data => {
         if (Array.isArray(data.data.applications)) {
-          data.data.applications.forEach(app => {
-            if (app.active == true) {
-              const appId = `webview-${app.application.toLowerCase()}`;
-              const buttonId = `${app.application.toLowerCase()}-button`;
+          // Cria um mapa dos apps ativos
+          const activeApps = data.data.applications.filter(app => app.active == true);
+          // Recupera ordem salva
+          const savedOrder = getAppButtonOrder();
+          // Ordena apps conforme ordem salva, apps novos vão para o final
+          const orderedApps = savedOrder.length
+            ? activeApps.slice().sort((a, b) => {
+                const aId = `${a.application.toLowerCase()}-button`;
+                const bId = `${b.application.toLowerCase()}-button`;
+                const aIdx = savedOrder.indexOf(aId);
+                const bIdx = savedOrder.indexOf(bId);
+                if (aIdx === -1 && bIdx === -1) return 0;
+                if (aIdx === -1) return 1;
+                if (bIdx === -1) return -1;
+                return aIdx - bIdx;
+              })
+            : activeApps;
+          orderedApps.forEach(app => {
+            const appId = `webview-${app.application.toLowerCase()}`;
+            const buttonId = `${app.application.toLowerCase()}-button`;
 
-              serviceMap[appId] = app.url;
-              services[buttonId] = appId;
+            serviceMap[appId] = app.url;
+            services[buttonId] = appId;
 
-              const button = createApplicationButton(app);
-              button.addEventListener('click', () => showWebview(appId, buttonId));
-              navSection?.appendChild(button);
-            }
+            const button = createApplicationButton(app);
+            button.addEventListener('click', () => showWebview(appId, buttonId));
+            navSection?.appendChild(button);
           });
+          // Aplica ordem salva (caso algum botão já exista)
+          applyAppButtonOrder(navSection);
+          // Ativa drag-and-drop
+          setupAppButtonDragAndDrop(navSection);
         }
       })
       .catch(error => console.error('Error loading applications:', error));
@@ -648,6 +773,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     button.className = 'nav-button';
     button.title = app.application;
     button.setAttribute('data-id', appId);
+    button.setAttribute('draggable', 'true'); // Torna arrastável
+    button.style.cursor = 'grab'; // Visual de arrasto
 
     const img = document.createElement('img');
     img.src = app.icon;
@@ -656,6 +783,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     img.height = 24;
     img.style.objectFit = 'contain';
     img.style.transition = 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
+    img.draggable = false; // Evita que o <img> capture o drag
 
     // Fallback para ícone local se o ícone da API não carregar
     img.onerror = () => {
@@ -666,6 +794,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     button.appendChild(img);
+
+    // Garante que dragstart funcione ao clicar na imagem
+    img.addEventListener('mousedown', (e) => {
+      // Redireciona o drag para o botão
+      e.preventDefault();
+      button.dispatchEvent(new MouseEvent('mousedown', e));
+    });
+
     return button;
   }
 
