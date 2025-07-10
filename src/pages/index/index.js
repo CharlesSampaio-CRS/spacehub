@@ -188,10 +188,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('Configurando webview do Teams...');
         webview.setAttribute('allowpopups', 'true');
         webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
+        // Otimização: Remover plugins, experimentalFeatures, webgl e ativar backgroundThrottling
         webview.setAttribute('webpreferences', 'contextIsolation=no, nodeIntegration=no, webSecurity=no, allowRunningInsecureContent=yes, backgroundThrottling=yes');
         
         let loadAttempts = 0;
-        const maxLoadAttempts = 3;
+        const maxLoadAttempts = 2; // Reduzido para evitar travamentos
         let loadTimeout;
 
         // Eventos específicos para Teams
@@ -509,6 +510,42 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         });
       }
+      // Configurações específicas para Slack
+      else if (url && url.includes('slack.com')) {
+        console.log('Configurando webview do Slack...');
+        webview.setAttribute('allowpopups', 'true');
+        webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
+        webview.setAttribute('webpreferences', 'contextIsolation=no, nodeIntegration=no, webSecurity=no, allowRunningInsecureContent=yes');
+
+        // Abrir links de troca de workspace e links internos na própria webview
+        webview.addEventListener('new-window', (event) => {
+          const url = event.url;
+          if (url.includes('slack.com') || url.includes('slack-edge.com')) {
+            // Se for popup de login/troca de workspace, abrir em nova janela Electron
+            if (url.includes('/signin') || url.includes('/ssb/redirect')) {
+              event.preventDefault();
+              window.electronAPI.send('open-popup-window', url);
+            } else {
+              // Links internos normais: abrir na própria webview
+              event.preventDefault();
+              webview.loadURL(url);
+            }
+          } else if (url.startsWith('http://') || url.startsWith('https://')) {
+            event.preventDefault();
+            window.electronAPI.send('open-external-link', url);
+          }
+        });
+        webview.addEventListener('will-navigate', (event) => {
+          const url = event.url;
+          if (url.includes('slack.com') || url.includes('slack-edge.com')) {
+            // Permitir navegação interna
+            return;
+          } else if (url.startsWith('http://') || url.startsWith('https://')) {
+            event.preventDefault();
+            window.electronAPI.send('open-external-link', url);
+          }
+        });
+      }
 
       // Eventos comuns para todas as webviews
       webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
@@ -566,6 +603,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       // --- Teams como Webview ---
       // Remover bloco especial para Teams, tratar como qualquer outro app
       // --- Fim Teams ---
+
+      // Remover webview do Teams do DOM quando não estiver ativo
+      if (currentWebview && currentWebview.id === 'webview-teams' && webviewId !== 'webview-teams') {
+        currentWebview.remove();
+        currentWebview = null;
+      }
 
       // Criar ou obter webview
       let webview = document.getElementById(webviewId);
@@ -642,6 +685,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       const buttonId = btn.id;
       btn.onclick = () => showWebview(appId, buttonId);
     });
+    // Reatribui o listener de clique ao botão home
+    const homeButton = navSection.querySelector('#home-button');
+    if (homeButton) {
+      homeButton.onclick = () => showWebview('webview-home', 'home-button');
+    }
 
     let dragged = null;
     let dragOverBtn = null;

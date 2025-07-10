@@ -1526,3 +1526,21 @@ ipcMain.handle('check-for-updates', async () => {
     autoUpdater.checkForUpdates();
   });
 });
+
+ipcMain.on('open-popup-window', (event, url) => {
+  const popup = new BrowserWindow({
+    width: 600,
+    height: 700,
+    title: 'Slack Popup',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      partition: 'persist:mainSession',
+      webSecurity: false,
+      allowRunningInsecureContent: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  });
+  popup.setMenu(null);
+  popup.loadURL(url);
+});
