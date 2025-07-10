@@ -395,7 +395,7 @@ async function loadSystemInfo() {
     
     if (versionButton) {
       versionButton.querySelector('#appVersion').textContent = `v${version}`;
-      versionButton.title = `Clique para verificar atualizações`;
+      versionButton.title = `Updates`;
       
       // Remover listener anterior se existir
       versionButton.removeEventListener('click', checkForUpdates);

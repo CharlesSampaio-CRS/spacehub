@@ -344,7 +344,7 @@ async function loadAppVersion() {
     
     if (versionButton) {
       versionButton.querySelector('#appVersion').textContent = `v${version}`;
-      versionButton.title = `Clique para verificar atualizações`;
+      versionButton.title = `Updates`;
       
       // Adicionar evento de clique
       versionButton.addEventListener('click', checkForUpdates);
