@@ -286,33 +286,99 @@ const translations = {
 
 // Função para traduzir os elementos
 function translatePage(language) {
+  
   const elements = document.querySelectorAll('[data-translate]');
+  
+  let translatedCount = 0;
   elements.forEach(element => {
     const key = element.getAttribute('data-translate');
     if (translations[language] && translations[language][key]) {
       element.textContent = translations[language][key];
+      translatedCount++;
     }
   });
+  
 }
 
 const setupLanguageToggle = () => {
   const toggle = document.getElementById("language-toggle");
   const toggleIcon = document.getElementById("language-icon");
-  if (!toggle || !toggleIcon) return;
+  if (!toggle || !toggleIcon) {
+    return;
+  }
+
 
   // Verificar o idioma atual
   window.electronAPI.invoke('get-language').then(currentLanguage => {
     const isEnglish = currentLanguage === 'en-US';
     toggle.checked = isEnglish;
     toggleIcon.innerHTML = isEnglish ? '🇺🇸' : '🇧🇷';
+  }).catch(error => {
+    console.error('Erro ao obter idioma atual:', error);
   });
 
-  toggle.addEventListener("change", () => {
+  toggle.addEventListener("change", async () => {
     const newLanguage = toggle.checked ? 'en-US' : 'pt-BR';
-    toggleIcon.innerHTML = toggle.checked ? '🇺🇸' : '🇧🇷';
-    window.electronAPI.setLanguage(newLanguage);
-    localStorage.setItem('language', newLanguage);
-    translatePage(newLanguage);
+    const languageName = toggle.checked ? 'Inglês' : 'Português';
+    
+    // Obter idioma atual para a mensagem de confirmação
+    const currentLanguage = await window.electronAPI.invoke('get-language');
+    
+    // Salvar estado original do toggle
+    const originalChecked = toggle.checked;
+    const originalIcon = toggleIcon.innerHTML;
+    
+    // Mostrar diálogo de confirmação personalizado
+    const showConfirmationDialog = async (message, onConfirm) => {
+      const dialog = document.createElement('div');
+      dialog.className = 'confirmation-dialog';
+      dialog.innerHTML = `
+        <div class="confirmation-content">
+          <h3>${translations[currentLanguage]?.['Confirmação'] || 'Confirmação'}</h3>
+          <p>${message}</p>
+          <div class="confirmation-buttons">
+            <button class="confirm-btn">${translations[currentLanguage]?.['Confirmar'] || 'Confirmar'}</button>
+            <button class="cancel-btn">${translations[currentLanguage]?.['Cancelar'] || 'Cancelar'}</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(dialog);
+
+      const confirmBtn = dialog.querySelector('.confirm-btn');
+      const cancelBtn = dialog.querySelector('.cancel-btn');
+
+      confirmBtn.addEventListener('click', () => {
+        document.body.removeChild(dialog);
+        onConfirm();
+      });
+
+      cancelBtn.addEventListener('click', () => {
+        document.body.removeChild(dialog);
+        // Reverter o toggle se cancelar
+        toggle.checked = !originalChecked;
+        toggleIcon.innerHTML = originalChecked ? '🇺🇸' : '🇧🇷';
+        console.log('Mudança de idioma cancelada pelo usuário');
+      });
+    };
+    
+    const confirmMessage = translations[currentLanguage]?.language_change_confirmation?.replace('%s', languageName) || 
+                          `Deseja realmente mudar o idioma para ${languageName}? A aplicação será reiniciada.`;
+    
+    showConfirmationDialog(confirmMessage, () => {
+      toggleIcon.innerHTML = toggle.checked ? '🇺🇸' : '🇧🇷';
+      
+      // Enviar mudança para o main process
+      window.electronAPI.setLanguage(newLanguage);
+      
+      // Salvar no localStorage
+      localStorage.setItem('language', newLanguage);
+      
+      // Reiniciar a aplicação
+      setTimeout(() => {
+        window.electronAPI.restartApp();
+      }, 500);
+    });
   });
 };
 
@@ -485,6 +551,10 @@ const initializeSettingsPage = async () => {
   setupFullscreenToggle();
   setupLanguageToggle();
   setupClearCacheButton(); // Adicionar chamada para o novo botão
+  
+  // Aplicar idioma inicial
+  const currentLanguage = await window.electronAPI.invoke('get-language');
+  translatePage(currentLanguage);
   
   // Configurar eventos
   const saveButton = document.getElementById("saveButton");

@@ -652,6 +652,7 @@ app.whenReady().then(() => {
 
   // Configurar idioma inicial
   const initialLanguage = store.get('language') || 'pt-BR';
+  
   BrowserWindow.getAllWindows().forEach(window => {
     if (!window.isDestroyed()) {
       window.webContents.send('language-changed', initialLanguage);
@@ -891,11 +892,6 @@ ipcMain.handle('restart-app', () => {
 // Modificar o handler de logout para limpar a sessão
 ipcMain.handle('logout', async (event, email) => {
   try {
-    // Limpar a sessão do usuário
-    // if (email) {
-    //   await clearUserSession(email);
-    //   console.log(`Sessão limpa para: ${email}`);
-    // }
 
     // Limpar dados do store
     store.delete('token');
@@ -937,10 +933,11 @@ ipcMain.handle('clear-all-sessions', async () => {
 // Adicionar handler para limpar cache (sem apagar senhas)
 ipcMain.handle('clear-cache', async () => {
   try {
-    // Limpar cache da sessão principal
+    
+    // Limpar apenas cache da sessão principal, NÃO storage data
     await session.defaultSession.clearCache();
     
-    // Limpar cache de todas as sessões de usuário
+    // Limpar cache de todas as sessões de usuário (apenas cache, não storage)
     for (const [email, userSession] of userSessions.entries()) {
       try {
         await userSession.clearCache();
@@ -981,7 +978,7 @@ ipcMain.handle('clear-cache', async () => {
       }
     }
     
-    // Limpar cache das outras janelas (login, register, auth)
+    // Limpar cache das outras janelas (login, register, auth) - apenas cache
     const allWindows = [loginWindow, registerWindow, authWindow, mainWindow];
     for (const window of allWindows) {
       if (window && !window.isDestroyed() && window.webContents) {
@@ -993,7 +990,8 @@ ipcMain.handle('clear-cache', async () => {
       }
     }
     
-    return { success: true, message: 'Cache limpo com sucesso' };
+    // IMPORTANTE: NÃO limpar storage data para preservar autenticação
+    return { success: true, message: 'Cache limpo com sucesso (autenticação preservada)' };
   } catch (error) {
     console.error('Erro ao limpar cache:', error);
     return { success: false, error: error.message };
