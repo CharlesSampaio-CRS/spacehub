@@ -601,14 +601,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       // --- Fim Slack ---
 
       // --- Teams como Webview ---
-      // Remover bloco especial para Teams, tratar como qualquer outro app
+      // Não remover mais a webview do Teams do DOM ao trocar de aba
       // --- Fim Teams ---
-
-      // Remover webview do Teams do DOM quando não estiver ativo
-      if (currentWebview && currentWebview.id === 'webview-teams' && webviewId !== 'webview-teams') {
-        currentWebview.remove();
-        currentWebview = null;
-      }
 
       // Criar ou obter webview
       let webview = document.getElementById(webviewId);
