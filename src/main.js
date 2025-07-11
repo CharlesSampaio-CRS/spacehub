@@ -934,6 +934,72 @@ ipcMain.handle('clear-all-sessions', async () => {
   return { success: true };
 });
 
+// Adicionar handler para limpar cache (sem apagar senhas)
+ipcMain.handle('clear-cache', async () => {
+  try {
+    // Limpar cache da sessão principal
+    await session.defaultSession.clearCache();
+    
+    // Limpar cache de todas as sessões de usuário
+    for (const [email, userSession] of userSessions.entries()) {
+      try {
+        await userSession.clearCache();
+        console.log(`Cache limpo para sessão: ${email}`);
+      } catch (error) {
+        console.error(`Erro ao limpar cache da sessão ${email}:`, error);
+      }
+    }
+    
+    // Limpar cache dos BrowserViews (LinkedIn e Slack)
+    if (linkedInView && linkedInView.webContents) {
+      try {
+        await linkedInView.webContents.session.clearCache();
+        console.log('Cache do LinkedIn limpo');
+      } catch (error) {
+        console.error('Erro ao limpar cache do LinkedIn:', error);
+      }
+    }
+    
+    if (slackView && slackView.webContents) {
+      try {
+        await slackView.webContents.session.clearCache();
+        console.log('Cache do Slack limpo');
+      } catch (error) {
+        console.error('Erro ao limpar cache do Slack:', error);
+      }
+    }
+    
+    // Limpar cache das janelas de links externos
+    for (const [url, window] of externalLinkWindows.entries()) {
+      if (!window.isDestroyed() && window.webContents) {
+        try {
+          await window.webContents.session.clearCache();
+          console.log(`Cache da janela externa limpo: ${url}`);
+        } catch (error) {
+          console.error(`Erro ao limpar cache da janela externa ${url}:`, error);
+        }
+      }
+    }
+    
+    // Limpar cache das outras janelas (login, register, auth)
+    const allWindows = [loginWindow, registerWindow, authWindow, mainWindow];
+    for (const window of allWindows) {
+      if (window && !window.isDestroyed() && window.webContents) {
+        try {
+          await window.webContents.session.clearCache();
+        } catch (error) {
+          console.error('Erro ao limpar cache da janela:', error);
+        }
+      }
+    }
+    
+    return { success: true, message: 'Cache limpo com sucesso' };
+  } catch (error) {
+    console.error('Erro ao limpar cache:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.on('create-webview', (event, webviewId, url) => {
   // Send the webview creation request back to the renderer process
   event.sender.send('create-webview-request', {

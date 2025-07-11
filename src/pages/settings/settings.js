@@ -192,21 +192,6 @@ const setupNotificationToggle = () => {
   });
 };
 
-const setupAutoLoginToggle = () => {
-  const toggle = document.getElementById("auto-login-toggle");
-  const toggleIcon = document.getElementById("auto-login-icon");
-  if (!toggle || !toggleIcon) return;
-
-  const isEnabled = toggle.checked;
-  toggleIcon.innerHTML = isEnabled ? '🔐' : '🔓';
-
-  toggle.addEventListener("change", () => {
-    const isEnabled = toggle.checked;
-    toggleIcon.innerHTML = isEnabled ? '🔐' : '🔓';
-    localStorage.setItem('autoLogin', isEnabled);
-  });
-};
-
 const setupCompactLayoutToggle = () => {
   const toggle = document.getElementById("compact-layout-toggle");
   const toggleIcon = document.getElementById("compact-layout-icon");
@@ -247,7 +232,6 @@ const translations = {
     'Preferências': 'Preferências',
     'Notificações': 'Notificações',
     'Modo Escuro': 'Tema',
-    'Auto Login': 'Auto Login',
     'Idioma': 'Idioma',
     'Aplicações': 'Aplicações',
     'Salvar': 'Salvar',
@@ -266,7 +250,8 @@ const translations = {
     'restart_confirmation': 'O sistema será reiniciado para aplicar a atualização. Deseja continuar?',
     'Atualizar': 'Atualizar',
     'OK': 'OK',
-    'Erro': 'Erro'
+    'Erro': 'Erro',
+    'Limpar': 'Limpar'
   },
   'en-US': {
     'Perfil': 'Profile',
@@ -276,7 +261,6 @@ const translations = {
     'Preferências': 'Preferences',
     'Notificações': 'Notifications',
     'Modo Escuro': 'Theme',
-    'Auto Login': 'Auto Login',
     'Idioma': 'Language',
     'Aplicações': 'Applications',
     'Salvar': 'Save',
@@ -295,7 +279,8 @@ const translations = {
     'restart_confirmation': 'The system will restart to apply the update. Do you want to continue?',
     'Atualizar': 'Update',
     'OK': 'OK',
-    'Erro': 'Error'
+    'Erro': 'Error',
+    'Limpar': 'Clear'
   }
 };
 
@@ -315,75 +300,141 @@ const setupLanguageToggle = () => {
   const toggleIcon = document.getElementById("language-icon");
   if (!toggle || !toggleIcon) return;
 
-  // Verificar o estado atual do idioma no store do Electron
-  window.electronAPI.getLanguage().then(language => {
-    toggle.checked = language === 'en-US';
-    document.documentElement.lang = language;
-    translatePage(language);
-    
-    // Atualizar o ícone inicial
-    toggleIcon.innerHTML = language === 'pt-BR' ? '🇧🇷' : '🇺🇸';
+  // Verificar o idioma atual
+  window.electronAPI.invoke('get-language').then(currentLanguage => {
+    const isEnglish = currentLanguage === 'en-US';
+    toggle.checked = isEnglish;
+    toggleIcon.innerHTML = isEnglish ? '🇺🇸' : '🇧🇷';
   });
 
-  // Evento de mudança do toggle
-  toggle.addEventListener('change', async () => {
+  toggle.addEventListener("change", () => {
     const newLanguage = toggle.checked ? 'en-US' : 'pt-BR';
-    const currentLanguage = await window.electronAPI.getLanguage();
-    
-    // Atualizar o ícone imediatamente
-    toggleIcon.innerHTML = newLanguage === 'pt-BR' ? '🇧🇷' : '🇺🇸';
+    toggleIcon.innerHTML = toggle.checked ? '🇺🇸' : '🇧🇷';
+    window.electronAPI.setLanguage(newLanguage);
+    localStorage.setItem('language', newLanguage);
+    translatePage(newLanguage);
+  });
+};
 
-    const showConfirmationDialog = async (message, onConfirm) => {
-      const dialog = document.createElement('div');
-      dialog.className = 'confirmation-dialog';
-      dialog.innerHTML = `
-        <div class="confirmation-content">
-          <h3>${translations[currentLanguage]['Confirmação']}</h3>
-          <p>${message}</p>
-          <div class="confirmation-buttons">
-            <button class="confirm-btn">${translations[currentLanguage]['Confirmar']}</button>
-            <button class="cancel-btn">${translations[currentLanguage]['Cancelar']}</button>
-          </div>
-        </div>
-      `;
-
-      document.body.appendChild(dialog);
-
-      const confirmBtn = dialog.querySelector('.confirm-btn');
-      const cancelBtn = dialog.querySelector('.cancel-btn');
-
-      confirmBtn.addEventListener('click', () => {
-        document.body.removeChild(dialog);
-        onConfirm();
-      });
-
-      cancelBtn.addEventListener('click', () => {
-        document.body.removeChild(dialog);
-        toggle.checked = !toggle.checked;
-        toggleIcon.innerHTML = currentLanguage === 'pt-BR' ? '🇧🇷' : '🇺🇸';
-      });
-    };
-
-    const languageName = newLanguage === 'pt-BR' ? translations[currentLanguage]['Português'] : translations[currentLanguage]['Inglês'];
-    const confirmationMessage = translations[currentLanguage]['language_change_confirmation'].replace('%s', languageName);
-
-    showConfirmationDialog(confirmationMessage, async () => {
+const setupClearCacheButton = () => {
+  const clearCacheButton = document.getElementById('clear-cache-button');
+  
+  if (clearCacheButton) {
+    clearCacheButton.addEventListener('click', async () => {
       try {
-        await window.electronAPI.setLanguage(newLanguage);
-        // Pequeno delay antes de reiniciar para garantir que a mudança de idioma foi processada
-        setTimeout(() => {
-          window.electronAPI.restartApp().catch(() => {
-            // Ignorar erro de objeto destruído
+        // Mostrar loading no botão
+        const originalContent = clearCacheButton.innerHTML;
+        clearCacheButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Limpando...</span>';
+        clearCacheButton.disabled = true;
+        
+        // Obter idioma atual para traduções
+        const currentLanguage = await window.electronAPI.invoke('get-language');
+        const translations = {
+          'pt-BR': {
+            'clear_cache_confirmation': 'Deseja realmente limpar o cache de todas as aplicações?',
+            'cache_cleared': 'Cache limpo com sucesso!',
+            'cache_clear_error': 'Erro ao limpar cache',
+            'Confirmação': 'Confirmação',
+            'Confirmar': 'Confirmar',
+            'Cancelar': 'Cancelar'
+          },
+          'en-US': {
+            'clear_cache_confirmation': 'Do you really want to clear the cache of all applications?',
+            'cache_cleared': 'Cache cleared successfully!',
+            'cache_clear_error': 'Error clearing cache',
+            'Confirmação': 'Confirmation',
+            'Confirmar': 'Confirm',
+            'Cancelar': 'Cancel'
+          }
+        };
+        
+        const t = translations[currentLanguage] || translations['pt-BR'];
+        
+        // Mostrar diálogo de confirmação
+        const showConfirmationDialog = async (message, onConfirm) => {
+          const dialog = document.createElement('div');
+          dialog.className = 'confirmation-dialog';
+          dialog.innerHTML = `
+            <div class="confirmation-content">
+              <h3>${t['Confirmação']}</h3>
+              <p>${message}</p>
+              <div class="confirmation-buttons">
+                <button class="confirm-btn">${t['Confirmar']}</button>
+                <button class="cancel-btn">${t['Cancelar']}</button>
+              </div>
+            </div>
+          `;
+
+          document.body.appendChild(dialog);
+
+          const confirmBtn = dialog.querySelector('.confirm-btn');
+          const cancelBtn = dialog.querySelector('.cancel-btn');
+
+          confirmBtn.addEventListener('click', () => {
+            document.body.removeChild(dialog);
+            onConfirm();
           });
-        }, 100);
+
+          cancelBtn.addEventListener('click', () => {
+            document.body.removeChild(dialog);
+          });
+        };
+        
+        showConfirmationDialog(t.clear_cache_confirmation, async () => {
+          try {
+            // Limpar cache
+            const result = await window.electronAPI.clearCache();
+            
+            if (result.success) {
+              // Mostrar mensagem de sucesso
+              const successMessage = document.createElement('div');
+              successMessage.className = 'cache-success-message';
+              successMessage.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>${t.cache_cleared}</span>
+              `;
+              document.body.appendChild(successMessage);
+              
+              // Remover mensagem após 3 segundos
+              setTimeout(() => {
+                if (successMessage.parentNode) {
+                  successMessage.parentNode.removeChild(successMessage);
+                }
+              }, 3000);
+              
+            } else {
+              throw new Error(result.error || 'Erro desconhecido');
+            }
+          } catch (error) {
+            console.error('Erro ao limpar cache:', error);
+            
+            // Mostrar mensagem de erro
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'cache-error-message';
+            errorMessage.innerHTML = `
+              <i class="fas fa-exclamation-circle"></i>
+              <span>${t.cache_clear_error}: ${error.message}</span>
+            `;
+            document.body.appendChild(errorMessage);
+            
+            // Remover mensagem após 5 segundos
+            setTimeout(() => {
+              if (errorMessage.parentNode) {
+                errorMessage.parentNode.removeChild(errorMessage);
+              }
+            }, 5000);
+          }
+        });
+        
       } catch (error) {
-        console.error('Erro ao mudar idioma:', error);
-        // Reverter o toggle em caso de erro
-        toggle.checked = !toggle.checked;
-        toggleIcon.innerHTML = currentLanguage === 'pt-BR' ? '🇧🇷' : '🇺🇸';
+        console.error('Erro ao configurar limpeza de cache:', error);
+      } finally {
+        // Restaurar botão
+        clearCacheButton.innerHTML = '<i class="fas fa-trash"></i> <span data-translate="Limpar">Limpar</span>';
+        clearCacheButton.disabled = false;
       }
     });
-  });
+  }
 };
 
 // Função para carregar informações do sistema
@@ -430,10 +481,10 @@ const initializeSettingsPage = async () => {
   // Restaurar configurações de tema e toggles
   setupDarkModeToggle();
   setupNotificationToggle();
-  setupAutoLoginToggle();
   setupCompactLayoutToggle();
   setupFullscreenToggle();
   setupLanguageToggle();
+  setupClearCacheButton(); // Adicionar chamada para o novo botão
   
   // Configurar eventos
   const saveButton = document.getElementById("saveButton");

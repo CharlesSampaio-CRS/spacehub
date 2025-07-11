@@ -240,7 +240,8 @@ body.dark-mode .nav-button.opened::after {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
+  margin-left: auto;
 }
 
 /* ===== Rodapé fixo ===== */

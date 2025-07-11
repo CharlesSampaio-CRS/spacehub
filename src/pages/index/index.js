@@ -1411,7 +1411,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           window.electronAPI.send('destroy-teams-view');
           document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
           const homeButton = document.getElementById('home-button');
-          if (homeButton) homeButton.classList.add('active');
+          if (homeButton) {
+            homeButton.classList.add('active');
+          }
           showWebview('webview-home', 'home-button');
         } else {
           const targetClose = document.getElementById(currentViewId);

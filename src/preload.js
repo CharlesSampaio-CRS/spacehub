@@ -15,7 +15,8 @@ const authAPI = {
 const sessionAPI = {
   createUserSession: (userId) => ipcRenderer.invoke('create-user-session', userId),
   clearUserSession: (userId) => ipcRenderer.invoke('clear-user-session', userId),
-  getUserSession: (userId) => ipcRenderer.invoke('get-user-session', userId)
+  getUserSession: (userId) => ipcRenderer.invoke('get-user-session', userId),
+  clearCache: () => ipcRenderer.invoke('clear-cache')
 };
 
 const windowAPI = {
