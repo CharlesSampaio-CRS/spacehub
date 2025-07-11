@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       translatePage(language);
     });
   } catch (error) {
-    console.error('Erro ao configurar idioma:', error);
+    // Todas as linhas contendo console.error foram removidas.
   }
 });
 

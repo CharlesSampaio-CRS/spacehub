@@ -50,27 +50,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Configurações específicas para WhatsApp
       if (url && url.includes('web.whatsapp.com')) {
-        console.log('Configurando webview do WhatsApp...');
         webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
         webview.setAttribute('webpreferences', 'contextIsolation=no, nodeIntegration=no, webSecurity=no, allowRunningInsecureContent=yes');
         webview.setAttribute('allowpopups', 'true');
         
         // Eventos específicos para WhatsApp
         webview.addEventListener('dom-ready', () => {
-          console.log('WhatsApp webview DOM ready');
           webview.setZoomFactor(currentZoom);
         });
 
         webview.addEventListener('did-start-loading', () => {
-          console.log('WhatsApp webview started loading');
         });
 
         webview.addEventListener('did-finish-load', () => {
-          console.log('WhatsApp webview finished loading');
         });
 
         webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
-          console.error('WhatsApp webview failed to load:', errorCode, errorDescription);
           if (errorCode === -3 || errorCode === -102) {
             setTimeout(() => webview.reload(), 2000);
           }
@@ -78,7 +73,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Handler para abrir links externos do WhatsApp
         webview.addEventListener('new-window', (event) => {
-          console.log('WhatsApp new window:', event.url);
           const url = event.url;
           
           // Verificar se é um link do WhatsApp ou relacionado
@@ -101,7 +95,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Handler para navegação dentro do WhatsApp
         webview.addEventListener('will-navigate', (event) => {
-          console.log('WhatsApp navigation:', event.url);
           const url = event.url;
           
           // Permitir navegação interna do WhatsApp
@@ -123,7 +116,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Handler para links de mídia e arquivos
         webview.addEventListener('will-navigate-in-page', (event) => {
-          console.log('WhatsApp in-page navigation:', event.url);
           const url = event.url;
           
           // Verificar se é um link de mídia ou arquivo
@@ -135,7 +127,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Handler para download de arquivos
         webview.addEventListener('will-download', (event, item, webContents) => {
-          console.log('WhatsApp download detected:', item.getFilename());
           // Permitir download de arquivos do WhatsApp
           // O arquivo será salvo na pasta de downloads padrão
         });
@@ -180,12 +171,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Monitorar erros de console do WhatsApp
         webview.addEventListener('console-message', (event) => {
-          console.log('WhatsApp console:', event.message);
         });
       }
       // Configurações específicas para Teams
       else if (url && url.includes('teams.microsoft.com')) {
-        console.log('Configurando webview do Teams...');
         webview.setAttribute('allowpopups', 'true');
         webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
         // Otimização: Remover plugins, experimentalFeatures, webgl e ativar backgroundThrottling
@@ -197,45 +186,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Eventos específicos para Teams
         webview.addEventListener('dom-ready', () => {
-          console.log('Teams webview DOM ready');
           webview.setZoomFactor(currentZoom);
           clearTimeout(loadTimeout);
         });
 
         webview.addEventListener('did-start-loading', () => {
-          console.log('Teams webview started loading');
         });
 
         webview.addEventListener('did-finish-load', () => {
-          console.log('Teams webview finished loading');
           loadAttempts = 0;
           clearTimeout(loadTimeout);
         });
 
         webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
-          console.error('Teams webview failed to load:', errorCode, errorDescription);
 
           if (loadAttempts < maxLoadAttempts) {
             loadAttempts++;
-            console.log(`Tentativa ${loadAttempts} de ${maxLoadAttempts} para recarregar Teams...`);
             setTimeout(() => {
               webview.reload();
             }, 2000 * loadAttempts);
           } else {
-            console.error('Número máximo de tentativas de carregamento atingido para Teams');
             // Mostrar mensagem de erro para o usuário
-            const errorMsg = document.createElement('div');
-            errorMsg.className = 'error-message';
-            errorMsg.textContent = 'Não foi possível carregar o Teams. Por favor, tente novamente.';
-            webviewContainer.appendChild(errorMsg);
           }
         });
 
         webview.addEventListener('crashed', () => {
-          console.error('Teams webview crashed');
           if (loadAttempts < maxLoadAttempts) {
             loadAttempts++;
-            console.log(`Tentativa ${loadAttempts} de ${maxLoadAttempts} para recriar Teams após crash...`);
             setTimeout(() => {
               createWebview(webviewId, url);
             }, 2000 * loadAttempts);
@@ -243,7 +220,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         webview.addEventListener('will-navigate', (event) => {
-          console.log('Teams navigation:', event.url);
           if (event.url.includes('teams.microsoft.com')) {
             event.preventDefault();
             webview.loadURL(event.url);
@@ -251,7 +227,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         webview.addEventListener('new-window', (event) => {
-          console.log('Teams new window:', event.url);
           if (event.url.includes('teams.microsoft.com')) {
             event.preventDefault();
             webview.loadURL(event.url);
@@ -261,7 +236,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Timeout para verificar se a página carregou
         loadTimeout = setTimeout(() => {
           if (webview.getURL() === 'about:blank' || webview.getURL() === '') {
-            console.log('Teams webview timeout, attempting reload...');
             if (loadAttempts < maxLoadAttempts) {
               loadAttempts++;
               webview.reload();
@@ -271,7 +245,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Monitorar mudanças de URL
         webview.addEventListener('did-navigate', (event) => {
-          console.log('Teams navigated to:', event.url);
           if (event.url.includes('teams.microsoft.com')) {
             clearTimeout(loadTimeout);
           }
@@ -279,12 +252,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Monitorar erros de console
         webview.addEventListener('console-message', (event) => {
-          console.log('Teams console:', event.message);
         });
 
         // Monitorar erros de renderização
         webview.addEventListener('render-process-gone', (event) => {
-          console.error('Teams render process gone:', event.reason);
           if (loadAttempts < maxLoadAttempts) {
             loadAttempts++;
             setTimeout(() => {
@@ -295,7 +266,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       // Configurações específicas para outras aplicações Microsoft (Outlook, Office, etc.)
       else if (url && (url.includes('outlook.office.com') || url.includes('office.com') || url.includes('portal.office.com'))) {
-        console.log('Configurando webview da Microsoft Office...');
         webview.setAttribute('allowpopups', 'true');
         webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
         webview.setAttribute('webpreferences', 'contextIsolation=no, nodeIntegration=no, webSecurity=no, allowRunningInsecureContent=yes, experimentalFeatures=yes, plugins=yes, webgl=yes');
@@ -306,44 +276,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Eventos específicos para Microsoft Office
         webview.addEventListener('dom-ready', () => {
-          console.log('Microsoft Office webview DOM ready');
           webview.setZoomFactor(currentZoom);
           clearTimeout(loadTimeout);
         });
 
         webview.addEventListener('did-start-loading', () => {
-          console.log('Microsoft Office webview started loading');
         });
 
         webview.addEventListener('did-finish-load', () => {
-          console.log('Microsoft Office webview finished loading');
           loadAttempts = 0;
           clearTimeout(loadTimeout);
         });
 
         webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
-          console.error('Microsoft Office webview failed to load:', errorCode, errorDescription);
 
           if (loadAttempts < maxLoadAttempts) {
             loadAttempts++;
-            console.log(`Tentativa ${loadAttempts} de ${maxLoadAttempts} para recarregar Microsoft Office...`);
             setTimeout(() => {
               webview.reload();
             }, 2000 * loadAttempts);
           } else {
-            console.error('Número máximo de tentativas de carregamento atingido para Microsoft Office');
-            const errorMsg = document.createElement('div');
-            errorMsg.className = 'error-message';
-            errorMsg.textContent = 'Não foi possível carregar a aplicação Microsoft. Por favor, tente novamente.';
-            webviewContainer.appendChild(errorMsg);
+            // Mostrar mensagem de erro para o usuário
           }
         });
 
         webview.addEventListener('crashed', () => {
-          console.error('Microsoft Office webview crashed');
           if (loadAttempts < maxLoadAttempts) {
             loadAttempts++;
-            console.log(`Tentativa ${loadAttempts} de ${maxLoadAttempts} para recriar Microsoft Office após crash...`);
             setTimeout(() => {
               createWebview(webviewId, url);
             }, 2000 * loadAttempts);
@@ -351,7 +310,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         webview.addEventListener('will-navigate', (event) => {
-          console.log('Microsoft Office navigation:', event.url);
           if (event.url.includes('office.com') || event.url.includes('microsoft.com')) {
             event.preventDefault();
             webview.loadURL(event.url);
@@ -359,7 +317,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         webview.addEventListener('new-window', (event) => {
-          console.log('Microsoft Office new window:', event.url);
           if (event.url.includes('office.com') || event.url.includes('microsoft.com')) {
             event.preventDefault();
             webview.loadURL(event.url);
@@ -369,7 +326,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Timeout para verificar se a página carregou
         loadTimeout = setTimeout(() => {
           if (webview.getURL() === 'about:blank' || webview.getURL() === '') {
-            console.log('Microsoft Office webview timeout, attempting reload...');
             if (loadAttempts < maxLoadAttempts) {
               loadAttempts++;
               webview.reload();
@@ -379,7 +335,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Monitorar mudanças de URL
         webview.addEventListener('did-navigate', (event) => {
-          console.log('Microsoft Office navigated to:', event.url);
           if (event.url.includes('office.com') || event.url.includes('microsoft.com')) {
             clearTimeout(loadTimeout);
           }
@@ -387,12 +342,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Monitorar erros de console
         webview.addEventListener('console-message', (event) => {
-          console.log('Microsoft Office console:', event.message);
         });
 
         // Monitorar erros de renderização
         webview.addEventListener('render-process-gone', (event) => {
-          console.error('Microsoft Office render process gone:', event.reason);
           if (loadAttempts < maxLoadAttempts) {
             loadAttempts++;
             setTimeout(() => {
@@ -403,7 +356,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       // Configurações específicas para LinkedIn (mantendo o código existente)
       else if (url && url.includes('linkedin.com')) {
-        console.log('Configurando webview do LinkedIn...');
         webview.setAttribute('allowpopups', 'true');
         webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
         webview.setAttribute('webpreferences', 'contextIsolation=no, nodeIntegration=no, webSecurity=no, allowRunningInsecureContent=yes');
@@ -414,45 +366,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Eventos específicos para LinkedIn
         webview.addEventListener('dom-ready', () => {
-          console.log('LinkedIn webview DOM ready');
           webview.setZoomFactor(currentZoom);
           clearTimeout(loadTimeout);
         });
 
         webview.addEventListener('did-start-loading', () => {
-          console.log('LinkedIn webview started loading');
         });
 
         webview.addEventListener('did-finish-load', () => {
-          console.log('LinkedIn webview finished loading');
           loadAttempts = 0;
           clearTimeout(loadTimeout);
         });
 
         webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
-          console.error('LinkedIn webview failed to load:', errorCode, errorDescription);
 
           if (loadAttempts < maxLoadAttempts) {
             loadAttempts++;
-            console.log(`Tentativa ${loadAttempts} de ${maxLoadAttempts} para recarregar LinkedIn...`);
             setTimeout(() => {
               webview.reload();
             }, 2000 * loadAttempts); // Aumenta o tempo entre tentativas
           } else {
-            console.error('Número máximo de tentativas de carregamento atingido');
             // Mostrar mensagem de erro para o usuário
-            const errorMsg = document.createElement('div');
-            errorMsg.className = 'error-message';
-            errorMsg.textContent = 'Não foi possível carregar o LinkedIn. Por favor, tente novamente.';
-            webviewContainer.appendChild(errorMsg);
           }
         });
 
         webview.addEventListener('crashed', () => {
-          console.error('LinkedIn webview crashed');
           if (loadAttempts < maxLoadAttempts) {
             loadAttempts++;
-            console.log(`Tentativa ${loadAttempts} de ${maxLoadAttempts} para recriar LinkedIn após crash...`);
             setTimeout(() => {
               createWebview(webviewId, url);
             }, 2000 * loadAttempts);
@@ -460,7 +400,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         webview.addEventListener('will-navigate', (event) => {
-          console.log('LinkedIn navigation:', event.url);
           if (event.url.includes('linkedin.com')) {
             event.preventDefault();
             webview.loadURL(event.url);
@@ -468,7 +407,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         webview.addEventListener('new-window', (event) => {
-          console.log('LinkedIn new window:', event.url);
           if (event.url.includes('linkedin.com')) {
             event.preventDefault();
             webview.loadURL(event.url);
@@ -478,7 +416,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Timeout para verificar se a página carregou
         loadTimeout = setTimeout(() => {
           if (webview.getURL() === 'about:blank' || webview.getURL() === '') {
-            console.log('LinkedIn webview timeout, attempting reload...');
             if (loadAttempts < maxLoadAttempts) {
               loadAttempts++;
               webview.reload();
@@ -488,7 +425,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Monitorar mudanças de URL
         webview.addEventListener('did-navigate', (event) => {
-          console.log('LinkedIn navigated to:', event.url);
           if (event.url.includes('linkedin.com')) {
             clearTimeout(loadTimeout);
           }
@@ -496,12 +432,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Monitorar erros de console
         webview.addEventListener('console-message', (event) => {
-          console.log('LinkedIn console:', event.message);
         });
 
         // Monitorar erros de renderização
         webview.addEventListener('render-process-gone', (event) => {
-          console.error('LinkedIn render process gone:', event.reason);
           if (loadAttempts < maxLoadAttempts) {
             loadAttempts++;
             setTimeout(() => {
@@ -512,7 +446,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       // Configurações específicas para Slack
       else if (url && url.includes('slack.com')) {
-        console.log('Configurando webview do Slack...');
         webview.setAttribute('allowpopups', 'true');
         webview.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
         webview.setAttribute('webpreferences', 'contextIsolation=no, nodeIntegration=no, webSecurity=no, allowRunningInsecureContent=yes');
@@ -549,14 +482,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Eventos comuns para todas as webviews
       webview.addEventListener('did-fail-load', (event, errorCode, errorDescription) => {
-        console.error(`Erro ao carregar ${webviewId}:`, errorCode, errorDescription);
       });
 
       // Adicionar a webview ao container
       webviewContainer.appendChild(webview);
       return webview;
     } catch (error) {
-      console.error('Erro ao criar webview:', error);
       return null;
     }
   };
@@ -622,7 +553,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     } catch (error) {
-      console.error('Erro ao mostrar webview:', error);
     }
   };
 
@@ -963,7 +893,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const target = e.target.closest('.nav-button');
         if (!target) {
-          console.log('Nenhum botão encontrado');
           return;
         }
 
@@ -1117,7 +1046,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     } catch (error) {
-      console.error('Erro ao configurar sessão do usuário:', error);
     }
   };
 
@@ -1160,7 +1088,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     } catch (error) {
-      console.error('Erro ao carregar dados do usuário:', error);
     }
 
     // Toggle do menu
@@ -1237,7 +1164,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Fechar a janela atual
           window.electronAPI.invoke('close-current-window');
         } catch (error) {
-          console.error('Erro ao fazer logout:', error);
         }
       });
     });
@@ -1403,6 +1329,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           const button = document.querySelector(`.nav-button[data-id="webview-teams"]`);
           if (button) button.classList.remove('opened', 'active');
           window.electronAPI.send('destroy-teams-view');
+          // Remover o elemento webview do Teams do DOM
+          const teamsWebview = document.getElementById('webview-teams');
+          if (teamsWebview) teamsWebview.remove();
           document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
           const homeButton = document.getElementById('home-button');
           if (homeButton) {
@@ -1465,7 +1394,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           await window.electronAPI.invoke('create-login-window');
           window.electronAPI.invoke('close-current-window');
         } catch (error) {
-          console.error('Erro ao fazer logout:', error);
         }
       });
     }
@@ -1489,7 +1417,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Abrir a webview-home ao iniciar
       showWebview('webview-home', 'home-button');
     } catch (error) {
-      console.error('Erro na inicialização:', error);
     }
   };
 
