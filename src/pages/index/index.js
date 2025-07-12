@@ -736,21 +736,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-      // Verificar trial status primeiro
-      const trialStatus = await window.electronAPI.checkTrialStatus(userUuid);
+      // Tentar usar dados pré-carregados primeiro
+      let trialStatus = await window.electronAPI.getTrialStatus();
+      let applications = await window.electronAPI.getUserApplications();
       
-      const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Se não houver dados pré-carregados, buscar da API
+      if (!trialStatus) {
+        trialStatus = await window.electronAPI.checkTrialStatus(userUuid);
+      }
       
-      const data = await response.json();
+      if (!applications || applications.length === 0) {
+        const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        applications = data.data?.applications || [];
+      }
       
-      if (Array.isArray(data.data.applications)) {
-        const applications = data.data.applications;
+      if (Array.isArray(applications)) {
         // Mostrar TODOS os aplicativos para todos os usuários
         const appsToShow = applications;
         
@@ -1315,38 +1323,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     const profileLogout = document.getElementById('profile-logout');
 
     try {
-      // Buscar informações do usuário da API
-      const token = await window.electronAPI.invoke('get-token');
-      const userUuid = await window.electronAPI.invoke('get-userUuid');
+      // Tentar usar dados pré-carregados primeiro
+      let userData = await window.electronAPI.getUserInfo();
       
-      if (token && userUuid) {
-        const response = await fetch(`https://spaceapp-digital-api.onrender.com/users/${userUuid}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+      // Se não houver dados pré-carregados, buscar da API
+      if (!userData) {
+        const token = await window.electronAPI.invoke('get-token');
+        const userUuid = await window.electronAPI.invoke('get-userUuid');
+        
+        if (token && userUuid) {
+          const response = await fetch(`https://spaceapp-digital-api.onrender.com/users/${userUuid}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            userData = await response.json();
           }
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          const firstName = userData.data.name ? userData.data.name.split(' ')[0] : 'Usuário';
-          
-          document.getElementById('profile-name').textContent = firstName;
-          document.getElementById('profile-menu-name').textContent = userData.data.name || 'Usuário';
-          document.getElementById('profile-menu-email').textContent = userData.data.email || 'usuario@email.com';
-          
-          // Atualizar avatares se houver
-          let avatarSrc = '../../assets/avatarrobot.png';
-          
-          document.getElementById('profile-avatar').src = avatarSrc;
-          document.getElementById('profile-menu-avatar').src = avatarSrc;
-
-          // Salvar dados do usuário no localStorage
-          localStorage.setItem('user', JSON.stringify(userData));
         }
       }
+
+      if (userData) {
+        const user = userData.data || userData;
+        const firstName = user.name ? user.name.split(' ')[0] : 'Usuário';
+        
+        document.getElementById('profile-name').textContent = firstName;
+        document.getElementById('profile-menu-name').textContent = user.name || 'Usuário';
+        document.getElementById('profile-menu-email').textContent = user.email || 'usuario@email.com';
+        
+        // Atualizar avatares se houver
+        let avatarSrc = '../../assets/avatarrobot.png';
+        
+        document.getElementById('profile-avatar').src = avatarSrc;
+        document.getElementById('profile-menu-avatar').src = avatarSrc;
+
+        // Salvar dados do usuário no localStorage
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
     } catch (error) {
+      // Silenciar erros
     }
 
     // Toggle do menu
@@ -1423,17 +1441,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Fechar a janela atual
           window.electronAPI.invoke('close-current-window');
         } catch (error) {
-        }
-      });
-    });
-
-    // Adicionar listener para mudanças no idioma
-    window.electronAPI.onLanguageChanged((language) => {
-      const elements = document.querySelectorAll('[data-translate]');
-      elements.forEach(element => {
-        const key = element.getAttribute('data-translate');
-        if (translations[language] && translations[language][key]) {
-          element.textContent = translations[language][key];
         }
       });
     });

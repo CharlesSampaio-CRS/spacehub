@@ -13,25 +13,34 @@ const loadApplications = async () => {
   if (!auth) return;
 
   try {
-    // Primeiro verificar trial status
-    const trialStatus = await window.electronAPI.checkTrialStatus(auth.userUuid);
-    const currentLanguage = await window.electronAPI.invoke('get-language');
+    // Tentar usar dados pré-carregados primeiro
+    let trialStatus = await window.electronAPI.getTrialStatus();
+    let applications = await window.electronAPI.getUserApplications();
     
-    const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${auth.userUuid}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${auth.token}`
-      }
-    });
-    const data = await response.json();
-    if (!Array.isArray(data.data.applications)) return;
+    // Se não houver dados pré-carregados, buscar da API
+    if (!trialStatus) {
+      trialStatus = await window.electronAPI.checkTrialStatus(auth.userUuid);
+    }
+    
+    if (!applications || applications.length === 0) {
+      const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${auth.userUuid}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`
+        }
+      });
+      const data = await response.json();
+      applications = data.data?.applications || [];
+    }
+    
+    if (!Array.isArray(applications)) return;
 
     const listContainer = document.getElementById("applicationsList");
     listContainer.innerHTML = "";
     
     // Ordenar aplicações: ativas primeiro, depois inativas
-    const sortedApplications = data.data.applications.sort((a, b) => {
+    const sortedApplications = applications.sort((a, b) => {
       if (a.active === b.active) {
         return a.application.localeCompare(b.application);
       }
@@ -245,6 +254,10 @@ const updateApplications = async () => {
         applications: updatedApplications
       })
     });
+    
+    // Atualizar dados pré-carregados
+    await window.electronAPI.updateUserApplications(updatedApplications);
+    
     // Atualizar imediatamente após salvar
     loadApplications();
     showSaveNotification(true, currentLanguage);
@@ -261,31 +274,38 @@ const loadUserInfo = async () => {
   if (!auth) return;
 
   try {
-    // Verificar trial status com fallback
-    let trialStatus;
-    try {
-      trialStatus = await window.electronAPI.checkTrialStatus(auth.userUuid);
-    } catch (error) {
-      // Fallback: assumir usuário free em trial
-      trialStatus = {
-        plan: 'free',
-        isInTrial: true,
-        daysLeft: 14
-      };
+    // Tentar usar dados pré-carregados primeiro
+    let trialStatus = await window.electronAPI.getTrialStatus();
+    let userData = await window.electronAPI.getUserInfo();
+    
+    // Se não houver dados pré-carregados, buscar da API
+    if (!trialStatus) {
+      try {
+        trialStatus = await window.electronAPI.checkTrialStatus(auth.userUuid);
+      } catch (error) {
+        // Fallback: assumir usuário free em trial
+        trialStatus = {
+          plan: 'free',
+          isInTrial: true,
+          daysLeft: 14
+        };
+      }
     }
     
-    const currentLanguage = await window.electronAPI.invoke('get-language');
-
-    const response = await fetch(`https://spaceapp-digital-api.onrender.com/users/${auth.userUuid}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${auth.token}`
-      }
-    });
+    if (!userData) {
+      const response = await fetch(`https://spaceapp-digital-api.onrender.com/users/${auth.userUuid}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`
+        }
+      });
+      
+      userData = await response.json();
+    }
     
-    const data = await response.json();
-    const user = data?.data || data;
+    const user = userData?.data || userData;
+    const currentLanguage = await window.electronAPI.invoke('get-language');
     
     const nameElem = document.getElementById("userName");
     const emailElem = document.getElementById("userEmail");

@@ -35,6 +35,16 @@ ipcMain.handle('get-user-info', () => {
   return user || null;
 });
 
+ipcMain.handle('get-user-applications', () => {
+  const applications = store.get('userApplications');
+  return applications || [];
+});
+
+ipcMain.handle('get-trial-status', () => {
+  const trialStatus = store.get('trialStatus');
+  return trialStatus || null;
+});
+
 ipcMain.handle('update-user-info', (event, userInfo) => {
   store.set('user', userInfo);
   return true;
@@ -413,6 +423,59 @@ ipcMain.on('start-google-login', () => {
 
       if (!token) {
         throw new Error('Token de autenticação não recebido');
+      }
+
+      // Decodificar o token para obter o userUuid
+      const payload = parseJwt(token);
+      const userUuid = payload?.uuid || payload?.userUuid || loginRes.data.data?.userUuid || loginRes.data.userUuid;
+      
+      if (!userUuid) {
+        throw new Error('UUID do usuário não encontrado');
+      }
+
+      // Pré-carregar dados do usuário e aplicações
+      try {
+        // Buscar dados do usuário
+        const userResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/users/${userUuid}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        // Buscar aplicações do usuário
+        const spacesResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        // Salvar dados no store para uso posterior
+        if (userResponse.data) {
+          store.set('user', userResponse.data.data || userResponse.data);
+        }
+        
+        if (spacesResponse.data && spacesResponse.data.data && spacesResponse.data.data.applications) {
+          store.set('userApplications', spacesResponse.data.data.applications);
+        }
+
+        // Verificar trial status e salvar
+        try {
+          const trialStatus = await checkTrialStatus(userUuid);
+          store.set('trialStatus', trialStatus);
+        } catch (trialError) {
+          // Fallback: assumir usuário free em trial
+          store.set('trialStatus', {
+            plan: 'free',
+            isInTrial: true,
+            daysLeft: 14
+          });
+        }
+
+      } catch (preloadError) {
+        console.error('Erro ao pré-carregar dados no login Google:', preloadError);
+        // Continuar mesmo se falhar o pré-carregamento
       }
 
       saveToken(token);
@@ -795,9 +858,61 @@ ipcMain.handle('login', async (event, { email, password }) => {
       token = data.data.access_token;
     }
 
-
     if (!token) {
       throw new Error('Token de autenticação não recebido no login normal');
+    }
+
+    // Decodificar o token para obter o userUuid
+    const payload = parseJwt(token);
+    const userUuid = payload?.uuid || payload?.userUuid || data.data?.userUuid || data.userUuid;
+    
+    if (!userUuid) {
+      throw new Error('UUID do usuário não encontrado');
+    }
+
+    // Pré-carregar dados do usuário e aplicações
+    try {
+      // Buscar dados do usuário
+      const userResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/users/${userUuid}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      // Buscar aplicações do usuário
+      const spacesResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      // Salvar dados no store para uso posterior
+      if (userResponse.data) {
+        store.set('user', userResponse.data.data || userResponse.data);
+      }
+      
+      if (spacesResponse.data && spacesResponse.data.data && spacesResponse.data.data.applications) {
+        store.set('userApplications', spacesResponse.data.data.applications);
+      }
+
+      // Verificar trial status e salvar
+      try {
+        const trialStatus = await checkTrialStatus(userUuid);
+        store.set('trialStatus', trialStatus);
+      } catch (trialError) {
+        // Fallback: assumir usuário free em trial
+        store.set('trialStatus', {
+          plan: 'free',
+          isInTrial: true,
+          daysLeft: 14
+        });
+      }
+
+    } catch (preloadError) {
+      console.error('Erro ao pré-carregar dados:', preloadError);
+      // Continuar mesmo se falhar o pré-carregamento
     }
 
     createUserSession(email);
@@ -904,6 +1019,8 @@ ipcMain.handle('logout', async (event, email) => {
     store.delete('token');
     store.delete('userUuid');
     store.delete('user');
+    store.delete('userApplications');
+    store.delete('trialStatus');
 
     // Fechar janela principal e criar janela de login
     closeWindow(mainWindow);
@@ -1995,6 +2112,8 @@ ipcMain.handle('force-logout', async () => {
     store.delete('token');
     store.delete('userUuid');
     store.delete('user');
+    store.delete('userApplications');
+    store.delete('trialStatus');
     
     // Fechar todas as janelas atuais
     BrowserWindow.getAllWindows().forEach(window => {
@@ -2006,6 +2125,24 @@ ipcMain.handle('force-logout', async () => {
     // Criar nova janela de login
     createLoginWindow();
     
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('update-user-applications', async (event, applications) => {
+  try {
+    store.set('userApplications', applications);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('update-trial-status', async (event, trialStatus) => {
+  try {
+    store.set('trialStatus', trialStatus);
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };

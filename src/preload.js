@@ -8,7 +8,11 @@ const authAPI = {
   getToken: () => ipcRenderer.invoke('get-token'),
   getUserUuid: () => ipcRenderer.invoke('get-userUuid'),
   getUserInfo: () => ipcRenderer.invoke('get-user-info'),
+  getUserApplications: () => ipcRenderer.invoke('get-user-applications'),
+  getTrialStatus: () => ipcRenderer.invoke('get-trial-status'),
   updateUserInfo: (userInfo) => ipcRenderer.invoke('update-user-info', userInfo),
+  updateUserApplications: (applications) => ipcRenderer.invoke('update-user-applications', applications),
+  updateTrialStatus: (trialStatus) => ipcRenderer.invoke('update-trial-status', trialStatus),
   handleGoogleLogin: (idToken) => ipcRenderer.invoke('handleGoogleLogin', idToken)
 };
 
