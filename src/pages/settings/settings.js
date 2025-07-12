@@ -244,6 +244,9 @@ const updateApplications = async () => {
     // Atualizar imediatamente após salvar
     loadApplications();
     showSaveNotification(true, currentLanguage);
+    
+    // Recarregar a sidebar na página principal
+    window.electronAPI.send('reload-applications');
   } catch (error) {
     const currentLanguage = await window.electronAPI.invoke('get-language');
     showSaveNotification(false, currentLanguage);
@@ -804,6 +807,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Função para verificar atualizações
 async function checkForUpdates() {
   try {
+    // Obter idioma atual
+    const currentLanguage = await window.electronAPI.invoke('get-language');
+    
     // Sempre obter a versão atual primeiro
     const currentVersion = await window.electronAPI.getAppVersion();
     
@@ -893,6 +899,8 @@ async function checkForUpdates() {
     });
   } catch (error) {
     console.error('Erro ao verificar atualizações:', error);
+    // Obter idioma atual para mensagem de erro
+    const currentLanguage = await window.electronAPI.invoke('get-language');
     Swal.fire({
       title: translations[currentLanguage]['Erro'],
       html: `
