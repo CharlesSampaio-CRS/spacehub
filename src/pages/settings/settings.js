@@ -163,25 +163,37 @@ const updateApplications = async () => {
     const trialStatus = await window.electronAPI.checkTrialStatus(auth.userUuid);
     const currentLanguage = await window.electronAPI.invoke('get-language');
     const toggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
-    const applications = Array.from(toggles).map(toggle => ({
+    let applications = Array.from(toggles).map(toggle => ({
       uuid: toggle.id.replace('toggle-', ''),
       active: toggle.checked
     }));
     if (trialStatus.plan === 'free' && !trialStatus.isInTrial) {
       const allowedApps = ['whatsapp', 'discord', 'linkedin'];
-      applications.forEach(app => {
+      // Só permitir ativar/desativar as permitidas
+      applications = applications.map(app => {
         const appData = toggles.find(toggle => toggle.id === `toggle-${app.uuid}`);
-        if (appData) {
-          const appName = appData.closest('.application-card').querySelector('p strong').textContent;
-          const isAllowed = allowedApps.includes(appName.toLowerCase());
-          app.active = isAllowed;
-          appData.checked = isAllowed;
-          appData.disabled = !isAllowed;
-          const toggleSwitch = appData.closest('.toggle-switch');
-          if (toggleSwitch) {
-            toggleSwitch.classList.toggle('disabled', !isAllowed);
+        const appName = appData.closest('.application-card').querySelector('p strong').textContent;
+        const isAllowed = allowedApps.includes(appName.toLowerCase());
+        if (!isAllowed) {
+          app.active = false;
+          if (appData) {
+            appData.checked = false;
+            appData.disabled = true;
+            const toggleSwitch = appData.closest('.toggle-switch');
+            if (toggleSwitch) {
+              toggleSwitch.classList.add('disabled');
+            }
+          }
+        } else {
+          if (appData) {
+            appData.disabled = false;
+            const toggleSwitch = appData.closest('.toggle-switch');
+            if (toggleSwitch) {
+              toggleSwitch.classList.remove('disabled');
+            }
           }
         }
+        return app;
       });
       const warningMessage = translations[currentLanguage]['only_3_apps_allowed'] || 
                             'Apenas 3 aplicações podem estar ativas no plano gratuito. Aplicações extras foram desativadas.';
@@ -206,6 +218,7 @@ const updateApplications = async () => {
         }
       });
     }
+    // Buscar estado atual das aplicações no backend
     const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${auth.userUuid}`, {
       method: 'GET',
       headers: {
@@ -236,7 +249,6 @@ const updateApplications = async () => {
     // Atualizar imediatamente após salvar
     loadApplications();
     showSaveNotification(true, currentLanguage);
-    
     // Recarregar a sidebar na página principal
     window.electronAPI.send('reload-applications');
   } catch (error) {
