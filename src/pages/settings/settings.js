@@ -276,32 +276,25 @@ const loadUserInfo = async () => {
     const data = await response.json();
     const user = data?.data || data;
     
-    const typeElem = document.getElementById("userType");
     const nameElem = document.getElementById("userName");
     const emailElem = document.getElementById("userEmail");
-    
-    if (!typeElem || !nameElem || !emailElem) {
+    if (!nameElem || !emailElem) {
       return;
     }
-    
-    // Preenche os campos, mesmo que estejam vazios
-    typeElem.textContent = user.type || (translations[currentLanguage]?.['Desconhecido'] || "Desconhecido");
     nameElem.textContent = user.name || "-";
     emailElem.textContent = user.email || "-";
 
     // Adicionar card de trial no placeholder correto
     const trialCardPlaceholder = document.getElementById("trialCardPlaceholder");
-    
     if (!trialCardPlaceholder) {
       return;
     }
-    
-    // Criar card de trial
+    // Criar card de plano como .application-card
     const trialCard = document.createElement("div");
-    trialCard.className = "trial-card";
-    
+    trialCard.className = "application-card";
+    let inner = '';
     if (trialStatus.plan === 'free' && !trialStatus.isInTrial) {
-      trialCard.innerHTML = `
+      inner = `
         <div class="trial-warning">
           <div class="warning-content">
             <i class="fas fa-exclamation-triangle"></i>
@@ -316,8 +309,9 @@ const loadUserInfo = async () => {
           </div>
         </div>
       `;
+      trialCard.className = "application-card";
     } else if (trialStatus.plan === 'free' && trialStatus.isInTrial) {
-      trialCard.innerHTML = `
+      inner = `
         <div class="trial-info">
           <div class="info-content">
             <i class="fas fa-clock"></i>
@@ -332,9 +326,10 @@ const loadUserInfo = async () => {
           </div>
         </div>
       `;
+      trialCard.className = "application-card";
     } else {
       // Usuário pago - mostrar informações do plano atual
-      trialCard.innerHTML = `
+      inner = `
         <div class="premium-status">
           <div class="status-content">
             <i class="fas fa-crown"></i>
@@ -345,12 +340,12 @@ const loadUserInfo = async () => {
           </div>
         </div>
       `;
+      trialCard.className = "application-card premium-card";
     }
-    
+    trialCard.innerHTML = inner;
     // Limpar placeholder e adicionar o card
     trialCardPlaceholder.innerHTML = '';
     trialCardPlaceholder.appendChild(trialCard);
-    
     // Adicionar eventos aos botões
     const upgradeBtn = trialCard.querySelector('#upgrade-plan-btn');
     if (upgradeBtn) {

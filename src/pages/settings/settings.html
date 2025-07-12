@@ -17,45 +17,17 @@
       <section id="profile-section" class="config-section">
         <h2 data-translate="Perfil">Perfil</h2>
         <div class="applications-list">
-          <!-- Cartões de Perfil -->
-          <div class="application-card">
-            <div class="application-info">
-              <div>
-                <div class="status-label" data-translate="Perfil">Perfil</div>
-                <div id="userType" class="user-info"></div>
-              </div>
-            </div>
-          </div>
-
           <div class="application-card">
             <div class="application-info">
               <div>
                 <div class="status-label" data-translate="Nome">Nome</div>
                 <div id="userName" class="user-info"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="application-card">
-            <div class="application-info">
-              <div>
-                <div class="status-label" data-translate="Email">Email</div>
+                <div class="status-label" data-translate="Email" style="margin-top:12px;">Email</div>
                 <div id="userEmail" class="user-info"></div>
               </div>
             </div>
           </div>
-
-          <!-- Card de Trial (substitui o card do plano) -->
-          <div class="application-card trial-card-container">
-            <div class="application-info">
-              <div>
-                <div class="status-label" data-translate="Plano">Plano</div>
-                <div id="trialCardPlaceholder" class="user-info">
-                  <!-- O card de trial será inserido aqui via JavaScript -->
-                </div>
-              </div>
-            </div>
-          </div>
+          <div id="trialCardPlaceholder"></div>
         </div>
       </section>
 
