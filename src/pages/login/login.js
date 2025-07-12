@@ -28,19 +28,38 @@ async function login() {
 
   try {
     const data = await window.electronAPI.login({ email, password });
-
-    if (rememberMe) {
-      localStorage.setItem('rememberedEmail', email);
-      localStorage.setItem('rememberedPassword', password);
-    } else {
-      localStorage.removeItem('rememberedEmail');
-      localStorage.removeItem('rememberedPassword');
-    }
-
     const token = data.data?.token || data.token;
-    
     if (!token) {
       throw new Error('Token não encontrado na resposta do servidor');
+    }
+
+    // Decodificar o token para obter o userUuid
+    function parseJwt(token) {
+      try {
+        return JSON.parse(atob(token.split('.')[1]));
+      } catch (e) {
+        return null;
+      }
+    }
+    const payload = parseJwt(token);
+    const userUuid = payload?.uuid || payload?.userUuid || data.data?.userUuid || data.userUuid;
+    if (!userUuid) {
+      throw new Error('UUID do usuário não encontrado');
+    }
+
+    // Buscar dados do usuário na API e salvar no localStorage
+    try {
+      const response = await fetch(`https://spaceapp-digital-api.onrender.com/users/${userUuid}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const userData = await response.json();
+      localStorage.setItem('user', JSON.stringify(userData.data || userData));
+    } catch (e) {
+      // Se falhar, apenas continue
     }
 
     window.electronAPI.send('login-success', token);
