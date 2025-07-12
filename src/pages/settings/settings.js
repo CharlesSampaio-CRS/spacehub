@@ -4,7 +4,6 @@ const getAuthData = async () => {
     const userUuid = await window.electronAPI.invoke('get-userUuid');
     return { token, userUuid };
   } catch (err) {
-    console.error("Erro ao obter token ou userUuid:", err);
     return null;
   }
 };
@@ -295,8 +294,8 @@ const loadUserInfo = async () => {
     
     if (trialStatus.plan === 'free' && !trialStatus.isInTrial) {
       trialCard.innerHTML = `
-        <div class="trial-expired">
-          <div class="expired-content">
+        <div class="trial-warning">
+          <div class="warning-content">
             <i class="fas fa-exclamation-triangle"></i>
             <div>
               <h4>${translations[currentLanguage]?.['trial_expired'] || 'Período de Trial Expirado'}</h4>

@@ -39,7 +39,6 @@ function parseJwt(token) {
     const decodedPayload = atob(base64Payload);  
     return JSON.parse(decodedPayload);
   } catch (e) {
-    console.error('Falha ao decodificar JWT:', e);
     return null;
   }
 }

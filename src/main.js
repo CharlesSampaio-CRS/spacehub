@@ -1837,17 +1837,7 @@ ipcMain.handle('check-trial-status', async (event, userUuid) => {
     });
     
     if (response.data && response.data.data) {
-      const userData = response.data.data;
-      
-      // Debug: verificar se a data está sendo obtida
-      console.log('Dados do usuário obtidos:', {
-        uuid: userData.uuid,
-        email: userData.email,
-        plan: userData.plan,
-        createdAt: userData.createdAt,
-        createdAtType: typeof userData.createdAt
-      });
-      
+      const userData = response.data.data;      
       const isInTrial = trialManager.isUserInTrial(userData);
       const canHaveMoreApps = trialManager.canUserHaveMoreApps(userData);
       
