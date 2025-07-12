@@ -103,49 +103,84 @@ const loadApplications = async () => {
   }
 };
 
+const showSaveNotification = (success, language) => {
+  // Remover notificação anterior, se existir
+  document.querySelectorAll('.save-toast-notification').forEach(n => n.remove());
+
+  const translations = {
+    'pt-BR': {
+      success: 'Alterações salvas com sucesso!',
+      error: 'Erro ao salvar alterações!'
+    },
+    'en-US': {
+      success: 'Changes saved successfully!',
+      error: 'Error saving changes!'
+    }
+  };
+  const t = translations[language] || translations['pt-BR'];
+  const message = success ? t.success : t.error;
+  const icon = success ? 'fa-check-circle' : 'fa-exclamation-triangle';
+  const color = success ? '#4ecdc4' : '#ff6b6b';
+
+  const notification = document.createElement('div');
+  notification.className = 'save-toast-notification';
+  notification.style.position = 'fixed';
+  notification.style.top = '32px';
+  notification.style.right = '32px';
+  notification.style.zIndex = '9999';
+  notification.style.background = '#fff';
+  notification.style.color = '#222';
+  notification.style.padding = '18px 32px 18px 24px';
+  notification.style.borderRadius = '10px';
+  notification.style.boxShadow = '0 4px 16px rgba(0,0,0,0.12)';
+  notification.style.display = 'flex';
+  notification.style.alignItems = 'center';
+  notification.style.gap = '16px';
+  notification.style.fontSize = '16px';
+  notification.style.minWidth = '260px';
+  notification.style.maxWidth = '400px';
+  notification.style.borderLeft = `6px solid ${color}`;
+  notification.innerHTML = `
+    <i class="fas ${icon}" style="font-size: 22px; color: ${color};"></i>
+    <span style="flex:1;">${message}</span>
+    <button class="close-toast-btn" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:#888;">&times;</button>
+  `;
+  document.body.appendChild(notification);
+  // Fechar ao clicar no botão
+  notification.querySelector('.close-toast-btn').onclick = () => notification.remove();
+  // Remover após 10 segundos
+  setTimeout(() => notification.remove(), 10000);
+};
+
 const updateApplications = async () => {
   try {
     const auth = await getAuthData();
     if (!auth) return;
-
-    // Verificar trial status antes de atualizar
     const trialStatus = await window.electronAPI.checkTrialStatus(auth.userUuid);
     const currentLanguage = await window.electronAPI.invoke('get-language');
-    
     const toggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
     const applications = Array.from(toggles).map(toggle => ({
       uuid: toggle.id.replace('toggle-', ''),
       active: toggle.checked
     }));
-
-    // Se for usuário free fora do trial, limitar a 3 aplicações (WhatsApp, Discord, LinkedIn)
     if (trialStatus.plan === 'free' && !trialStatus.isInTrial) {
       const allowedApps = ['whatsapp', 'discord', 'linkedin'];
-      
-      // Desativar todas as aplicações exceto as permitidas
       applications.forEach(app => {
         const appData = toggles.find(toggle => toggle.id === `toggle-${app.uuid}`);
         if (appData) {
           const appName = appData.closest('.application-card').querySelector('p strong').textContent;
           const isAllowed = allowedApps.includes(appName.toLowerCase());
           app.active = isAllowed;
-          
-          // Atualizar o toggle visualmente
           appData.checked = isAllowed;
           appData.disabled = !isAllowed;
-          
           const toggleSwitch = appData.closest('.toggle-switch');
           if (toggleSwitch) {
             toggleSwitch.classList.toggle('disabled', !isAllowed);
           }
         }
       });
-      
-      // Mostrar aviso
       const warningMessage = translations[currentLanguage]['only_3_apps_allowed'] || 
                             'Apenas 3 aplicações podem estar ativas no plano gratuito. Aplicações extras foram desativadas.';
-      
-      // Criar notificação visual
       const notification = document.createElement('div');
       notification.className = 'trial-notification';
       notification.innerHTML = `
@@ -156,23 +191,17 @@ const updateApplications = async () => {
         </div>
       `;
       document.body.appendChild(notification);
-      
-      // Remover notificação após 5 segundos
       setTimeout(() => {
         if (notification.parentNode) {
           notification.parentNode.removeChild(notification);
         }
       }, 5000);
-      
-      // Fechar notificação ao clicar
       notification.querySelector('.close-notification').addEventListener('click', () => {
         if (notification.parentNode) {
           notification.parentNode.removeChild(notification);
         }
       });
     }
-
-    // Buscar aplicações atuais para obter dados completos
     const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${auth.userUuid}`, {
       method: 'GET',
       headers: {
@@ -180,11 +209,8 @@ const updateApplications = async () => {
         'Authorization': `Bearer ${auth.token}`
       }
     });
-    
     const data = await response.json();
     if (!Array.isArray(data.data.applications)) return;
-
-    // Atualizar status das aplicações
     const updatedApplications = data.data.applications.map(app => {
       const toggleState = applications.find(t => t.uuid === app.uuid);
       return {
@@ -192,8 +218,6 @@ const updateApplications = async () => {
         active: toggleState ? toggleState.active : app.active
       };
     });
-
-    // Enviar atualização para o servidor
     await fetch('https://spaceapp-digital-api.onrender.com/spaces', {
       method: 'PUT',
       headers: {
@@ -205,14 +229,12 @@ const updateApplications = async () => {
         applications: updatedApplications
       })
     });
-
-    // Recarregar aplicações para garantir sincronização
-    setTimeout(() => {
-      loadApplications();
-    }, 1000);
-
+    // Atualizar imediatamente após salvar
+    loadApplications();
+    showSaveNotification(true, currentLanguage);
   } catch (error) {
-    // Silenciar erros de rede
+    const currentLanguage = await window.electronAPI.invoke('get-language');
+    showSaveNotification(false, currentLanguage);
   }
 };
 
@@ -734,13 +756,12 @@ async function loadSystemInfo() {
 }
 
 const initializeSettingsPage = async () => {
+    // Carregar outras informações
+    loadApplications();
   // Carregar informações do sistema primeiro
   await loadSystemInfo();
-  
-  // Carregar outras informações
-  loadApplications();
+
   loadUserInfo();
-  
   // Restaurar configurações de tema e toggles
   setupDarkModeToggle();
   setupNotificationToggle();
@@ -880,18 +901,3 @@ async function checkForUpdates() {
     });
   }
 }
-
-window.electronAPI.on('reload-applications', () => {
-  // Função que recarrega as aplicações do menu lateral
-  carregarAplicacoesSidebar();
-});
-
-// Função para recarregar aplicações do sidebar
-const carregarAplicacoesSidebar = async () => {
-  try {
-    // Enviar evento para recarregar aplicações na página principal
-    window.electronAPI.send('reload-applications');
-  } catch (error) {
-    console.error('Erro ao recarregar aplicações do sidebar:', error);
-  }
-};

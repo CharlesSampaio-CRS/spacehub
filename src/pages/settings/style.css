@@ -1236,3 +1236,42 @@ body.dark-mode .trial-card .premium-status {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: #1f2937;
 }
+
+.save-toast-notification {
+  position: fixed;
+  top: 32px;
+  right: 32px;
+  z-index: 9999;
+  background: #fff;
+  color: #222;
+  padding: 18px 32px 18px 24px;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 16px;
+  min-width: 260px;
+  max-width: 400px;
+  border-left: 6px solid #4ecdc4;
+  animation: fadeIn 0.4s;
+}
+.save-toast-notification .close-toast-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: #888;
+  margin-left: 8px;
+}
+.save-toast-notification.success { border-left-color: #4ecdc4; }
+.save-toast-notification.error { border-left-color: #ff6b6b; }
+@media (max-width: 600px) {
+  .save-toast-notification {
+    right: 8px;
+    left: 8px;
+    min-width: unset;
+    max-width: unset;
+  }
+}

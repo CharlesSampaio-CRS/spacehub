@@ -1626,7 +1626,14 @@ const trialManager = {
     
     const createdAt = new Date(userData.createdAt);
     const now = new Date();
-    const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+    
+    // Resetar horários para comparar apenas as datas
+    const createdDate = new Date(createdAt.getFullYear(), createdAt.getMonth(), createdAt.getDate());
+    const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // Calcular diferença em dias
+    const timeDiff = currentDate.getTime() - createdDate.getTime();
+    const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
     
     return daysDiff <= 14;
   },
@@ -1831,6 +1838,16 @@ ipcMain.handle('check-trial-status', async (event, userUuid) => {
     
     if (response.data && response.data.data) {
       const userData = response.data.data;
+      
+      // Debug: verificar se a data está sendo obtida
+      console.log('Dados do usuário obtidos:', {
+        uuid: userData.uuid,
+        email: userData.email,
+        plan: userData.plan,
+        createdAt: userData.createdAt,
+        createdAtType: typeof userData.createdAt
+      });
+      
       const isInTrial = trialManager.isUserInTrial(userData);
       const canHaveMoreApps = trialManager.canUserHaveMoreApps(userData);
       
@@ -1839,12 +1856,35 @@ ipcMain.handle('check-trial-status', async (event, userUuid) => {
         canHaveMoreApps,
         plan: userData.plan || 'free',
         createdAt: userData.createdAt,
-        daysLeft: isInTrial ? Math.max(0, 14 - Math.floor((new Date() - new Date(userData.createdAt)) / (1000 * 60 * 60 * 24))) : 0
+        daysLeft: isInTrial ? (() => {
+          const createdAt = new Date(userData.createdAt);
+          const now = new Date();
+          
+          // Resetar horários para comparar apenas as datas
+          const createdDate = new Date(createdAt.getFullYear(), createdAt.getMonth(), createdAt.getDate());
+          const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          
+          // Calcular diferença em dias
+          const timeDiff = currentDate.getTime() - createdDate.getTime();
+          const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+          
+          console.log('Cálculo de dias:', {
+            createdAt: userData.createdAt,
+            parsedCreatedAt: createdAt,
+            createdDate: createdDate,
+            currentDate: currentDate,
+            daysDiff: daysDiff,
+            daysLeft: Math.max(0, 14 - daysDiff)
+          });
+          
+          return Math.max(0, 14 - daysDiff);
+        })() : 0
       };
     }
     
     return { isInTrial: false, canHaveMoreApps: false, plan: 'free', daysLeft: 0 };
   } catch (error) {
+    console.error('Erro ao verificar trial status:', error);
     return { isInTrial: false, canHaveMoreApps: false, plan: 'free', daysLeft: 0 };
   }
 });
