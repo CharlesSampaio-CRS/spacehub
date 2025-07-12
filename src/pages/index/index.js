@@ -755,8 +755,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             })
           : activeApps;
         
-        // Combinar aplicativos inativos + ativos ordenados (ativos por último)
-        const finalOrderedApps = [...inactiveApps, ...orderedActiveApps];
+        // Combinar aplicativos ativos ordenados + inativos (ativos primeiro)
+        const finalOrderedApps = [...orderedActiveApps, ...inactiveApps];
         
         finalOrderedApps.forEach(app => {
           const appId = `webview-${app.application.toLowerCase()}`;
@@ -779,8 +779,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
           navSection?.appendChild(button);
         });
-        // Aplica ordem salva (caso algum botão já exista)
-        applyAppButtonOrder(navSection);
+        // Remover a chamada que interfere na ordenação
+        // applyAppButtonOrder(navSection);
         // Ativa drag-and-drop
         setupAppButtonDragAndDrop(navSection);
       }
