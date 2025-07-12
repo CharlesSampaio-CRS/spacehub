@@ -69,32 +69,45 @@ const loadApplications = async () => {
     sortedApplications.forEach(app => {
       const appItem = document.createElement("div");
       appItem.className = "application-card";
+      // Garantir que o card seja relativo para posicionar a coroa
+      appItem.style.position = 'relative';
       
       // Verificar se deve desabilitar o toggle (apenas para usuários free fora do trial)
       const isDisabled = trialStatus.plan === 'free' && !trialStatus.isInTrial && !app.active;
+      const isPremiumOnly = trialStatus.plan === 'free' && !trialStatus.isInTrial && !['whatsapp','discord','linkedin'].includes(app.application.toLowerCase());
       
       appItem.innerHTML = `
+        ${isPremiumOnly ? '<span class="premium-crown"><i class="fas fa-crown"></i></span>' : ''}
         <div class="application-info">
-          <img src="${app.icon}" alt="${app.application}" class="app-icon" onerror="this.src='../../assets/${app.application.toLowerCase()}.png'">
+          <div class="app-icon-wrapper">
+            <img src="${app.icon}" alt="${app.application}" class="app-icon${isPremiumOnly ? ' disabled-app' : ''}" onerror="this.src='../../assets/${app.application.toLowerCase()}.png'" ${isPremiumOnly ? 'title="Disponível apenas para usuários premium"' : ''}>
+          </div>
           <div>
             <p><strong>${app.application}</strong></p>
           </div>
         </div>
         <div class="application-toggle ${isDisabled ? 'disabled' : ''}">
           <label class="toggle-switch">
-            <input type="checkbox" id="toggle-${app.uuid}" ${app.active ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}>
+            <input type="checkbox" id="toggle-${app.uuid}" ${app.active ? 'checked' : ''} ${isDisabled ? 'disabled' : ''} ${isPremiumOnly ? 'data-premium="1"' : ''}>
             <span class="slider"></span>
           </label>
         </div>
       `;
-      
       listContainer.appendChild(appItem);
     });
 
     // Adicionar eventos aos toggles
     const toggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
     toggles.forEach(toggle => {
-      toggle.addEventListener('change', updateApplications);
+      // Se for premium only, mostrar notificação ao tentar interagir
+      if (toggle.dataset.premium === "1") {
+        toggle.addEventListener('click', (e) => {
+          e.preventDefault();
+          showSaveNotification(false, (window.electronAPI && window.electronAPI.getLanguage && window.electronAPI.getLanguage()) || 'pt-BR', 'Disponível apenas para usuários premium');
+        });
+      } else {
+        toggle.addEventListener('change', updateApplications);
+      }
     });
 
   } catch (error) {

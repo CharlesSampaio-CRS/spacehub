@@ -1275,3 +1275,35 @@ body.dark-mode .trial-card .premium-status {
     max-width: unset;
   }
 }
+
+.disabled-app {
+  opacity: 0.4;
+  filter: grayscale(1);
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+.premium-crown {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  background: transparent;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #ffd700;
+  z-index: 2;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  pointer-events: none;
+  padding: 0;
+}
+.premium-crown i {
+  color: #ffd700;
+  font-size: 14px;
+  vertical-align: middle;
+  line-height: 1;
+}
