@@ -595,6 +595,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     saveAppButtonOrder(order);
   }
 
+  // Versão simplificada do setupAppButtonDragAndDrop para não interferir na ordenação
+  const setupAppButtonDragAndDropSimple = (navSection) => {
+    // Garante que todos os botões (exceto o Home) tenham draggable=true
+    navSection.querySelectorAll('.nav-button:not(#home-button)').forEach(btn => {
+      // Só permitir drag para apps ativos
+      if (!btn.classList.contains('disabled-app')) {
+        btn.setAttribute('draggable', 'true');
+      } else {
+        btn.setAttribute('draggable', 'false');
+      }
+      
+      // Reatribui o listener de clique
+      const appId = btn.getAttribute('data-id');
+      const buttonId = btn.id;
+      
+      // Verificar se é um app ativo ou inativo
+      if (!btn.classList.contains('disabled-app')) {
+        btn.onclick = () => showWebview(appId, buttonId);
+      } else {
+        btn.onclick = () => showWebview('webview-settings', 'settings-button');
+      }
+    });
+    
+    // Reatribui o listener de clique ao botão home
+    const homeButton = navSection.querySelector('#home-button');
+    if (homeButton) {
+      homeButton.onclick = () => showWebview('webview-home', 'home-button');
+    }
+  };
+
   function setupAppButtonDragAndDrop(navSection) {
     // Remove event listeners antigos (clonando o node)
     const newNavSection = navSection.cloneNode(true);
@@ -871,6 +901,148 @@ document.addEventListener('DOMContentLoaded', async () => {
     }).catch(err => console.error('Failed to get token:', err));
   };
 
+  // Nova função para atualização suave das aplicações
+  let isRefreshing = false; // Flag para evitar múltiplas chamadas simultâneas
+  
+  const smoothRefreshApplications = async () => {
+    if (isRefreshing) {
+      console.log('⏳ Atualização já em andamento, ignorando chamada...');
+      return;
+    }
+    
+    isRefreshing = true;
+    console.log('🔄 Iniciando atualização suave das aplicações...');
+    
+    try {
+      const token = await window.electronAPI.invoke('get-token');
+      const userUuid = await window.electronAPI.invoke('get-userUuid');
+      if (!token || !userUuid) {
+        console.log('❌ Token ou userUuid não encontrados, usando fallback');
+        refreshApplications();
+        return;
+      }
+
+      const trialStatus = await window.electronAPI.checkTrialStatus(userUuid);
+      
+      const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (!Array.isArray(data.data.applications)) {
+        console.log('❌ Dados de aplicações inválidos, usando fallback');
+        refreshApplications();
+        return;
+      }
+
+      console.log('✅ Dados obtidos com sucesso:', data.data.applications.length, 'aplicações');
+
+      const applications = data.data.applications;
+      const navSection = document.getElementById('nav-section');
+      if (!navSection) {
+        console.log('❌ Nav section não encontrada, usando fallback');
+        refreshApplications();
+        return;
+      }
+
+      // Ordenar aplicativos: ativos primeiro, depois inativos
+      const sortedApps = applications.sort((a, b) => {
+        if (a.active === b.active) {
+          return 0;
+        }
+        return a.active ? -1 : 1;
+      });
+      
+      // Recupera ordem salva apenas para aplicativos ativos
+      const savedOrder = getAppButtonOrder();
+      
+      // Separar aplicativos ativos e inativos
+      const activeApps = sortedApps.filter(app => app.active);
+      const inactiveApps = sortedApps.filter(app => !app.active);
+      
+      console.log('📊 Aplicações ativas:', activeApps.length, '| Inativas:', inactiveApps.length);
+      
+      // Ordenar aplicativos ativos conforme ordem salva
+      const orderedActiveApps = savedOrder.length
+        ? activeApps.slice().sort((a, b) => {
+            const aId = `${a.application.toLowerCase()}-button`;
+            const bId = `${b.application.toLowerCase()}-button`;
+            const aIdx = savedOrder.indexOf(aId);
+            const bIdx = savedOrder.indexOf(bId);
+            if (aIdx === -1 && bIdx === -1) return 0;
+            if (aIdx === -1) return 1;
+            if (bIdx === -1) return -1;
+            return aIdx - bIdx;
+          })
+        : activeApps;
+      
+      // Combinar aplicativos ativos ordenados + inativos (ativos primeiro)
+      const finalOrderedApps = [...orderedActiveApps, ...inactiveApps];
+
+      // Salvar o botão ativo e opened antes de remover
+      const prevActive = navSection.querySelector('.nav-button.active');
+      const prevOpened = navSection.querySelector('.nav-button.opened');
+      const prevActiveId = prevActive ? prevActive.id : null;
+      const prevOpenedId = prevOpened ? prevOpened.id : null;
+
+      // Remover todos os botões de aplicação (exceto home/trial) antes de inserir novamente
+      navSection.querySelectorAll('.nav-button:not(#home-button):not(#trial-button)').forEach(btn => btn.remove());
+
+      // Restaurar classe active/opened no botão home se necessário
+      const homeButton = navSection.querySelector('#home-button');
+      if (homeButton && homeButton.id === prevActiveId) homeButton.classList.add('active');
+      if (homeButton && homeButton.id === prevOpenedId) homeButton.classList.add('opened');
+
+      // Processar cada aplicação na ordem correta
+      finalOrderedApps.forEach((app, index) => {
+        const appId = `webview-${app.application.toLowerCase()}`;
+        const buttonId = `${app.application.toLowerCase()}-button`;
+
+        // Adicionar ao serviceMap apenas se estiver ativo
+        if (app.active) {
+          serviceMap[appId] = app.url;
+          services[buttonId] = appId;
+        }
+
+        // Criar novo botão
+        const button = createApplicationButton(app, trialStatus);
+        if (app.active) {
+          button.addEventListener('click', () => showWebview(appId, buttonId));
+        } else {
+          button.addEventListener('click', () => {
+            showWebview('webview-settings', 'settings-button');
+          });
+        }
+        // Restaurar classe active/opened se for o mesmo botão
+        if (buttonId === prevActiveId) button.classList.add('active');
+        if (buttonId === prevOpenedId) button.classList.add('opened');
+        // Inserir na posição correta (antes do trial, se existir)
+        const trialButton = navSection.querySelector('#trial-button');
+        if (trialButton) {
+          navSection.insertBefore(button, trialButton);
+        } else {
+          navSection.appendChild(button);
+        }
+      });
+
+      // Reativar drag-and-drop
+      setupAppButtonDragAndDrop(navSection);
+      console.log('✅ Atualização suave concluída com sucesso!');
+      
+    } catch (error) {
+      console.error('❌ Erro na atualização suave:', error);
+      console.log('🔄 Usando fallback (refreshApplications)...');
+      refreshApplications();
+    } finally {
+      isRefreshing = false;
+    }
+  };
+
   const setupButtonEvents = () => {
     Object.entries(services).forEach(([btnId, webviewId]) => {
       document.getElementById(btnId)?.addEventListener('click', () => showWebview(webviewId, btnId));
@@ -1083,8 +1255,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Evento separado para recarregar aplicações (emitido pelo processo principal)
   window.electronAPI.on('reload-applications', () => {
-    refreshApplications();
+    console.log('📡 Evento reload-applications recebido!');
+    smoothRefreshApplications();
   });
+
+  // Teste manual temporário - remover depois
+  window.testRefresh = () => {
+    console.log('🧪 Teste manual de refresh iniciado');
+    smoothRefreshApplications();
+  };
 
   const setupDarkMode = () => {
     // Verificar se o modo escuro está ativado no localStorage
