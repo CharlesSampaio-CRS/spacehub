@@ -1110,6 +1110,28 @@ body.dark-mode .trial-notification {
   border-radius: 6px;
   overflow: hidden;
   width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  box-sizing: border-box;
+}
+
+.trial-card .premium-status,
+.trial-card .trial-warning,
+.trial-card .trial-info {
+  border-radius: 0;
+  padding: 0;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.trial-card .status-content,
+.trial-card .warning-content,
+.trial-card .info-content {
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .trial-card .trial-warning {
@@ -1221,6 +1243,9 @@ body.dark-mode .trial-notification {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
 }
 
 /* Dark mode adjustments for trial card */

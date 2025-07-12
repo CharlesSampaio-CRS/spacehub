@@ -339,12 +339,8 @@ const loadUserInfo = async () => {
           <div class="status-content">
             <i class="fas fa-crown"></i>
             <div>
-              <h4>${translations[currentLanguage]?.['premium_plan_active'] || 'Plano Premium Ativo'}</h4>
+              <h4>${translations[currentLanguage]?.['premium_plan_active'] ||  'Premium'}</h4>
               <p>${translations[currentLanguage]?.['premium_plan_description'] || 'Acesso completo a todos os recursos'}</p>
-              <button class="manage-subscription-btn">
-                <i class="fas fa-cog"></i>
-                ${translations[currentLanguage]?.['manage'] || 'Gerenciar'}
-              </button>
             </div>
           </div>
         </div>
@@ -361,14 +357,6 @@ const loadUserInfo = async () => {
       upgradeBtn.addEventListener('click', () => {
         // Abrir site de pagamentos
         window.electronAPI.openExternal('https://spaceapp-digital.com/pricing');
-      });
-    }
-
-    const manageBtn = trialCard.querySelector('.manage-subscription-btn');
-    if (manageBtn) {
-      manageBtn.addEventListener('click', () => {
-        // Abrir página de gerenciamento de assinatura
-        window.electronAPI.openExternal('https://spaceapp-digital.com/account');
       });
     }
 
@@ -504,7 +492,7 @@ const translations = {
     'save_success': 'Alterações salvas com sucesso!',
     'save_error': 'Erro ao salvar alterações!',
     'Desconhecido': 'Desconhecido',
-    'premium_plan_active': 'Plano Premium Ativo',
+    'premium_plan_active': 'Premium',
     'premium_plan_description': 'Acesso completo a todos os recursos',
     'manage': 'Gerenciar',
     'premium_only': 'Disponível apenas para usuários premium'
@@ -551,7 +539,7 @@ const translations = {
     'save_success': 'Changes saved successfully!',
     'save_error': 'Error saving changes!',
     'Desconhecido': 'Unknown',
-    'premium_plan_active': 'Premium Plan Active',
+    'premium_plan_active': 'Premium',
     'premium_plan_description': 'Full access to all features',
     'manage': 'Manage',
     'premium_only': 'Available only for premium users'
