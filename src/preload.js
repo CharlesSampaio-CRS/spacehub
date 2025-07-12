@@ -49,6 +49,15 @@ const languageAPI = {
   sendLanguageChanged: (language) => ipcRenderer.send('language-changed', language)
 };
 
+const trialAPI = {
+  checkTrialStatus: (userUuid) => ipcRenderer.invoke('check-trial-status', userUuid),
+  limitApplications: (userUuid) => ipcRenderer.invoke('limit-applications', userUuid),
+  manualTrialCheck: () => ipcRenderer.invoke('manual-trial-check'),
+  forceLogout: () => ipcRenderer.invoke('force-logout'),
+  onForceLogout: (callback) => ipcRenderer.on('force-logout', (_, data) => callback(data)),
+  testApplicationLimitation: (userUuid) => ipcRenderer.invoke('test-application-limitation', userUuid)
+};
+
 const ipcAPI = {
   invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
   send: (channel, data) => ipcRenderer.send(channel, data),
@@ -56,14 +65,30 @@ const ipcAPI = {
   handle: (channel, callback) => ipcRenderer.handle(channel, callback)
 };
 
-// Expose all APIs through a single electronAPI object
+// Expose APIs to renderer process
 contextBridge.exposeInMainWorld('electronAPI', {
+  // Auth API
   ...authAPI,
+  
+  // Session API
   ...sessionAPI,
+  
+  // Window API
   ...windowAPI,
+  
+  // Update API
   ...updateAPI,
+  
+  // Trial API
+  ...trialAPI,
+  
+  // Theme API
   ...themeAPI,
+  
+  // Language API
   ...languageAPI,
+  
+  // IPC API
   ...ipcAPI
 });
 

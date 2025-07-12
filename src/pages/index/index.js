@@ -580,8 +580,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   function applyAppButtonOrder(navSection) {
     const order = getAppButtonOrder();
     if (!order.length) return;
-    // Seleciona todos os botões exceto o home
-    const buttons = Array.from(navSection.querySelectorAll('.nav-button:not(#home-button)'));
+    // Seleciona todos os botões exceto o home e os desabilitados
+    const buttons = Array.from(navSection.querySelectorAll('.nav-button:not(#home-button):not(.disabled-app)'));
     // Ordena os botões conforme o array salvo
     order.forEach(buttonId => {
       const btn = buttons.find(b => b.id === buttonId);
@@ -590,10 +590,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function updateAndSaveAppButtonOrder(navSection) {
-    // Salva a ordem atual dos botões exceto o home
-    const order = Array.from(navSection.querySelectorAll('.nav-button:not(#home-button)')).map(btn => btn.id);
+    // Salva a ordem atual dos botões exceto o home e os desabilitados
+    const order = Array.from(navSection.querySelectorAll('.nav-button:not(#home-button):not(.disabled-app)')).map(btn => btn.id);
     saveAppButtonOrder(order);
   }
+
+  // Versão simplificada do setupAppButtonDragAndDrop para não interferir na ordenação
+  const setupAppButtonDragAndDropSimple = (navSection) => {
+    // Garante que todos os botões (exceto o Home) tenham draggable=true
+    navSection.querySelectorAll('.nav-button:not(#home-button)').forEach(btn => {
+      // Só permitir drag para apps ativos
+      if (!btn.classList.contains('disabled-app')) {
+        btn.setAttribute('draggable', 'true');
+      } else {
+        btn.setAttribute('draggable', 'false');
+      }
+      
+      // Reatribui o listener de clique
+      const appId = btn.getAttribute('data-id');
+      const buttonId = btn.id;
+      
+      // Verificar se é um app ativo ou inativo
+      if (!btn.classList.contains('disabled-app')) {
+        btn.onclick = () => showWebview(appId, buttonId);
+      } else {
+        btn.onclick = () => showWebview('webview-settings', 'settings-button');
+      }
+    });
+    
+    // Reatribui o listener de clique ao botão home
+    const homeButton = navSection.querySelector('#home-button');
+    if (homeButton) {
+      homeButton.onclick = () => showWebview('webview-home', 'home-button');
+    }
+  };
 
   function setupAppButtonDragAndDrop(navSection) {
     // Remove event listeners antigos (clonando o node)
@@ -603,11 +633,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Garante que todos os botões (exceto o Home) tenham draggable=true
     navSection.querySelectorAll('.nav-button:not(#home-button)').forEach(btn => {
-      btn.setAttribute('draggable', 'true');
+      // Só permitir drag para apps ativos
+      if (!btn.classList.contains('disabled-app')) {
+        btn.setAttribute('draggable', 'true');
+      } else {
+        btn.setAttribute('draggable', 'false');
+      }
+      
       // Reatribui o listener de clique
       const appId = btn.getAttribute('data-id');
       const buttonId = btn.id;
-      btn.onclick = () => showWebview(appId, buttonId);
+      
+      // Verificar se é um app ativo ou inativo
+      if (!btn.classList.contains('disabled-app')) {
+        btn.onclick = () => showWebview(appId, buttonId);
+      } else {
+        btn.onclick = () => showWebview('webview-settings', 'settings-button');
+      }
     });
     // Reatribui o listener de clique ao botão home
     const homeButton = navSection.querySelector('#home-button');
@@ -619,7 +661,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let dragOverBtn = null;
 
     navSection.addEventListener('dragstart', (e) => {
-      if (e.target.classList.contains('nav-button') && e.target.id !== 'home-button') {
+      if (e.target.classList.contains('nav-button') && e.target.id !== 'home-button' && !e.target.classList.contains('disabled-app')) {
         dragged = e.target;
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', e.target.id);
@@ -638,7 +680,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.preventDefault();
       if (!dragged) return;
       const afterElement = getDragAfterElement(navSection, e.clientY);
-      if (afterElement && afterElement !== dragged && afterElement.id !== 'home-button') {
+      if (afterElement && afterElement !== dragged && afterElement.id !== 'home-button' && !afterElement.classList.contains('disabled-app')) {
         navSection.insertBefore(dragged, afterElement);
         if (dragOverBtn && dragOverBtn !== afterElement) dragOverBtn.classList.remove('drag-over');
         dragOverBtn = afterElement;
@@ -667,7 +709,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function getDragAfterElement(container, y) {
-    const draggableElements = [...container.querySelectorAll('.nav-button:not(#home-button):not(.dragging)')];
+    const draggableElements = [...container.querySelectorAll('.nav-button:not(#home-button):not(.dragging):not(.disabled-app)')];
     return draggableElements.reduce((closest, child) => {
       const box = child.getBoundingClientRect();
       const offset = y - box.top - box.height / 2;
@@ -679,7 +721,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, { offset: -Infinity }).element;
   }
 
-  const loadWithToken = (token, userUuid) => {
+  const loadWithToken = async (token, userUuid) => {
     const navSection = document.getElementById('nav-section');
     if (navSection) {
       navSection.innerHTML = '';
@@ -693,54 +735,113 @@ document.addEventListener('DOMContentLoaded', async () => {
       navSection.appendChild(homeButton);
     }
 
-    fetch(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (Array.isArray(data.data.applications)) {
-          // Cria um mapa dos apps ativos
-          const activeApps = data.data.applications.filter(app => app.active == true);
-          // Recupera ordem salva
-          const savedOrder = getAppButtonOrder();
-          // Ordena apps conforme ordem salva, apps novos vão para o final
-          const orderedApps = savedOrder.length
-            ? activeApps.slice().sort((a, b) => {
-                const aId = `${a.application.toLowerCase()}-button`;
-                const bId = `${b.application.toLowerCase()}-button`;
-                const aIdx = savedOrder.indexOf(aId);
-                const bIdx = savedOrder.indexOf(bId);
-                if (aIdx === -1 && bIdx === -1) return 0;
-                if (aIdx === -1) return 1;
-                if (bIdx === -1) return -1;
-                return aIdx - bIdx;
-              })
-            : activeApps;
-          orderedApps.forEach(app => {
-            const appId = `webview-${app.application.toLowerCase()}`;
-            const buttonId = `${app.application.toLowerCase()}-button`;
+    try {
+      // Verificar trial status primeiro
+      const trialStatus = await window.electronAPI.checkTrialStatus(userUuid);
+      
+      const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (Array.isArray(data.data.applications)) {
+        const applications = data.data.applications;
+        // Mostrar TODOS os aplicativos para todos os usuários
+        const appsToShow = applications;
+        
+        // Ordenar aplicativos: ativos primeiro (de baixo para cima), depois inativos
+        const sortedApps = appsToShow.sort((a, b) => {
+          // Se ambos são ativos ou ambos são inativos, manter ordem original
+          if (a.active === b.active) {
+            return 0;
+          }
+          // Aplicativos ativos vêm primeiro (serão inseridos de baixo para cima)
+          return a.active ? -1 : 1;
+        });
+        
+        // Recupera ordem salva apenas para aplicativos ativos
+        const savedOrder = getAppButtonOrder();
+        
+        // Separar aplicativos ativos e inativos
+        const activeApps = sortedApps.filter(app => app.active);
+        const inactiveApps = sortedApps.filter(app => !app.active);
+        
+        // Ordenar aplicativos ativos conforme ordem salva
+        const orderedActiveApps = savedOrder.length
+          ? activeApps.slice().sort((a, b) => {
+              const aId = `${a.application.toLowerCase()}-button`;
+              const bId = `${b.application.toLowerCase()}-button`;
+              const aIdx = savedOrder.indexOf(aId);
+              const bIdx = savedOrder.indexOf(bId);
+              if (aIdx === -1 && bIdx === -1) return 0;
+              if (aIdx === -1) return 1;
+              if (bIdx === -1) return -1;
+              return aIdx - bIdx;
+            })
+          : activeApps;
+        
+        // Combinar aplicativos ativos ordenados + inativos (ativos primeiro)
+        const finalOrderedApps = [...orderedActiveApps, ...inactiveApps];
+        
+        finalOrderedApps.forEach(app => {
+          const appId = `webview-${app.application.toLowerCase()}`;
+          const buttonId = `${app.application.toLowerCase()}-button`;
 
+          // Adicionar ao serviceMap apenas se estiver ativo
+          if (app.active) {
             serviceMap[appId] = app.url;
             services[buttonId] = appId;
+          }
 
-            const button = createApplicationButton(app);
+          const button = createApplicationButton(app, trialStatus);
+          if (app.active) {
             button.addEventListener('click', () => showWebview(appId, buttonId));
-            navSection?.appendChild(button);
-          });
-          // Aplica ordem salva (caso algum botão já exista)
-          applyAppButtonOrder(navSection);
-          // Ativa drag-and-drop
-          setupAppButtonDragAndDrop(navSection);
-        }
-      })
-      .catch(error => console.error('Error loading applications:', error));
+          } else {
+            // Para apps inativos, redirecionar para settings
+            button.addEventListener('click', () => {
+              showWebview('webview-settings', 'settings-button');
+            });
+          }
+          navSection?.appendChild(button);
+        });
+        // Remover a chamada que interfere na ordenação
+        // applyAppButtonOrder(navSection);
+        // Ativa drag-and-drop
+        setupAppButtonDragAndDrop(navSection);
+      }
+
+      // Adicionar botão de trial no final do sidebar se for usuário free
+      if (trialStatus.plan === 'free') {
+        const trialButton = document.createElement('button');
+        trialButton.id = 'trial-button';
+        trialButton.className = 'nav-button trial-button';
+        trialButton.title = trialStatus.isInTrial ? 'Trial Ativo' : 'Fazer Upgrade';
+        trialButton.setAttribute('data-id', 'trial-button');
+        
+        // Definir ícone baseado no status do trial
+        const icon = trialStatus.isInTrial ? 'fas fa-clock' : 'fas fa-crown';
+        const color = trialStatus.isInTrial ? '#4ecdc4' : '#ff6b6b';
+        
+        trialButton.innerHTML = `<i class="${icon}" style="color: ${color}; font-size: 24px;"></i>`;
+        
+        trialButton.addEventListener('click', () => {
+          // Abrir site de pagamentos
+          window.electronAPI.openExternal('https://spaceapp-digital.com/pricing');
+        });
+        
+        navSection?.appendChild(trialButton);
+      }
+    } catch (error) {
+      // Silenciar erros de rede
+    }
   };
 
-  function createApplicationButton(app) {
+  function createApplicationButton(app, trialStatus) {
     const button = document.createElement('button');
     const appId = `webview-${app.application.toLowerCase()}`;
     const buttonId = `${app.application.toLowerCase()}-button`;
@@ -751,6 +852,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     button.setAttribute('data-id', appId);
     button.setAttribute('draggable', 'true'); // Torna arrastável
     button.style.cursor = 'grab'; // Visual de arrasto
+
+    // Se o app não estiver ativo, aplicar classe de desabilitado
+    if (!app.active) {
+      button.classList.add('disabled-app');
+      // Remover o title/alt para aplicativos inativos
+      button.removeAttribute('title');
+    }
 
     const img = document.createElement('img');
     img.src = app.icon;
@@ -771,6 +879,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     button.appendChild(img);
 
+    // Remover a adição do ícone de coroa para apps inativos
+
     // Garante que dragstart funcione ao clicar na imagem
     img.addEventListener('mousedown', (e) => {
       // Redireciona o drag para o botão
@@ -789,6 +899,148 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadWithToken(token, userUuid);
       }).catch(err => console.error('Failed to get userUuid:', err));
     }).catch(err => console.error('Failed to get token:', err));
+  };
+
+  // Nova função para atualização suave das aplicações
+  let isRefreshing = false; // Flag para evitar múltiplas chamadas simultâneas
+  
+  const smoothRefreshApplications = async () => {
+    if (isRefreshing) {
+      console.log('⏳ Atualização já em andamento, ignorando chamada...');
+      return;
+    }
+    
+    isRefreshing = true;
+    console.log('🔄 Iniciando atualização suave das aplicações...');
+    
+    try {
+      const token = await window.electronAPI.invoke('get-token');
+      const userUuid = await window.electronAPI.invoke('get-userUuid');
+      if (!token || !userUuid) {
+        console.log('❌ Token ou userUuid não encontrados, usando fallback');
+        refreshApplications();
+        return;
+      }
+
+      const trialStatus = await window.electronAPI.checkTrialStatus(userUuid);
+      
+      const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (!Array.isArray(data.data.applications)) {
+        console.log('❌ Dados de aplicações inválidos, usando fallback');
+        refreshApplications();
+        return;
+      }
+
+      console.log('✅ Dados obtidos com sucesso:', data.data.applications.length, 'aplicações');
+
+      const applications = data.data.applications;
+      const navSection = document.getElementById('nav-section');
+      if (!navSection) {
+        console.log('❌ Nav section não encontrada, usando fallback');
+        refreshApplications();
+        return;
+      }
+
+      // Ordenar aplicativos: ativos primeiro, depois inativos
+      const sortedApps = applications.sort((a, b) => {
+        if (a.active === b.active) {
+          return 0;
+        }
+        return a.active ? -1 : 1;
+      });
+      
+      // Recupera ordem salva apenas para aplicativos ativos
+      const savedOrder = getAppButtonOrder();
+      
+      // Separar aplicativos ativos e inativos
+      const activeApps = sortedApps.filter(app => app.active);
+      const inactiveApps = sortedApps.filter(app => !app.active);
+      
+      console.log('📊 Aplicações ativas:', activeApps.length, '| Inativas:', inactiveApps.length);
+      
+      // Ordenar aplicativos ativos conforme ordem salva
+      const orderedActiveApps = savedOrder.length
+        ? activeApps.slice().sort((a, b) => {
+            const aId = `${a.application.toLowerCase()}-button`;
+            const bId = `${b.application.toLowerCase()}-button`;
+            const aIdx = savedOrder.indexOf(aId);
+            const bIdx = savedOrder.indexOf(bId);
+            if (aIdx === -1 && bIdx === -1) return 0;
+            if (aIdx === -1) return 1;
+            if (bIdx === -1) return -1;
+            return aIdx - bIdx;
+          })
+        : activeApps;
+      
+      // Combinar aplicativos ativos ordenados + inativos (ativos primeiro)
+      const finalOrderedApps = [...orderedActiveApps, ...inactiveApps];
+
+      // Salvar o botão ativo e opened antes de remover
+      const prevActive = navSection.querySelector('.nav-button.active');
+      const prevOpened = navSection.querySelector('.nav-button.opened');
+      const prevActiveId = prevActive ? prevActive.id : null;
+      const prevOpenedId = prevOpened ? prevOpened.id : null;
+
+      // Remover todos os botões de aplicação (exceto home/trial) antes de inserir novamente
+      navSection.querySelectorAll('.nav-button:not(#home-button):not(#trial-button)').forEach(btn => btn.remove());
+
+      // Restaurar classe active/opened no botão home se necessário
+      const homeButton = navSection.querySelector('#home-button');
+      if (homeButton && homeButton.id === prevActiveId) homeButton.classList.add('active');
+      if (homeButton && homeButton.id === prevOpenedId) homeButton.classList.add('opened');
+
+      // Processar cada aplicação na ordem correta
+      finalOrderedApps.forEach((app, index) => {
+        const appId = `webview-${app.application.toLowerCase()}`;
+        const buttonId = `${app.application.toLowerCase()}-button`;
+
+        // Adicionar ao serviceMap apenas se estiver ativo
+        if (app.active) {
+          serviceMap[appId] = app.url;
+          services[buttonId] = appId;
+        }
+
+        // Criar novo botão
+        const button = createApplicationButton(app, trialStatus);
+        if (app.active) {
+          button.addEventListener('click', () => showWebview(appId, buttonId));
+        } else {
+          button.addEventListener('click', () => {
+            showWebview('webview-settings', 'settings-button');
+          });
+        }
+        // Restaurar classe active/opened se for o mesmo botão
+        if (buttonId === prevActiveId) button.classList.add('active');
+        if (buttonId === prevOpenedId) button.classList.add('opened');
+        // Inserir na posição correta (antes do trial, se existir)
+        const trialButton = navSection.querySelector('#trial-button');
+        if (trialButton) {
+          navSection.insertBefore(button, trialButton);
+        } else {
+          navSection.appendChild(button);
+        }
+      });
+
+      // Reativar drag-and-drop
+      setupAppButtonDragAndDrop(navSection);
+      console.log('✅ Atualização suave concluída com sucesso!');
+      
+    } catch (error) {
+      console.error('❌ Erro na atualização suave:', error);
+      console.log('🔄 Usando fallback (refreshApplications)...');
+      refreshApplications();
+    } finally {
+      isRefreshing = false;
+    }
   };
 
   const setupButtonEvents = () => {
@@ -1003,8 +1255,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Evento separado para recarregar aplicações (emitido pelo processo principal)
   window.electronAPI.on('reload-applications', () => {
-    refreshApplications();
+    console.log('📡 Evento reload-applications recebido!');
+    smoothRefreshApplications();
   });
+
+  // Teste manual temporário - remover depois
+  window.testRefresh = () => {
+    console.log('🧪 Teste manual de refresh iniciado');
+    smoothRefreshApplications();
+  };
 
   const setupDarkMode = () => {
     // Verificar se o modo escuro está ativado no localStorage
@@ -1200,6 +1459,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
+  // Adicionar traduções para trial
+  const trialTranslations = {
+    'pt-BR': {
+      'trial_expired_notification': 'Seu período de trial expirou. Apenas 3 aplicações podem estar ativas no plano gratuito.'
+    },
+    'en-US': {
+      'trial_expired_notification': 'Your trial period has expired. Only 3 applications can be active in the free plan.'
+    }
+  };
+
   // Adicionar listener para mudanças no idioma
   window.electronAPI.onLanguageChanged((language) => {
     document.documentElement.lang = language;
@@ -1358,6 +1627,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Listener para logout automático quando trial expirar
+  window.electronAPI.onForceLogout((data) => {
+    const { reason, message } = data;
+    
+    // Mostrar notificação de logout
+    const notification = document.createElement('div');
+    notification.className = 'trial-notification';
+    notification.innerHTML = `
+      <div class="notification-content">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>${message}</span>
+      </div>
+    `;
+    document.body.appendChild(notification);
+    
+    // Aguardar 3 segundos e então fazer logout
+    setTimeout(async () => {
+      try {
+        await window.electronAPI.forceLogout();
+      } catch (error) {
+        console.error('Erro ao fazer logout automático:', error);
+      }
+    }, 3000);
+  });
+
   // Listener para ações do menu de usuário nativo
   window.electronAPI.on('profile-menu-action', async (event, action) => {
     // Garante que o objeto translations está disponível
@@ -1402,6 +1696,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Inicialização
   const init = async () => {
     try {
+      // (Removido localStorage.removeItem('user'); para não afetar o carregamento)
       // Configurar idioma inicial
       const currentLanguage = await window.electronAPI.getLanguage();
       document.documentElement.lang = currentLanguage;
