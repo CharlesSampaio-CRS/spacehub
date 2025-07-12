@@ -37,7 +37,7 @@ body.dark-mode {
 
 .main-wrapper {
   height: 100vh;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
 }
@@ -63,9 +63,10 @@ body.dark-mode {
 
 #content-container {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  height: calc(100vh - 40px);
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 380px 1fr;
+  gap: 16px;
+  height: calc(100vh - 32px);
   overflow: hidden;
 }
 
@@ -73,7 +74,7 @@ body.dark-mode {
   background: var(--card-bg);
   border-radius: 12px;
   box-shadow: var(--card-shadow);
-  padding: 20px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -82,11 +83,13 @@ body.dark-mode {
 #profile-section {
   grid-column: 1;
   grid-row: 1;
+  max-height: 380px;
 }
 
 #preferences-section {
   grid-column: 2;
   grid-row: 1;
+  max-height: 380px;
 }
 
 #applications-section {
@@ -98,14 +101,14 @@ body.dark-mode {
 .applications-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin-bottom: 15px;
+  gap: 18px;
+  margin-bottom: 18px;
 }
 
 .application-card {
   background: var(--secondary-color);
   border-radius: 10px;
-  padding: 15px;
+  padding: 16px;
   transition: var(--transition);
   border: 1px solid var(--border-color);
 }
@@ -116,18 +119,23 @@ body.dark-mode {
 }
 
 .application-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
 .dark-mode .application-card:hover {
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 .application-info {
   display: flex;
   align-items: center;
   gap: 15px;
+}
+
+/* Ajuste específico para cards de usuário sem ícones */
+.application-card .application-info {
+  justify-content: flex-start;
 }
 
 .application-info img {
@@ -140,6 +148,21 @@ body.dark-mode {
 }
 
 .dark-mode .application-info img {
+  background: transparent;
+  padding: 0;
+}
+
+/* CSS específico para imagens das aplicações */
+.application-card .application-info img {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: contain;
+  background: white;
+  padding: 2px;
+}
+
+.dark-mode .application-card .application-info img {
   background: transparent;
   padding: 0;
 }
@@ -168,14 +191,14 @@ body.dark-mode {
 #settings-panel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .setting-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -185,18 +208,18 @@ body.dark-mode {
 
 .application-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
   overflow: auto;
-  padding: 10px;
-  margin: 10px 0;
+  padding: 8px;
+  margin: 8px 0;
 }
 
 .application-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 14px 16px;
   background: var(--secondary-color);
   border-radius: 12px;
   transition: var(--transition);
@@ -247,8 +270,8 @@ body.dark-mode {
 }
 
 .save-button-container {
-  margin-top: 20px;
-  padding: 15px 0;
+  margin-top: 16px;
+  padding: 12px 0;
   border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: center;
@@ -262,7 +285,7 @@ body.dark-mode {
   background: var(--primary-color);
   color: white;
   border: none;
-  padding: 12px 32px;
+  padding: 10px 28px;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
@@ -310,9 +333,9 @@ body.dark-mode {
 }
 
 #applications-section h2 {
-  font-size: 20px;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
+  font-size: 18px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
   border-bottom: 2px solid var(--primary-color);
   color: var(--primary-color);
   font-weight: 500;
@@ -912,4 +935,304 @@ input:focus {
   padding: 0.75rem 2rem;
   font-size: 1rem;
   border-radius: 4px;
+}
+
+/* Trial Warning and Info Styles */
+.trial-warning {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.trial-info {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
+}
+
+.warning-content,
+.info-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.warning-content i,
+.info-content i {
+  font-size: 20px;
+  margin-top: 2px;
+}
+
+.warning-content div,
+.info-content div {
+  flex: 1;
+}
+
+.warning-content h4,
+.info-content h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.warning-content p,
+.info-content p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.upgrade-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+}
+
+.upgrade-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Disabled toggle styles */
+.toggle-switch.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle-switch.disabled input {
+  cursor: not-allowed;
+}
+
+.trial-limit {
+  display: block;
+  font-size: 11px;
+  color: #ef4444;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Dark mode adjustments */
+body.dark-mode .trial-warning {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+body.dark-mode .trial-info {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+/* Trial Notification Styles */
+.trial-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(255, 107, 107, 0.4);
+  z-index: 10000;
+  max-width: 400px;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.notification-content i {
+  font-size: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.notification-content span {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.close-notification {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.close-notification:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Dark mode adjustments */
+body.dark-mode .trial-notification {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+/* Trial Card in Profile Section */
+.trial-card {
+  margin-top: 6px;
+  border-radius: 6px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.trial-card .trial-warning {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: white;
+  padding: 6px;
+}
+
+.trial-card .trial-info {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  color: white;
+  padding: 6px;
+}
+
+.trial-card .premium-status {
+  background: linear-gradient(135deg, #ffd700, #ffb347);
+  color: #333;
+  padding: 6px;
+}
+
+.trial-card .warning-content,
+.trial-card .info-content,
+.trial-card .status-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trial-card .warning-content i,
+.trial-card .info-content i,
+.trial-card .status-content i {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.trial-card .warning-content div,
+.trial-card .info-content div,
+.trial-card .status-content div {
+  flex: 1;
+}
+
+.trial-card .warning-content h4,
+.trial-card .info-content h4,
+.trial-card .status-content h4 {
+  margin: 0 0 2px 0;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.trial-card .warning-content p,
+.trial-card .info-content p,
+.trial-card .status-content p {
+  margin: 0 0 4px 0;
+  font-size: 9px;
+  opacity: 0.9;
+  line-height: 1.2;
+}
+
+/* Buttons */
+.trial-card .upgrade-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: fit-content;
+}
+
+.trial-card .upgrade-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.manage-subscription-btn {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  color: #333;
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: fit-content;
+}
+
+.manage-subscription-btn:hover {
+  background: rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Container específico para o trial card */
+.trial-card-container {
+  position: relative;
+}
+
+.trial-card-container .user-info {
+  min-height: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Dark mode adjustments for trial card */
+body.dark-mode .trial-card .trial-warning {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+body.dark-mode .trial-card .trial-info {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+body.dark-mode .trial-card .premium-status {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #1f2937;
 }

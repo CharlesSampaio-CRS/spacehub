@@ -20,7 +20,6 @@
           <!-- Cartões de Perfil -->
           <div class="application-card">
             <div class="application-info">
-              <img width="48" height="48" src="https://img.icons8.com/fluency/48/contract-job.png" alt="Perfil" />
               <div>
                 <div class="status-label" data-translate="Perfil">Perfil</div>
                 <div id="userType" class="user-info"></div>
@@ -30,7 +29,6 @@
 
           <div class="application-card">
             <div class="application-info">
-              <img width="48" height="48" src="https://img.icons8.com/color/48/men-age-group-4.png" alt="Nome" />
               <div>
                 <div class="status-label" data-translate="Nome">Nome</div>
                 <div id="userName" class="user-info"></div>
@@ -40,7 +38,6 @@
 
           <div class="application-card">
             <div class="application-info">
-              <img width="48" height="48" src="https://img.icons8.com/emoji/48/e-mail.png" alt="Email" />
               <div>
                 <div class="status-label" data-translate="Email">Email</div>
                 <div id="userEmail" class="user-info"></div>
@@ -48,12 +45,14 @@
             </div>
           </div>
 
-          <div class="application-card">
+          <!-- Card de Trial (substitui o card do plano) -->
+          <div class="application-card trial-card-container">
             <div class="application-info">
-              <img width="48" height="48" src="https://img.icons8.com/color/48/diamond.png" alt="Plano" />
               <div>
                 <div class="status-label" data-translate="Plano">Plano</div>
-                <div id="userPlan" class="user-info"></div>
+                <div id="trialCardPlaceholder" class="user-info">
+                  <!-- O card de trial será inserido aqui via JavaScript -->
+                </div>
               </div>
             </div>
           </div>

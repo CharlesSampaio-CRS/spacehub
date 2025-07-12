@@ -679,7 +679,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, { offset: -Infinity }).element;
   }
 
-  const loadWithToken = (token, userUuid) => {
+  const loadWithToken = async (token, userUuid) => {
     const navSection = document.getElementById('nav-section');
     if (navSection) {
       navSection.innerHTML = '';
@@ -693,51 +693,123 @@ document.addEventListener('DOMContentLoaded', async () => {
       navSection.appendChild(homeButton);
     }
 
-    fetch(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (Array.isArray(data.data.applications)) {
-          // Cria um mapa dos apps ativos
-          const activeApps = data.data.applications.filter(app => app.active == true);
-          // Recupera ordem salva
-          const savedOrder = getAppButtonOrder();
-          // Ordena apps conforme ordem salva, apps novos vão para o final
-          const orderedApps = savedOrder.length
-            ? activeApps.slice().sort((a, b) => {
-                const aId = `${a.application.toLowerCase()}-button`;
-                const bId = `${b.application.toLowerCase()}-button`;
-                const aIdx = savedOrder.indexOf(aId);
-                const bIdx = savedOrder.indexOf(bId);
-                if (aIdx === -1 && bIdx === -1) return 0;
-                if (aIdx === -1) return 1;
-                if (bIdx === -1) return -1;
-                return aIdx - bIdx;
-              })
-            : activeApps;
-          orderedApps.forEach(app => {
-            const appId = `webview-${app.application.toLowerCase()}`;
-            const buttonId = `${app.application.toLowerCase()}-button`;
-
-            serviceMap[appId] = app.url;
-            services[buttonId] = appId;
-
-            const button = createApplicationButton(app);
-            button.addEventListener('click', () => showWebview(appId, buttonId));
-            navSection?.appendChild(button);
-          });
-          // Aplica ordem salva (caso algum botão já exista)
-          applyAppButtonOrder(navSection);
-          // Ativa drag-and-drop
-          setupAppButtonDragAndDrop(navSection);
+    try {
+      // Verificar trial status primeiro
+      const trialStatus = await window.electronAPI.checkTrialStatus(userUuid);
+      
+      const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
-      })
-      .catch(error => console.error('Error loading applications:', error));
+      });
+      
+      const data = await response.json();
+      
+      if (Array.isArray(data.data.applications)) {
+        // Se for usuário free fora do trial, limitar aplicações
+        let applications = data.data.applications;
+        if (trialStatus.plan === 'free' && !trialStatus.isInTrial) {
+          const activeApps = applications.filter(app => app.active === true);
+          if (activeApps.length > 3) {
+            // Limitar aplicações automaticamente
+            const result = await window.electronAPI.limitApplications(userUuid);
+            if (result.success) {
+              applications = result.applications;
+              
+              // Mostrar notificação
+              const currentLanguage = await window.electronAPI.invoke('get-language');
+              const message = trialTranslations[currentLanguage]?.trial_expired_notification || 
+                             'Your trial period has expired. Only 3 applications can be active in the free plan.';
+              
+              // Criar notificação visual
+              const notification = document.createElement('div');
+              notification.className = 'trial-notification';
+              notification.innerHTML = `
+                <div class="notification-content">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <span>${message}</span>
+                  <button class="close-notification">&times;</button>
+                </div>
+              `;
+              document.body.appendChild(notification);
+              
+              // Remover notificação após 5 segundos
+              setTimeout(() => {
+                if (notification.parentNode) {
+                  notification.parentNode.removeChild(notification);
+                }
+              }, 5000);
+              
+              // Fechar notificação ao clicar
+              notification.querySelector('.close-notification').addEventListener('click', () => {
+                if (notification.parentNode) {
+                  notification.parentNode.removeChild(notification);
+                }
+              });
+            }
+          }
+        }
+        
+        // Cria um mapa dos apps ativos
+        const activeApps = applications.filter(app => app.active == true);
+        // Recupera ordem salva
+        const savedOrder = getAppButtonOrder();
+        // Ordena apps conforme ordem salva, apps novos vão para o final
+        const orderedApps = savedOrder.length
+          ? activeApps.slice().sort((a, b) => {
+              const aId = `${a.application.toLowerCase()}-button`;
+              const bId = `${b.application.toLowerCase()}-button`;
+              const aIdx = savedOrder.indexOf(aId);
+              const bIdx = savedOrder.indexOf(bId);
+              if (aIdx === -1 && bIdx === -1) return 0;
+              if (aIdx === -1) return 1;
+              if (bIdx === -1) return -1;
+              return aIdx - bIdx;
+            })
+          : activeApps;
+        orderedApps.forEach(app => {
+          const appId = `webview-${app.application.toLowerCase()}`;
+          const buttonId = `${app.application.toLowerCase()}-button`;
+
+          serviceMap[appId] = app.url;
+          services[buttonId] = appId;
+
+          const button = createApplicationButton(app);
+          button.addEventListener('click', () => showWebview(appId, buttonId));
+          navSection?.appendChild(button);
+        });
+        // Aplica ordem salva (caso algum botão já exista)
+        applyAppButtonOrder(navSection);
+        // Ativa drag-and-drop
+        setupAppButtonDragAndDrop(navSection);
+      }
+
+      // Adicionar botão de trial no final do sidebar se for usuário free
+      if (trialStatus.plan === 'free') {
+        const trialButton = document.createElement('button');
+        trialButton.id = 'trial-button';
+        trialButton.className = 'nav-button trial-button';
+        trialButton.title = trialStatus.isInTrial ? 'Trial Ativo' : 'Fazer Upgrade';
+        trialButton.setAttribute('data-id', 'trial-button');
+        
+        // Definir ícone baseado no status do trial
+        const icon = trialStatus.isInTrial ? 'fas fa-clock' : 'fas fa-crown';
+        const color = trialStatus.isInTrial ? '#4ecdc4' : '#ff6b6b';
+        
+        trialButton.innerHTML = `<i class="${icon}" style="color: ${color}; font-size: 24px;"></i>`;
+        
+        trialButton.addEventListener('click', () => {
+          // Abrir site de pagamentos
+          window.electronAPI.openExternal('https://spaceapp-digital.com/pricing');
+        });
+        
+        navSection?.appendChild(trialButton);
+      }
+    } catch (error) {
+      // Silenciar erros de rede
+    }
   };
 
   function createApplicationButton(app) {
@@ -1200,6 +1272,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
+  // Adicionar traduções para trial
+  const trialTranslations = {
+    'pt-BR': {
+      'trial_expired_notification': 'Seu período de trial expirou. Apenas 3 aplicações podem estar ativas no plano gratuito.'
+    },
+    'en-US': {
+      'trial_expired_notification': 'Your trial period has expired. Only 3 applications can be active in the free plan.'
+    }
+  };
+
   // Adicionar listener para mudanças no idioma
   window.electronAPI.onLanguageChanged((language) => {
     document.documentElement.lang = language;
@@ -1356,6 +1438,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         break;
     }
+  });
+
+  // Listener para logout automático quando trial expirar
+  window.electronAPI.onForceLogout((data) => {
+    const { reason, message } = data;
+    
+    // Mostrar notificação de logout
+    const notification = document.createElement('div');
+    notification.className = 'trial-notification';
+    notification.innerHTML = `
+      <div class="notification-content">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>${message}</span>
+      </div>
+    `;
+    document.body.appendChild(notification);
+    
+    // Aguardar 3 segundos e então fazer logout
+    setTimeout(async () => {
+      try {
+        await window.electronAPI.forceLogout();
+      } catch (error) {
+        console.error('Erro ao fazer logout automático:', error);
+      }
+    }, 3000);
   });
 
   // Listener para ações do menu de usuário nativo

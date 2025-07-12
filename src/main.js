@@ -390,7 +390,9 @@ ipcMain.on('start-google-login', () => {
 
       try {
         await axios.post('https://spaceapp-digital-api.onrender.com/register', {
-          name, email, password: fakePassword, googleId
+          name, email, password: fakePassword, googleId,
+          plan: 'free', // Definir plano como free por padrão
+          createdAt: new Date().toISOString() // Incluir data de criação
         });
       } catch (err) {
         if (err.response?.status !== 409) {
@@ -668,6 +670,9 @@ app.whenReady().then(() => {
     error: (message) => console.error('AutoUpdater:', message)
   };
 
+  // Inicializar sistema de trial
+  trialManager.startDailyTrialCheck();
+
   // Remover verificação inicial de atualizações para melhor performance
 });
 
@@ -804,13 +809,15 @@ ipcMain.handle('login', async (event, { email, password }) => {
   }
 });
 
-// Modificar o handler de registro
+// Modificar o handler de registro para incluir data de criação
 ipcMain.handle('register', async (event, { name, email, password }) => {
   try {
     const { data } = await axios.post('https://spaceapp-digital-api.onrender.com/register', {
       name,
       email,
-      password
+      password,
+      plan: 'free', // Definir plano como free por padrão
+      createdAt: new Date().toISOString() // Incluir data de criação
     });
 
     createUserSession(email);
@@ -1607,4 +1614,370 @@ ipcMain.on('open-popup-window', (event, url) => {
   });
   popup.setMenu(null);
   popup.loadURL(url);
+});
+
+// Sistema de Trial Management
+const trialManager = {
+  // Verificar se usuário está no trial (14 dias)
+  isUserInTrial: (userData) => {
+    if (!userData || !userData.createdAt) {
+      return false;
+    }
+    
+    const createdAt = new Date(userData.createdAt);
+    const now = new Date();
+    const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+    
+    return daysDiff <= 14;
+  },
+
+  // Verificar se usuário pode ter mais de 3 apps ativos
+  canUserHaveMoreApps: (userData) => {
+    if (!userData) return false;
+    
+    // Se for plano pago, pode ter quantos quiser
+    if (userData.plan && userData.plan !== 'free') {
+      return true;
+    }
+    
+    // Se for free, verificar se ainda está no trial
+    return trialManager.isUserInTrial(userData);
+  },
+
+  // Limitar aplicações para usuários free fora do trial
+  limitApplicationsForFreeUser: (applications) => {
+    if (!Array.isArray(applications)) return applications;
+    
+    // Lista das aplicações que devem permanecer ativas após o trial
+    const allowedApps = ['whatsapp', 'discord', 'linkedin'];
+    
+    // Desativar todas as aplicações exceto as permitidas
+    const limitedApps = applications.map(app => {
+      const isAllowed = allowedApps.includes(app.application.toLowerCase());
+      
+      return {
+        ...app,
+        active: isAllowed
+      };
+    });
+    
+    return limitedApps;
+  },
+
+  // Calcular próximo horário de execução (00:00)
+  getNextExecutionTime: () => {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    return tomorrow.getTime();
+  },
+
+  // Verificar se é meia-noite
+  isMidnight: () => {
+    const now = new Date();
+    return now.getHours() === 0 && now.getMinutes() === 0;
+  },
+
+  // Job diário para verificar trial status
+  startDailyTrialCheck: () => {
+    // Função para executar a verificação
+    const executeTrialCheck = async () => {
+      try {
+        // Buscar todos os usuários free
+        const response = await axios.get('https://spaceapp-digital-api.onrender.com/users/free-users', {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.data && Array.isArray(response.data.data)) {
+          const freeUsers = response.data.data;
+          
+          for (const user of freeUsers) {
+            const isInTrial = trialManager.isUserInTrial(user);
+            
+            // Verificar se saiu do trial
+            if (!isInTrial) {
+              // Buscar aplicações do usuário
+              const appsResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/spaces/${user.uuid}`, {
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              });
+              
+              if (appsResponse.data && appsResponse.data.data && appsResponse.data.data.applications) {
+                const limitedApps = trialManager.limitApplicationsForFreeUser(appsResponse.data.data.applications);
+                
+                // Atualizar aplicações do usuário
+                await axios.put('https://spaceapp-digital-api.onrender.com/spaces', {
+                  userUuid: user.uuid,
+                  applications: limitedApps
+                }, {
+                  headers: {
+                    'Content-Type': 'application/json'
+                  }
+                });
+              }
+            }
+          }
+        }
+      } catch (error) {
+        // Silenciar erros de rede
+      }
+    };
+
+    // Função para verificar se deve deslogar usuários
+    const checkForLogout = async () => {
+      try {
+        // Verificar se há usuários logados que saíram do trial
+        const response = await axios.get('https://spaceapp-digital-api.onrender.com/users/free-users', {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.data && Array.isArray(response.data.data)) {
+          const freeUsers = response.data.data;
+          
+          for (const user of freeUsers) {
+            if (!trialManager.isUserInTrial(user)) {
+              // Enviar evento para todas as janelas fecharem
+              BrowserWindow.getAllWindows().forEach(window => {
+                if (!window.isDestroyed()) {
+                  window.webContents.send('force-logout', {
+                    reason: 'trial_expired',
+                    message: 'Seu período de trial expirou. Faça login novamente.'
+                  });
+                }
+              });
+            }
+          }
+        }
+      } catch (error) {
+        // Silenciar erros de rede
+      }
+    };
+
+    // Executar verificação imediatamente na primeira vez
+    setTimeout(async () => {
+      await executeTrialCheck();
+    }, 5000);
+
+    // Configurar verificação diária às 00:00
+    const scheduleNextExecution = () => {
+      const nextExecution = trialManager.getNextExecutionTime();
+      const now = Date.now();
+      const delay = nextExecution - now;
+      
+      setTimeout(async () => {
+        await executeTrialCheck();
+        await checkForLogout(); // Verificar logout à meia-noite
+        scheduleNextExecution(); // Agendar próxima execução
+      }, delay);
+    };
+
+    // Iniciar agendamento
+    scheduleNextExecution();
+
+    // Verificação adicional a cada hora para garantir que não perca a meia-noite
+    setInterval(async () => {
+      const now = new Date();
+      if (now.getHours() === 0 && now.getMinutes() === 0) {
+        await executeTrialCheck();
+        await checkForLogout();
+      }
+    }, 60 * 1000); // Verificar a cada minuto
+  },
+
+  // Verificação manual (para testes)
+  manualCheck: async () => {
+    try {
+      const response = await axios.get('https://spaceapp-digital-api.onrender.com/users/free-users', {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.data && Array.isArray(response.data.data)) {
+        const freeUsers = response.data.data;
+        
+        for (const user of freeUsers) {
+          const isInTrial = trialManager.isUserInTrial(user);
+        }
+      }
+    } catch (error) {
+      // Silenciar erros de rede
+    }
+  }
+};
+
+// Adicionar handler para verificar trial status
+ipcMain.handle('check-trial-status', async (event, userUuid) => {
+  try {
+    // Obter token do usuário atual
+    const token = store.get('token');
+    
+    if (!token) {
+      return { isInTrial: false, canHaveMoreApps: false, plan: 'free', daysLeft: 0 };
+    }
+
+    const response = await axios.get(`https://spaceapp-digital-api.onrender.com/users/${userUuid}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.data && response.data.data) {
+      const userData = response.data.data;
+      const isInTrial = trialManager.isUserInTrial(userData);
+      const canHaveMoreApps = trialManager.canUserHaveMoreApps(userData);
+      
+      return {
+        isInTrial,
+        canHaveMoreApps,
+        plan: userData.plan || 'free',
+        createdAt: userData.createdAt,
+        daysLeft: isInTrial ? Math.max(0, 14 - Math.floor((new Date() - new Date(userData.createdAt)) / (1000 * 60 * 60 * 24))) : 0
+      };
+    }
+    
+    return { isInTrial: false, canHaveMoreApps: false, plan: 'free', daysLeft: 0 };
+  } catch (error) {
+    return { isInTrial: false, canHaveMoreApps: false, plan: 'free', daysLeft: 0 };
+  }
+});
+
+// Handler para limitar aplicações
+ipcMain.handle('limit-applications', async (event, userUuid) => {
+  try {
+    // Obter token do usuário atual
+    const token = store.get('token');
+    
+    if (!token) {
+      return { success: false, error: 'Token não encontrado' };
+    }
+
+    const response = await axios.get(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.data && response.data.data && response.data.data.applications) {
+      const limitedApps = trialManager.limitApplicationsForFreeUser(response.data.data.applications);
+      
+      await axios.put('https://spaceapp-digital-api.onrender.com/spaces', {
+        userUuid: userUuid,
+        applications: limitedApps
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      return { success: true, applications: limitedApps };
+    }
+    
+    return { success: false, error: 'Nenhuma aplicação encontrada' };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Handler para verificação manual de trial
+ipcMain.handle('manual-trial-check', async () => {
+  await trialManager.manualCheck();
+  return { success: true };
+});
+
+// Handler para testar limitação de aplicações
+ipcMain.handle('test-application-limitation', async (event, userUuid) => {
+  try {
+    // Obter token do usuário atual
+    const token = store.get('token');
+    
+    if (!token) {
+      return { success: false, error: 'Token não encontrado' };
+    }
+    
+    // Buscar dados do usuário
+    const userResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/users/${userUuid}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (userResponse.data && userResponse.data.data) {
+      const userData = userResponse.data.data;
+      
+      // Verificar trial status
+      const isInTrial = trialManager.isUserInTrial(userData);
+      
+      // Buscar aplicações
+      const appsResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (appsResponse.data && appsResponse.data.data && appsResponse.data.data.applications) {
+        const applications = appsResponse.data.data.applications;
+        
+        // Aplicar limitação
+        const limitedApps = trialManager.limitApplicationsForFreeUser(applications);
+        
+        // Atualizar no servidor
+        const updateResponse = await axios.put('https://spaceapp-digital-api.onrender.com/spaces', {
+          userUuid: userUuid,
+          applications: limitedApps
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        return { 
+          success: true, 
+          originalApps: applications,
+          limitedApps: limitedApps,
+          updateStatus: updateResponse.status
+        };
+      }
+    }
+    
+    return { success: false, error: 'Dados não encontrados' };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Handler para forçar logout
+ipcMain.handle('force-logout', async () => {
+  try {
+    // Limpar dados de autenticação
+    store.delete('token');
+    store.delete('userUuid');
+    store.delete('user');
+    
+    // Fechar todas as janelas atuais
+    BrowserWindow.getAllWindows().forEach(window => {
+      if (!window.isDestroyed()) {
+        window.close();
+      }
+    });
+    
+    // Criar nova janela de login
+    createLoginWindow();
+    
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
 });

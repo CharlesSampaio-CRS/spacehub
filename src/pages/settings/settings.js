@@ -14,6 +14,10 @@ const loadApplications = async () => {
   if (!auth) return;
 
   try {
+    // Primeiro verificar trial status
+    const trialStatus = await window.electronAPI.checkTrialStatus(auth.userUuid);
+    const currentLanguage = await window.electronAPI.invoke('get-language');
+    
     const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${auth.userUuid}`, {
       method: 'GET',
       headers: {
@@ -26,29 +30,76 @@ const loadApplications = async () => {
 
     const listContainer = document.getElementById("applicationsList");
     listContainer.innerHTML = "";
-    data.data.applications
-      .sort((a, b) => b.active - a.active)
-      .forEach(app => {
-        const isChecked = app.active == true;
-        const appItem = document.createElement("div");
-        appItem.classList.add("application-item");
+    
+    // Ordenar aplicações: ativas primeiro, depois inativas
+    const sortedApplications = data.data.applications.sort((a, b) => {
+      if (a.active === b.active) {
+        return a.application.localeCompare(b.application);
+      }
+      return b.active - a.active;
+    });
 
-        appItem.innerHTML = `
-          <div class="application-info">
-            <img src="${app.icon}" alt="${app.application}" width="32" height="32" />
+    // Se for usuário free fora do trial, limitar a 3 aplicações (WhatsApp, Discord, LinkedIn)
+    if (trialStatus.plan === 'free' && !trialStatus.isInTrial) {
+      const allowedApps = ['whatsapp', 'discord', 'linkedin'];
+      
+      // Desativar todas as aplicações exceto as permitidas
+      sortedApplications.forEach(app => {
+        const isAllowed = allowedApps.includes(app.application.toLowerCase());
+        app.active = isAllowed;
+      });
+      
+      // Atualizar no servidor
+      try {
+        await fetch('https://spaceapp-digital-api.onrender.com/spaces', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${auth.token}`
+          },
+          body: JSON.stringify({
+            userUuid: auth.userUuid,
+            applications: sortedApplications
+          })
+        });
+      } catch (error) {
+        // Silenciar erros de rede
+      }
+    }
+
+    sortedApplications.forEach(app => {
+      const appItem = document.createElement("div");
+      appItem.className = "application-card";
+      
+      // Verificar se deve desabilitar o toggle (apenas para usuários free fora do trial)
+      const isDisabled = trialStatus.plan === 'free' && !trialStatus.isInTrial && !app.active;
+      
+      appItem.innerHTML = `
+        <div class="application-info">
+          <img src="${app.icon}" alt="${app.application}" class="app-icon" onerror="this.src='../../assets/${app.application.toLowerCase()}.png'">
+          <div>
             <p><strong>${app.application}</strong></p>
           </div>
-          <div class="application-toggle">
-            <label class="toggle-switch">
-              <input type="checkbox" ${isChecked ? 'checked' : ''} id="toggle-${app.uuid}" />
-              <span class="slider"></span>
-            </label>
-          </div>
-        `;
-        listContainer.appendChild(appItem);
-      });
+        </div>
+        <div class="application-toggle ${isDisabled ? 'disabled' : ''}">
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-${app.uuid}" ${app.active ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}>
+            <span class="slider"></span>
+          </label>
+        </div>
+      `;
+      
+      listContainer.appendChild(appItem);
+    });
+
+    // Adicionar eventos aos toggles
+    const toggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
+    toggles.forEach(toggle => {
+      toggle.addEventListener('change', updateApplications);
+    });
+
   } catch (error) {
-    console.error('Erro ao carregar aplicações:', error);
+    // Silenciar erros de rede
   }
 };
 
@@ -57,49 +108,111 @@ const updateApplications = async () => {
     const auth = await getAuthData();
     if (!auth) return;
 
+    // Verificar trial status antes de atualizar
+    const trialStatus = await window.electronAPI.checkTrialStatus(auth.userUuid);
+    const currentLanguage = await window.electronAPI.invoke('get-language');
+    
     const toggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
     const applications = Array.from(toggles).map(toggle => ({
       uuid: toggle.id.replace('toggle-', ''),
       active: toggle.checked
     }));
 
-    const payload = {
-      userUuid: auth.userUuid,
-      applications
-    };
-
-    const saveButton = document.getElementById("saveButton");
-    if (saveButton) {
-      saveButton.disabled = true;
+    // Se for usuário free fora do trial, limitar a 3 aplicações (WhatsApp, Discord, LinkedIn)
+    if (trialStatus.plan === 'free' && !trialStatus.isInTrial) {
+      const allowedApps = ['whatsapp', 'discord', 'linkedin'];
+      
+      // Desativar todas as aplicações exceto as permitidas
+      applications.forEach(app => {
+        const appData = toggles.find(toggle => toggle.id === `toggle-${app.uuid}`);
+        if (appData) {
+          const appName = appData.closest('.application-card').querySelector('p strong').textContent;
+          const isAllowed = allowedApps.includes(appName.toLowerCase());
+          app.active = isAllowed;
+          
+          // Atualizar o toggle visualmente
+          appData.checked = isAllowed;
+          appData.disabled = !isAllowed;
+          
+          const toggleSwitch = appData.closest('.toggle-switch');
+          if (toggleSwitch) {
+            toggleSwitch.classList.toggle('disabled', !isAllowed);
+          }
+        }
+      });
+      
+      // Mostrar aviso
+      const warningMessage = translations[currentLanguage]['only_3_apps_allowed'] || 
+                            'Apenas 3 aplicações podem estar ativas no plano gratuito. Aplicações extras foram desativadas.';
+      
+      // Criar notificação visual
+      const notification = document.createElement('div');
+      notification.className = 'trial-notification';
+      notification.innerHTML = `
+        <div class="notification-content">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>${warningMessage}</span>
+          <button class="close-notification">&times;</button>
+        </div>
+      `;
+      document.body.appendChild(notification);
+      
+      // Remover notificação após 5 segundos
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 5000);
+      
+      // Fechar notificação ao clicar
+      notification.querySelector('.close-notification').addEventListener('click', () => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      });
     }
 
-    const res = await fetch('https://spaceapp-digital-api.onrender.com/spaces', {
+    // Buscar aplicações atuais para obter dados completos
+    const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${auth.userUuid}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${auth.token}`
+      }
+    });
+    
+    const data = await response.json();
+    if (!Array.isArray(data.data.applications)) return;
+
+    // Atualizar status das aplicações
+    const updatedApplications = data.data.applications.map(app => {
+      const toggleState = applications.find(t => t.uuid === app.uuid);
+      return {
+        ...app,
+        active: toggleState ? toggleState.active : app.active
+      };
+    });
+
+    // Enviar atualização para o servidor
+    await fetch('https://spaceapp-digital-api.onrender.com/spaces', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${auth.token}`
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        userUuid: auth.userUuid,
+        applications: updatedApplications
+      })
     });
 
-    // Tentar logar o corpo da resposta
-    let responseBody;
-    try {
-      responseBody = await res.json();
-    } catch (e) {}
+    // Recarregar aplicações para garantir sincronização
+    setTimeout(() => {
+      loadApplications();
+    }, 1000);
 
-    if (!res.ok) {
-      alert('Erro ao salvar as configurações: ' + (responseBody?.message || res.status));
-    }
-
-    await window.electronAPI.send('reload-applications');
   } catch (error) {
-    alert('Erro ao salvar as configurações.');
-  } finally {
-    const saveButton = document.getElementById("saveButton");
-    if (saveButton) {
-      saveButton.disabled = false;
-    }
+    // Silenciar erros de rede
   }
 };
 
@@ -107,35 +220,132 @@ const loadUserInfo = async () => {
   const auth = await getAuthData();
   if (!auth) return;
 
-  fetch(`https://spaceapp-digital-api.onrender.com/users/${auth.userUuid}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${auth.token}`
+  try {
+    // Verificar trial status com fallback
+    let trialStatus;
+    try {
+      trialStatus = await window.electronAPI.checkTrialStatus(auth.userUuid);
+    } catch (error) {
+      // Fallback: assumir usuário free em trial
+      trialStatus = {
+        plan: 'free',
+        isInTrial: true,
+        daysLeft: 14
+      };
     }
-  })
-    .then(res => res.json())
-    .then(data => {      const user = data?.data || data;
-      const typeElem = document.getElementById("userType");
-      const nameElem = document.getElementById("userName");
-      const emailElem = document.getElementById("userEmail");
-      const planElem = document.getElementById("userPlan");
-      if (!typeElem || !nameElem || !emailElem || !planElem) {
-        console.error('Elementos de usuário não encontrados no DOM.');
-        return;
+    
+    const currentLanguage = await window.electronAPI.invoke('get-language');
+
+    const response = await fetch(`https://spaceapp-digital-api.onrender.com/users/${auth.userUuid}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${auth.token}`
       }
-      // Preenche os campos, mesmo que estejam vazios
-      typeElem.textContent = user.type || "Desconhecido";
-      nameElem.textContent = user.name || "-";
-      emailElem.textContent = user.email || "-";
-      planElem.textContent = user.plan || "-";
-    })
-    .catch(error => {
-      console.error('Erro ao carregar dados do usuário:', error);
-      // Opcional: exibir mensagem de erro na interface
-      const nameElem = document.getElementById("userName");
-      if (nameElem) nameElem.textContent = "Erro ao carregar usuário";
     });
+    
+    const data = await response.json();
+    const user = data?.data || data;
+    
+    const typeElem = document.getElementById("userType");
+    const nameElem = document.getElementById("userName");
+    const emailElem = document.getElementById("userEmail");
+    
+    if (!typeElem || !nameElem || !emailElem) {
+      return;
+    }
+    
+    // Preenche os campos, mesmo que estejam vazios
+    typeElem.textContent = user.type || "Desconhecido";
+    nameElem.textContent = user.name || "-";
+    emailElem.textContent = user.email || "-";
+
+    // Adicionar card de trial no placeholder correto
+    const trialCardPlaceholder = document.getElementById("trialCardPlaceholder");
+    
+    if (!trialCardPlaceholder) {
+      return;
+    }
+    
+    // Criar card de trial
+    const trialCard = document.createElement("div");
+    trialCard.className = "trial-card";
+    
+    if (trialStatus.plan === 'free' && !trialStatus.isInTrial) {
+      trialCard.innerHTML = `
+        <div class="trial-expired">
+          <div class="expired-content">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+              <h4>${translations[currentLanguage]?.['trial_expired'] || 'Período de Trial Expirado'}</h4>
+              <p>${translations[currentLanguage]?.['trial_expired_message'] || 'Seu período gratuito de 14 dias expirou. Faça upgrade para continuar usando todas as aplicações.'}</p>
+              <button id="upgrade-plan-btn" class="upgrade-btn">
+                <i class="fas fa-crown"></i>
+                Fazer Upgrade
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (trialStatus.plan === 'free' && trialStatus.isInTrial) {
+      trialCard.innerHTML = `
+        <div class="trial-info">
+          <div class="info-content">
+            <i class="fas fa-clock"></i>
+            <div>
+              <h4>${translations[currentLanguage]?.['trial_active'] || 'Período de Trial Ativo'}</h4>
+              <p>${(translations[currentLanguage]?.['trial_days_left'] || 'Você tem %s dias restantes no período gratuito.').replace('%s', trialStatus.daysLeft)}</p>
+              <button id="upgrade-plan-btn" class="upgrade-btn">
+                <i class="fas fa-crown"></i>
+                Fazer Upgrade
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      // Usuário pago - mostrar informações do plano atual
+      trialCard.innerHTML = `
+        <div class="premium-status">
+          <div class="status-content">
+            <i class="fas fa-crown"></i>
+            <div>
+              <h4>Plano Premium Ativo</h4>
+              <p>Acesso completo a todos os recursos</p>
+              <button class="manage-subscription-btn">
+                <i class="fas fa-cog"></i>
+                Gerenciar
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Limpar placeholder e adicionar o card
+    trialCardPlaceholder.innerHTML = '';
+    trialCardPlaceholder.appendChild(trialCard);
+    
+    // Adicionar eventos aos botões
+    const upgradeBtn = trialCard.querySelector('#upgrade-plan-btn');
+    if (upgradeBtn) {
+      upgradeBtn.addEventListener('click', () => {
+        // Abrir site de pagamentos
+        window.electronAPI.openExternal('https://spaceapp-digital.com/pricing');
+      });
+    }
+
+    const manageBtn = trialCard.querySelector('.manage-subscription-btn');
+    if (manageBtn) {
+      manageBtn.addEventListener('click', () => {
+        // Abrir página de gerenciamento de assinatura
+        window.electronAPI.openExternal('https://spaceapp-digital.com/account');
+      });
+    }
+
+  } catch (error) {
+    // Silenciar erros de rede
+  }
 };
 
 const setupDarkModeToggle = () => {
@@ -251,36 +461,27 @@ const translations = {
     'Atualizar': 'Atualizar',
     'OK': 'OK',
     'Erro': 'Erro',
-    'Limpar': 'Limpar'
+    'Limpar': 'Limpar',
+    'trial_expired': 'Período de Trial Expirado',
+    'trial_expired_message': 'Seu período gratuito de 14 dias expirou. Faça upgrade para continuar usando todas as aplicações.',
+    'trial_active': 'Período de Trial Ativo',
+    'trial_days_left': 'Você tem %s dias restantes no período gratuito.',
+    'upgrade_plan': 'Fazer Upgrade',
+    'free_plan_limit': 'Limite do plano gratuito',
+    'only_3_apps_allowed': 'Apenas 3 aplicações podem estar ativas no plano gratuito. Aplicações extras foram desativadas.'
   },
   'en-US': {
-    'Perfil': 'Profile',
-    'Nome': 'Name',
-    'Email': 'Email',
-    'Plano': 'Plan',
-    'Preferências': 'Preferences',
-    'Notificações': 'Notifications',
-    'Modo Escuro': 'Theme',
-    'Idioma': 'Language',
-    'Aplicações': 'Applications',
-    'Salvar': 'Save',
     'Configurações': 'Settings',
-    'Confirmação': 'Confirmation',
-    'Confirmar': 'Confirm',
-    'Cancelar': 'Cancel',
-    'language_change_confirmation': 'Do you really want to change the language to %s? The application will be restarted.',
-    'Português': 'Portuguese',
-    'Inglês': 'English',
-    'update_available': 'A new version is available for download.',
-    'current_version': 'Current Version',
-    'new_version': 'New Version',
-    'latest_version': 'You are using the latest version.',
-    'update_check_error': 'Unable to check for updates at this time.',
-    'restart_confirmation': 'The system will restart to apply the update. Do you want to continue?',
-    'Atualizar': 'Update',
-    'OK': 'OK',
-    'Erro': 'Error',
-    'Limpar': 'Clear'
+    'Sair': 'Logout',
+    'Salvar': 'Save',
+    'Limpar': 'Clear',
+    'trial_expired': 'Trial Period Expired',
+    'trial_expired_message': 'Your 14-day free period has expired. Upgrade to continue using all applications.',
+    'trial_active': 'Trial Period Active',
+    'trial_days_left': 'You have %s days remaining in your free period.',
+    'upgrade_plan': 'Upgrade Plan',
+    'only_3_apps_allowed': 'Only 3 applications can be active in the free plan. Extra applications have been deactivated.',
+    'free_plan_limit': 'Free plan limit'
   }
 };
 
@@ -508,7 +709,6 @@ async function loadSystemInfo() {
   try {
     const version = await window.electronAPI.getAppVersion();
     const versionButton = document.getElementById('versionButton');
-    console.log('Versão obtida:', version); // Debug
     
     if (versionButton) {
       versionButton.querySelector('#appVersion').textContent = `v${version}`;
@@ -519,11 +719,10 @@ async function loadSystemInfo() {
       
       // Adicionar novo listener
       versionButton.addEventListener('click', () => {
-        console.log('Verificando atualizações...'); // Debug
         checkForUpdates();
       });
     } else {
-      console.error('Botão de versão não encontrado!'); // Debug
+      console.error('Botão de versão não encontrado!');
     }
   } catch (error) {
     console.error('Erro ao carregar versão:', error);
@@ -535,8 +734,6 @@ async function loadSystemInfo() {
 }
 
 const initializeSettingsPage = async () => {
-  console.log('Inicializando página de configurações...'); // Debug
-  
   // Carregar informações do sistema primeiro
   await loadSystemInfo();
   
@@ -550,7 +747,7 @@ const initializeSettingsPage = async () => {
   setupCompactLayoutToggle();
   setupFullscreenToggle();
   setupLanguageToggle();
-  setupClearCacheButton(); // Adicionar chamada para o novo botão
+  setupClearCacheButton();
   
   // Aplicar idioma inicial
   const currentLanguage = await window.electronAPI.invoke('get-language');
@@ -565,26 +762,23 @@ const initializeSettingsPage = async () => {
 
 // Garantir que o evento DOMContentLoaded está sendo chamado
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('DOM carregado, inicializando...'); // Debug
-  await initializeSettingsPage();
+  // Aguardar um pouco para garantir que tudo esteja carregado
+  setTimeout(async () => {
+    await initializeSettingsPage();
+  }, 100);
 });
 
 // Função para verificar atualizações
 async function checkForUpdates() {
   try {
-    console.log('Iniciando verificação de atualizações...'); // Debug
-    
     // Sempre obter a versão atual primeiro
     const currentVersion = await window.electronAPI.getAppVersion();
-    console.log('Versão atual:', currentVersion); // Debug
     
     // Verificar se há atualizações disponíveis
     const latestVersion = await window.electronAPI.checkForUpdates();
-    console.log('Última versão disponível:', latestVersion); // Debug
     
     // Se não houver nova versão ou se a versão atual for igual à mais recente
     if (!latestVersion || latestVersion === currentVersion) {
-      console.log('Usando versão mais recente'); // Debug
       Swal.fire({
         title: translations[currentLanguage]['Confirmação'],
         html: `
@@ -610,7 +804,6 @@ async function checkForUpdates() {
     }
     
     // Se houver uma nova versão disponível
-    console.log('Nova versão disponível:', latestVersion); // Debug
     Swal.fire({
       title: translations[currentLanguage]['Confirmação'],
       html: `
@@ -660,7 +853,6 @@ async function checkForUpdates() {
           }
         }).then((restartResult) => {
           if (restartResult.isConfirmed) {
-            console.log('Iniciando atualização...'); // Debug
             window.electronAPI.downloadUpdate();
           }
         });
@@ -693,3 +885,13 @@ window.electronAPI.on('reload-applications', () => {
   // Função que recarrega as aplicações do menu lateral
   carregarAplicacoesSidebar();
 });
+
+// Função para recarregar aplicações do sidebar
+const carregarAplicacoesSidebar = async () => {
+  try {
+    // Enviar evento para recarregar aplicações na página principal
+    window.electronAPI.send('reload-applications');
+  } catch (error) {
+    console.error('Erro ao recarregar aplicações do sidebar:', error);
+  }
+};
