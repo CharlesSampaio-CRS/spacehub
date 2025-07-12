@@ -580,8 +580,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   function applyAppButtonOrder(navSection) {
     const order = getAppButtonOrder();
     if (!order.length) return;
-    // Seleciona todos os botões exceto o home
-    const buttons = Array.from(navSection.querySelectorAll('.nav-button:not(#home-button)'));
+    // Seleciona todos os botões exceto o home e os desabilitados
+    const buttons = Array.from(navSection.querySelectorAll('.nav-button:not(#home-button):not(.disabled-app)'));
     // Ordena os botões conforme o array salvo
     order.forEach(buttonId => {
       const btn = buttons.find(b => b.id === buttonId);
@@ -590,8 +590,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function updateAndSaveAppButtonOrder(navSection) {
-    // Salva a ordem atual dos botões exceto o home
-    const order = Array.from(navSection.querySelectorAll('.nav-button:not(#home-button)')).map(btn => btn.id);
+    // Salva a ordem atual dos botões exceto o home e os desabilitados
+    const order = Array.from(navSection.querySelectorAll('.nav-button:not(#home-button):not(.disabled-app)')).map(btn => btn.id);
     saveAppButtonOrder(order);
   }
 
@@ -603,11 +603,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Garante que todos os botões (exceto o Home) tenham draggable=true
     navSection.querySelectorAll('.nav-button:not(#home-button)').forEach(btn => {
-      btn.setAttribute('draggable', 'true');
+      // Só permitir drag para apps ativos
+      if (!btn.classList.contains('disabled-app')) {
+        btn.setAttribute('draggable', 'true');
+      } else {
+        btn.setAttribute('draggable', 'false');
+      }
+      
       // Reatribui o listener de clique
       const appId = btn.getAttribute('data-id');
       const buttonId = btn.id;
-      btn.onclick = () => showWebview(appId, buttonId);
+      
+      // Verificar se é um app ativo ou inativo
+      if (!btn.classList.contains('disabled-app')) {
+        btn.onclick = () => showWebview(appId, buttonId);
+      } else {
+        btn.onclick = () => showWebview('webview-settings', 'settings-button');
+      }
     });
     // Reatribui o listener de clique ao botão home
     const homeButton = navSection.querySelector('#home-button');
@@ -619,7 +631,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let dragOverBtn = null;
 
     navSection.addEventListener('dragstart', (e) => {
-      if (e.target.classList.contains('nav-button') && e.target.id !== 'home-button') {
+      if (e.target.classList.contains('nav-button') && e.target.id !== 'home-button' && !e.target.classList.contains('disabled-app')) {
         dragged = e.target;
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', e.target.id);
@@ -638,7 +650,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.preventDefault();
       if (!dragged) return;
       const afterElement = getDragAfterElement(navSection, e.clientY);
-      if (afterElement && afterElement !== dragged && afterElement.id !== 'home-button') {
+      if (afterElement && afterElement !== dragged && afterElement.id !== 'home-button' && !afterElement.classList.contains('disabled-app')) {
         navSection.insertBefore(dragged, afterElement);
         if (dragOverBtn && dragOverBtn !== afterElement) dragOverBtn.classList.remove('drag-over');
         dragOverBtn = afterElement;
@@ -667,7 +679,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function getDragAfterElement(container, y) {
-    const draggableElements = [...container.querySelectorAll('.nav-button:not(#home-button):not(.dragging)')];
+    const draggableElements = [...container.querySelectorAll('.nav-button:not(#home-button):not(.dragging):not(.disabled-app)')];
     return draggableElements.reduce((closest, child) => {
       const box = child.getBoundingClientRect();
       const offset = y - box.top - box.height / 2;
@@ -708,56 +720,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       const data = await response.json();
       
       if (Array.isArray(data.data.applications)) {
-        // Se for usuário free fora do trial, limitar aplicações
-        let applications = data.data.applications;
-        if (trialStatus.plan === 'free' && !trialStatus.isInTrial) {
-          const activeApps = applications.filter(app => app.active === true);
-          if (activeApps.length > 3) {
-            // Limitar aplicações automaticamente
-            const result = await window.electronAPI.limitApplications(userUuid);
-            if (result.success) {
-              applications = result.applications;
-              
-              // Mostrar notificação
-              const currentLanguage = await window.electronAPI.invoke('get-language');
-              const message = trialTranslations[currentLanguage]?.trial_expired_notification || 
-                             'Your trial period has expired. Only 3 applications can be active in the free plan.';
-              
-              // Criar notificação visual
-              const notification = document.createElement('div');
-              notification.className = 'trial-notification';
-              notification.innerHTML = `
-                <div class="notification-content">
-                  <i class="fas fa-exclamation-triangle"></i>
-                  <span>${message}</span>
-                  <button class="close-notification">&times;</button>
-                </div>
-              `;
-              document.body.appendChild(notification);
-              
-              // Remover notificação após 5 segundos
-              setTimeout(() => {
-                if (notification.parentNode) {
-                  notification.parentNode.removeChild(notification);
-                }
-              }, 5000);
-              
-              // Fechar notificação ao clicar
-              notification.querySelector('.close-notification').addEventListener('click', () => {
-                if (notification.parentNode) {
-                  notification.parentNode.removeChild(notification);
-                }
-              });
-            }
-          }
-        }
+        const applications = data.data.applications;
+        // Mostrar TODOS os aplicativos para todos os usuários
+        const appsToShow = applications;
         
-        // Cria um mapa dos apps ativos
-        const activeApps = applications.filter(app => app.active == true);
-        // Recupera ordem salva
+        // Ordenar aplicativos: ativos primeiro (de baixo para cima), depois inativos
+        const sortedApps = appsToShow.sort((a, b) => {
+          // Se ambos são ativos ou ambos são inativos, manter ordem original
+          if (a.active === b.active) {
+            return 0;
+          }
+          // Aplicativos ativos vêm primeiro (serão inseridos de baixo para cima)
+          return a.active ? -1 : 1;
+        });
+        
+        // Recupera ordem salva apenas para aplicativos ativos
         const savedOrder = getAppButtonOrder();
-        // Ordena apps conforme ordem salva, apps novos vão para o final
-        const orderedApps = savedOrder.length
+        
+        // Separar aplicativos ativos e inativos
+        const activeApps = sortedApps.filter(app => app.active);
+        const inactiveApps = sortedApps.filter(app => !app.active);
+        
+        // Ordenar aplicativos ativos conforme ordem salva
+        const orderedActiveApps = savedOrder.length
           ? activeApps.slice().sort((a, b) => {
               const aId = `${a.application.toLowerCase()}-button`;
               const bId = `${b.application.toLowerCase()}-button`;
@@ -769,15 +754,29 @@ document.addEventListener('DOMContentLoaded', async () => {
               return aIdx - bIdx;
             })
           : activeApps;
-        orderedApps.forEach(app => {
+        
+        // Combinar aplicativos inativos + ativos ordenados (ativos por último)
+        const finalOrderedApps = [...inactiveApps, ...orderedActiveApps];
+        
+        finalOrderedApps.forEach(app => {
           const appId = `webview-${app.application.toLowerCase()}`;
           const buttonId = `${app.application.toLowerCase()}-button`;
 
-          serviceMap[appId] = app.url;
-          services[buttonId] = appId;
+          // Adicionar ao serviceMap apenas se estiver ativo
+          if (app.active) {
+            serviceMap[appId] = app.url;
+            services[buttonId] = appId;
+          }
 
-          const button = createApplicationButton(app);
-          button.addEventListener('click', () => showWebview(appId, buttonId));
+          const button = createApplicationButton(app, trialStatus);
+          if (app.active) {
+            button.addEventListener('click', () => showWebview(appId, buttonId));
+          } else {
+            // Para apps inativos, redirecionar para settings
+            button.addEventListener('click', () => {
+              showWebview('webview-settings', 'settings-button');
+            });
+          }
           navSection?.appendChild(button);
         });
         // Aplica ordem salva (caso algum botão já exista)
@@ -812,7 +811,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  function createApplicationButton(app) {
+  function createApplicationButton(app, trialStatus) {
     const button = document.createElement('button');
     const appId = `webview-${app.application.toLowerCase()}`;
     const buttonId = `${app.application.toLowerCase()}-button`;
@@ -823,6 +822,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     button.setAttribute('data-id', appId);
     button.setAttribute('draggable', 'true'); // Torna arrastável
     button.style.cursor = 'grab'; // Visual de arrasto
+
+    // Se o app não estiver ativo, aplicar classe de desabilitado
+    if (!app.active) {
+      button.classList.add('disabled-app');
+      // Remover o title/alt para aplicativos inativos
+      button.removeAttribute('title');
+    }
 
     const img = document.createElement('img');
     img.src = app.icon;
@@ -842,6 +848,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     button.appendChild(img);
+
+    // Remover a adição do ícone de coroa para apps inativos
 
     // Garante que dragstart funcione ao clicar na imagem
     img.addEventListener('mousedown', (e) => {
@@ -1509,6 +1517,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Inicialização
   const init = async () => {
     try {
+      // (Removido localStorage.removeItem('user'); para não afetar o carregamento)
       // Configurar idioma inicial
       const currentLanguage = await window.electronAPI.getLanguage();
       document.documentElement.lang = currentLanguage;

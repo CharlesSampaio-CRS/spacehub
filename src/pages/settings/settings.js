@@ -77,7 +77,6 @@ const loadApplications = async () => {
       const isPremiumOnly = trialStatus.plan === 'free' && !trialStatus.isInTrial && !['whatsapp','discord','linkedin'].includes(app.application.toLowerCase());
       
       appItem.innerHTML = `
-        ${isPremiumOnly ? '<span class="premium-crown"><i class="fas fa-crown"></i></span>' : ''}
         <div class="application-info">
           <div class="app-icon-wrapper">
             <img src="${app.icon}" alt="${app.application}" class="app-icon${isPremiumOnly ? ' disabled-app' : ''}" onerror="this.src='../../assets/${app.application.toLowerCase()}.png'" ${isPremiumOnly ? 'title="Disponível apenas para usuários premium"' : ''}>

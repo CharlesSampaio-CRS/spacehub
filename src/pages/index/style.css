@@ -929,3 +929,37 @@ body.dark-mode .trial-button {
 body.dark-mode .trial-button:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* Estilos para aplicativos desabilitados */
+.nav-button.disabled-app {
+  opacity: 0.5;
+  filter: grayscale(100%);
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition);
+}
+
+.nav-button.disabled-app:hover {
+  opacity: 0.7;
+  filter: grayscale(80%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 107, 107, 0.15);
+}
+
+/* Modo escuro para aplicativos desabilitados */
+body.dark-mode .nav-button.disabled-app {
+  opacity: 0.4;
+}
+
+body.dark-mode .nav-button.disabled-app:hover {
+  opacity: 0.6;
+}
+
+/* Aplicativos desabilitados não podem ser arrastados */
+.nav-button.disabled-app[draggable="true"] {
+  cursor: not-allowed;
+}
+
+.nav-button.disabled-app[draggable="false"] {
+  cursor: pointer;
+}
