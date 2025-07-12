@@ -103,7 +103,9 @@ const loadApplications = async () => {
       if (toggle.dataset.premium === "1") {
         toggle.addEventListener('click', (e) => {
           e.preventDefault();
-          showSaveNotification(false, (window.electronAPI && window.electronAPI.getLanguage && window.electronAPI.getLanguage()) || 'pt-BR', 'Disponível apenas para usuários premium');
+          const currentLanguage = (window.electronAPI && window.electronAPI.getLanguage && window.electronAPI.getLanguage()) || 'pt-BR';
+          const premiumMessage = translations[currentLanguage]?.['premium_only'] || 'Disponível apenas para usuários premium';
+          showSaveNotification(false, currentLanguage, premiumMessage);
         });
       } else {
         toggle.addEventListener('change', updateApplications);
@@ -115,22 +117,12 @@ const loadApplications = async () => {
   }
 };
 
-const showSaveNotification = (success, language) => {
+const showSaveNotification = (success, language, customMessage = null) => {
   // Remover notificação anterior, se existir
   document.querySelectorAll('.save-toast-notification').forEach(n => n.remove());
 
-  const translations = {
-    'pt-BR': {
-      success: 'Alterações salvas com sucesso!',
-      error: 'Erro ao salvar alterações!'
-    },
-    'en-US': {
-      success: 'Changes saved successfully!',
-      error: 'Error saving changes!'
-    }
-  };
   const t = translations[language] || translations['pt-BR'];
-  const message = success ? t.success : t.error;
+  const message = customMessage || (success ? t.save_success || 'Alterações salvas com sucesso!' : t.save_error || 'Erro ao salvar alterações!');
   const icon = success ? 'fa-check-circle' : 'fa-exclamation-triangle';
   const color = success ? '#4ecdc4' : '#ff6b6b';
 
@@ -293,7 +285,7 @@ const loadUserInfo = async () => {
     }
     
     // Preenche os campos, mesmo que estejam vazios
-    typeElem.textContent = user.type || "Desconhecido";
+    typeElem.textContent = user.type || (translations[currentLanguage]?.['Desconhecido'] || "Desconhecido");
     nameElem.textContent = user.name || "-";
     emailElem.textContent = user.email || "-";
 
@@ -318,7 +310,7 @@ const loadUserInfo = async () => {
               <p>${translations[currentLanguage]?.['trial_expired_message'] || 'Seu período gratuito de 14 dias expirou. Faça upgrade para continuar usando todas as aplicações.'}</p>
               <button id="upgrade-plan-btn" class="upgrade-btn">
                 <i class="fas fa-crown"></i>
-                Fazer Upgrade
+                ${translations[currentLanguage]?.['upgrade_plan'] || 'Fazer Upgrade'}
               </button>
             </div>
           </div>
@@ -334,7 +326,7 @@ const loadUserInfo = async () => {
               <p>${(translations[currentLanguage]?.['trial_days_left'] || 'Você tem %s dias restantes no período gratuito.').replace('%s', trialStatus.daysLeft)}</p>
               <button id="upgrade-plan-btn" class="upgrade-btn">
                 <i class="fas fa-crown"></i>
-                Fazer Upgrade
+                ${translations[currentLanguage]?.['upgrade_plan'] || 'Fazer Upgrade'}
               </button>
             </div>
           </div>
@@ -347,11 +339,11 @@ const loadUserInfo = async () => {
           <div class="status-content">
             <i class="fas fa-crown"></i>
             <div>
-              <h4>Plano Premium Ativo</h4>
-              <p>Acesso completo a todos os recursos</p>
+              <h4>${translations[currentLanguage]?.['premium_plan_active'] || 'Plano Premium Ativo'}</h4>
+              <p>${translations[currentLanguage]?.['premium_plan_description'] || 'Acesso completo a todos os recursos'}</p>
               <button class="manage-subscription-btn">
                 <i class="fas fa-cog"></i>
-                Gerenciar
+                ${translations[currentLanguage]?.['manage'] || 'Gerenciar'}
               </button>
             </div>
           </div>
@@ -505,12 +497,46 @@ const translations = {
     'trial_days_left': 'Você tem %s dias restantes no período gratuito.',
     'upgrade_plan': 'Fazer Upgrade',
     'free_plan_limit': 'Limite do plano gratuito',
-    'only_3_apps_allowed': 'Apenas 3 aplicações podem estar ativas no plano gratuito. Aplicações extras foram desativadas.'
+    'only_3_apps_allowed': 'Apenas 3 aplicações podem estar ativas no plano gratuito. Aplicações extras foram desativadas.',
+    'clear_cache_confirmation': 'Deseja realmente limpar o cache de todas as aplicações?',
+    'cache_cleared': 'Cache limpo com sucesso!',
+    'cache_clear_error': 'Erro ao limpar cache',
+    'save_success': 'Alterações salvas com sucesso!',
+    'save_error': 'Erro ao salvar alterações!',
+    'Desconhecido': 'Desconhecido',
+    'premium_plan_active': 'Plano Premium Ativo',
+    'premium_plan_description': 'Acesso completo a todos os recursos',
+    'manage': 'Gerenciar',
+    'premium_only': 'Disponível apenas para usuários premium'
   },
   'en-US': {
+    'Perfil': 'Profile',
+    'Nome': 'Name',
+    'Email': 'Email',
+    'Plano': 'Plan',
+    'Preferências': 'Preferences',
+    'Notificações': 'Notifications',
+    'Modo Escuro': 'Theme',
+    'Idioma': 'Language',
+    'Aplicações': 'Applications',
+    'Salvar': 'Save',
     'Configurações': 'Settings',
     'Sair': 'Logout',
-    'Salvar': 'Save',
+    'Confirmação': 'Confirmation',
+    'Confirmar': 'Confirm',
+    'Cancelar': 'Cancel',
+    'language_change_confirmation': 'Do you really want to change the language to %s? The application will be restarted.',
+    'Português': 'Portuguese',
+    'Inglês': 'English',
+    'update_available': 'A new version is available for download.',
+    'current_version': 'Current Version',
+    'new_version': 'New Version',
+    'latest_version': 'You are using the latest version.',
+    'update_check_error': 'Unable to check for updates at this time.',
+    'restart_confirmation': 'The system will be restarted to apply the update. Do you want to continue?',
+    'Atualizar': 'Update',
+    'OK': 'OK',
+    'Erro': 'Error',
     'Limpar': 'Clear',
     'trial_expired': 'Trial Period Expired',
     'trial_expired_message': 'Your 14-day free period has expired. Upgrade to continue using all applications.',
@@ -518,12 +544,25 @@ const translations = {
     'trial_days_left': 'You have %s days remaining in your free period.',
     'upgrade_plan': 'Upgrade Plan',
     'only_3_apps_allowed': 'Only 3 applications can be active in the free plan. Extra applications have been deactivated.',
-    'free_plan_limit': 'Free plan limit'
+    'free_plan_limit': 'Free plan limit',
+    'clear_cache_confirmation': 'Do you really want to clear the cache of all applications?',
+    'cache_cleared': 'Cache cleared successfully!',
+    'cache_clear_error': 'Error clearing cache',
+    'save_success': 'Changes saved successfully!',
+    'save_error': 'Error saving changes!',
+    'Desconhecido': 'Unknown',
+    'premium_plan_active': 'Premium Plan Active',
+    'premium_plan_description': 'Full access to all features',
+    'manage': 'Manage',
+    'premium_only': 'Available only for premium users'
   }
 };
 
 // Função para traduzir os elementos
 function translatePage(language) {
+  
+  // Atualizar o atributo lang do HTML
+  document.documentElement.lang = language === 'en-US' ? 'en' : 'pt-BR';
   
   const elements = document.querySelectorAll('[data-translate]');
   
@@ -535,6 +574,15 @@ function translatePage(language) {
       translatedCount++;
     }
   });
+  
+  // Traduzir o título da página
+  const titleElement = document.querySelector('title[data-translate]');
+  if (titleElement) {
+    const key = titleElement.getAttribute('data-translate');
+    if (translations[language] && translations[language][key]) {
+      titleElement.textContent = translations[language][key];
+    }
+  }
   
 }
 
@@ -633,24 +681,6 @@ const setupClearCacheButton = () => {
         
         // Obter idioma atual para traduções
         const currentLanguage = await window.electronAPI.invoke('get-language');
-        const translations = {
-          'pt-BR': {
-            'clear_cache_confirmation': 'Deseja realmente limpar o cache de todas as aplicações?',
-            'cache_cleared': 'Cache limpo com sucesso!',
-            'cache_clear_error': 'Erro ao limpar cache',
-            'Confirmação': 'Confirmação',
-            'Confirmar': 'Confirmar',
-            'Cancelar': 'Cancelar'
-          },
-          'en-US': {
-            'clear_cache_confirmation': 'Do you really want to clear the cache of all applications?',
-            'cache_cleared': 'Cache cleared successfully!',
-            'cache_clear_error': 'Error clearing cache',
-            'Confirmação': 'Confirmation',
-            'Confirmar': 'Confirm',
-            'Cancelar': 'Cancel'
-          }
-        };
         
         const t = translations[currentLanguage] || translations['pt-BR'];
         
