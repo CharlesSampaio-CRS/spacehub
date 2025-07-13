@@ -15,6 +15,9 @@ const loadApplications = async () => {
   const auth = await getAuthData();
   if (!auth) return;
 
+  // Obter status do trial/plano
+  const trialStatus = await window.electronAPI.getTrialStatus();
+
   try {
     // Buscar dados do usuário para validação de plano/trial
     let user = await window.electronAPI.getUserInfo();
@@ -85,13 +88,16 @@ const loadApplications = async () => {
       const appItem = document.createElement("div");
       appItem.className = "application-card";
       appItem.style.position = 'relative';
-      // Remover lógica de desabilitação do toggle
-      // const isDisabled = Array.isArray(allowedApps) && !allowedApps.includes(app.application.toLowerCase()); // Removido
-      // const isPremiumOnly = Array.isArray(allowedApps) && !allowedApps.includes(app.application.toLowerCase()); // Removido
+      
+      // Verificar se o app deve estar desabilitado
+      const isDisabled = trialStatus && trialStatus.plan === 'free' && !trialStatus.isInTrial;
+      const defaultApps = ['whatsapp', 'discord', 'linkedin'];
+      const shouldDisableIcon = isDisabled && !defaultApps.includes(app.application.toLowerCase());
+      
       appItem.innerHTML = `
         <div class="application-info">
           <div class="app-icon-wrapper">
-            <img src="${app.icon}" alt="${app.application}" class="app-icon" onerror="this.src='../../assets/${app.application.toLowerCase()}.png'">
+            <img src="${app.icon}" alt="${app.application}" class="app-icon ${shouldDisableIcon ? 'icon-disabled' : ''}" onerror="this.src='../../assets/${app.application.toLowerCase()}.png'">
           </div>
           <div>
             <p><strong>${app.application}</strong></p>
@@ -107,20 +113,24 @@ const loadApplications = async () => {
       listContainer.appendChild(appItem);
     });
 
+    // Desabilitar toggles se trial expirado e app não for padrão
+    if (trialStatus && trialStatus.plan === 'free' && !trialStatus.isInTrial) {
+      const defaultApps = ['whatsapp', 'discord', 'linkedin'];
+      sortedApplications.forEach(app => {
+        if (!defaultApps.includes(app.application.toLowerCase())) {
+          const toggle = document.getElementById(`toggle-${app.uuid}`);
+          if (toggle) {
+            toggle.disabled = true;
+            toggle.closest('.toggle-switch').classList.add('disabled');
+          }
+        }
+      });
+    }
+
     // Adicionar eventos aos toggles
     const toggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
     toggles.forEach(toggle => {
-      // Remover lógica de desabilitação do toggle
-      // if (toggle.dataset.premium === "1") { // Removido
-      //   toggle.addEventListener('click', (e) => {
-      //     e.preventDefault();
-      //     const currentLanguage = (window.electronAPI && window.electronAPI.getLanguage && window.electronAPI.getLanguage()) || 'pt-BR';
-      //     const premiumMessage = translations[currentLanguage]?.['premium_only'] || 'Disponível apenas para usuários premium';
-      //     showSaveNotification(false, currentLanguage, premiumMessage);
-      //   });
-      // } else { // Removido
         toggle.addEventListener('change', updateApplications);
-      // } // Removido
     });
 
   } catch (error) {

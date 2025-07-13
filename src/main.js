@@ -462,8 +462,7 @@ ipcMain.on('start-google-login', () => {
 
         // Verificar trial status e salvar
         try {
-          const trialStatus = await checkTrialStatus(userUuid);
-          store.set('trialStatus', trialStatus);
+          await validateAndSaveTrialStatus(userUuid, token, email);
         } catch (trialError) {
           // Fallback: assumir usuário free em trial
           store.set('trialStatus', {
@@ -2027,6 +2026,51 @@ ipcMain.handle('check-trial-status', async (event, userUuid) => {
   }
 });
 
+// Handler para forçar revalidação das aplicações ao mudar de plano
+ipcMain.handle('force-applications-revalidation', async (event, userUuid) => {
+  try {
+    const token = store.get('token');
+    if (!token) {
+      return { success: false, error: 'Token não encontrado' };
+    }
+    // Buscar dados do usuário
+    const userResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/users/${userUuid}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const userData = userResponse.data?.data || userResponse.data;
+    // Buscar aplicações do usuário
+    const spacesResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    let applications = spacesResponse.data?.data?.applications || [];
+    // Se for free e trial expirado, limitar apps
+    if (userData.plan === 'free' && !trialManager.isUserInTrial(userData)) {
+      applications = trialManager.limitApplicationsForFreeUser(applications);
+      // Atualizar no banco
+      await axios.put('https://spaceapp-digital-api.onrender.com/spaces', {
+        userUuid: userUuid,
+        applications: applications
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    }
+    // Atualizar no store local também
+    store.set('userApplications', applications);
+    return { success: true, applications };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
 // Handler para limitar aplicações
 ipcMain.handle('limit-applications', async (event, userUuid) => {
   try {
@@ -2179,3 +2223,78 @@ ipcMain.handle('update-trial-status', async (event, trialStatus) => {
     return { success: false, error: error.message };
   }
 });
+
+// Função utilitária para validar e salvar status de trial/plano igual ao login tradicional
+async function validateAndSaveTrialStatus(userUuid, token, email) {
+  try {
+    // Buscar dados do usuário
+    const userResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/users/${userUuid}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    let userData = userResponse.data.data || userResponse.data;
+    store.set('user', userData);
+
+    // Buscar aplicações do usuário
+    const spacesResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    let applications = spacesResponse.data?.data?.applications || [];
+
+    // Validar plano e trial
+    let trialStatus = {
+      plan: userData.plan || 'free',
+      isInTrial: false,
+      canHaveMoreApps: false,
+      daysLeft: 0,
+      createdAt: userData.createdAt
+    };
+    if (userData.plan === 'free') {
+      // Verificar trial
+      const isInTrial = trialManager.isUserInTrial(userData);
+      trialStatus.isInTrial = isInTrial;
+      trialStatus.canHaveMoreApps = isInTrial;
+      if (isInTrial) {
+        // Calcular dias restantes
+        const createdAt = new Date(userData.createdAt);
+        const now = new Date();
+        const createdDate = new Date(createdAt.getFullYear(), createdAt.getMonth(), createdAt.getDate());
+        const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const timeDiff = currentDate.getTime() - createdDate.getTime();
+        const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        trialStatus.daysLeft = Math.max(0, 14 - daysDiff);
+      } else {
+        // Fora do trial: limitar aplicações
+        applications = trialManager.limitApplicationsForFreeUser(applications);
+        // Atualizar no servidor se necessário
+        await axios.put('https://spaceapp-digital-api.onrender.com/spaces', {
+          userUuid: userUuid,
+          applications: applications
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
+    } else {
+      // Premium: tudo liberado
+      trialStatus.plan = userData.plan;
+      trialStatus.isInTrial = false;
+      trialStatus.canHaveMoreApps = true;
+      trialStatus.daysLeft = null;
+    }
+    store.set('userApplications', applications);
+    store.set('trialStatus', trialStatus);
+    if (email) createUserSession(email);
+    return trialStatus;
+  } catch (error) {
+    console.error('Erro ao validar e salvar trial status:', error);
+    return null;
+  }
+}

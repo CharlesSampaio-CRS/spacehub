@@ -1352,3 +1352,16 @@ body.dark-mode .trial-card .premium-status {
   box-shadow: none;
   padding: 0;
 }
+
+/* Estilo para ícones desabilitados */
+.icon-disabled {
+  opacity: 0.4 !important;
+  filter: grayscale(1) !important;
+  transition: opacity 0.2s, filter 0.2s;
+}
+
+/* Estilo para ícones desabilitados no modo escuro */
+.dark-mode .icon-disabled {
+  opacity: 0.3 !important;
+  filter: grayscale(1) brightness(0.7) !important;
+}

@@ -761,7 +761,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (Array.isArray(applications)) {
         // Mostrar TODOS os aplicativos para todos os usuários
         const appsToShow = applications;
-        
         // Ordenar aplicativos: ativos primeiro (de baixo para cima), depois inativos
         const sortedApps = appsToShow.sort((a, b) => {
           // Se ambos são ativos ou ambos são inativos, manter ordem original
@@ -771,14 +770,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Aplicativos ativos vêm primeiro (serão inseridos de baixo para cima)
           return a.active ? -1 : 1;
         });
-        
         // Recupera ordem salva apenas para aplicativos ativos
         const savedOrder = getAppButtonOrder();
-        
         // Separar aplicativos ativos e inativos
         const activeApps = sortedApps.filter(app => app.active);
         const inactiveApps = sortedApps.filter(app => !app.active);
-        
         // Ordenar aplicativos ativos conforme ordem salva
         const orderedActiveApps = savedOrder.length
           ? activeApps.slice().sort((a, b) => {
@@ -792,22 +788,25 @@ document.addEventListener('DOMContentLoaded', async () => {
               return aIdx - bIdx;
             })
           : activeApps;
-        
         // Combinar aplicativos ativos ordenados + inativos (ativos primeiro)
         const finalOrderedApps = [...orderedActiveApps, ...inactiveApps];
-        
+        // Definir apps padrão
+        const defaultApps = ['whatsapp', 'discord', 'linkedin'];
         finalOrderedApps.forEach(app => {
           const appId = `webview-${app.application.toLowerCase()}`;
           const buttonId = `${app.application.toLowerCase()}-button`;
-
           // Adicionar ao serviceMap apenas se estiver ativo
           if (app.active) {
             serviceMap[appId] = app.url;
             services[buttonId] = appId;
           }
-
           const button = createApplicationButton(app, trialStatus);
-          if (app.active) {
+          // Se trial expirado e app não é padrão, desabilitar
+          if (trialStatus.plan === 'free' && !trialStatus.isInTrial && !defaultApps.includes(app.application.toLowerCase())) {
+            button.classList.add('disabled-app');
+            button.onclick = () => showWebview('webview-settings', 'settings-button');
+            button.setAttribute('draggable', 'false');
+          } else if (app.active) {
             button.addEventListener('click', () => showWebview(appId, buttonId));
           } else {
             // Para apps inativos, redirecionar para settings
@@ -1385,10 +1384,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if (trialStatus && trialStatus.plan === 'free') {
           if (trialStatus.isInTrial) {
-            trialInfoElem.textContent = `${t['trial_active'] || 'Trial'}: ${trialStatus.daysLeft ?? '-'} ${t['trial_days_left'] ? t['trial_days_left'].replace('%s', trialStatus.daysLeft ?? '-') : 'dias restantes'}`;
-            trialInfoElem.style.color = '#4ecdc4';
-            trialInfoElem.style.background = '#eafaf7';
-            trialInfoElem.classList.remove('trial-expired');
+            let daysLeftText = '';
+            if (trialStatus.daysLeft === 0) {
+              daysLeftText = (currentLanguage === 'pt-BR')
+                ? 'Trial termina amanhã'
+                : 'Trial ends tomorrow';
+            } else if (trialStatus.daysLeft === 1) {
+              daysLeftText = (currentLanguage === 'pt-BR')
+                ? 'Trial 1 dia restante'
+                : 'Trial 1 day left';
+            } else {
+              daysLeftText = (currentLanguage === 'pt-BR')
+                ? `Trial ${trialStatus.daysLeft} dias restantes`
+                : `Trial ${trialStatus.daysLeft} days left`;
+            }
+            trialInfoElem.innerHTML = `<span style="color: #4ecdc4; font-weight: 500; margin-right: 4px;" title="Dias restantes de trial">${daysLeftText}</span>`;
+            trialInfoElem.style.display = '';
+            trialInfoElem.title = `${t['trial_active'] || 'Trial'}: ${trialStatus.daysLeft ?? '-'} ${t['trial_days_left'] ? t['trial_days_left'].replace('%s', trialStatus.daysLeft ?? '-') : 'dias restantes'}`;
           } else {
             trialInfoElem.textContent = t['trial_expired'] || 'Trial expirado';
             trialInfoElem.style.color = '#ff6b6b';
