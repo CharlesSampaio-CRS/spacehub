@@ -1999,13 +1999,13 @@ ipcMain.handle('check-trial-status', async (event, userUuid) => {
       const userData = response.data.data;      
       const isInTrial = trialManager.isUserInTrial(userData);
       const canHaveMoreApps = trialManager.canUserHaveMoreApps(userData);
-      
+      const isPremium = userData.plan === 'premium';
       return {
         isInTrial,
         canHaveMoreApps,
         plan: userData.plan || 'free',
         createdAt: userData.createdAt,
-        daysLeft: isInTrial ? (() => {
+        daysLeft: isPremium ? 0 : (isInTrial ? (() => {
           const createdAt = new Date(userData.createdAt);
           const now = new Date();
           
@@ -2015,19 +2015,8 @@ ipcMain.handle('check-trial-status', async (event, userUuid) => {
           
           // Calcular diferença em dias
           const timeDiff = currentDate.getTime() - createdDate.getTime();
-          const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-          
-          console.log('Cálculo de dias:', {
-            createdAt: userData.createdAt,
-            parsedCreatedAt: createdAt,
-            createdDate: createdDate,
-            currentDate: currentDate,
-            daysDiff: daysDiff,
-            daysLeft: Math.max(0, 14 - daysDiff)
-          });
-          
-          return Math.max(0, 14 - daysDiff);
-        })() : 0
+          const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));          return Math.max(0, 14 - daysDiff);
+        })() : 0)
       };
     }
     
