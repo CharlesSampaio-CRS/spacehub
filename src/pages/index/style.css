@@ -553,6 +553,28 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
   align-items: center;
 }
 
+#profile-trial-info {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 2px 8px;
+  background: #eafaf7;
+  color: #4ecdc4;
+  transition: background 0.2s, color 0.2s;
+  min-width: 60px;
+  min-height: 20px;
+  box-shadow: 0 1px 4px rgba(78,205,196,0.08);
+}
+
+#profile-trial-info.trial-expired {
+  background: #fff0f0;
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b22;
+}
+
 .profile-button {
   display: flex;
   align-items: center;

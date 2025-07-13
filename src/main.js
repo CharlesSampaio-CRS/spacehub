@@ -891,9 +891,6 @@ ipcMain.handle('login', async (event, { email, password }) => {
       });
       userData = userResponse.data.data || userResponse.data;
       store.set('user', userData);
-      
-      // Logar os dados do usuário no console da aplicação
-      console.log('Usuário autenticado:', userData);
 
       // Buscar aplicações do usuário
       const spacesResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {

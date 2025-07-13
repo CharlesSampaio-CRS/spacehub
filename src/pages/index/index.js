@@ -1346,6 +1346,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      // Buscar status do trial
+      const trialStatus = await window.electronAPI.getTrialStatus();
+      const currentLanguage = await window.electronAPI.getLanguage();
+      const t = {
+        ...(window.translations?.[currentLanguage] || window.translations?.['pt-BR'] || {}),
+        ...(trialTranslations?.[currentLanguage] || trialTranslations['pt-BR'])
+      };
+
       if (userData) {
         const user = userData.data || userData;
         const firstName = user.name ? user.name.split(' ')[0] : 'Usuário';
@@ -1362,6 +1370,59 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Salvar dados do usuário no localStorage
         localStorage.setItem('user', JSON.stringify(userData));
+
+        // Adicionar info de trial ao lado do nome do usuário (profile-button)
+        const profileButtonSpan = document.getElementById('profile-name');
+        let trialInfoElem = document.getElementById('profile-trial-info');
+        if (!trialInfoElem) {
+          trialInfoElem = document.createElement('span');
+          trialInfoElem.id = 'profile-trial-info';
+          trialInfoElem.style.marginLeft = '10px';
+          trialInfoElem.style.fontSize = '12px';
+          trialInfoElem.style.fontWeight = '500';
+          trialInfoElem.style.color = '#ff6b6b';
+          profileButtonSpan.parentNode.insertBefore(trialInfoElem, profileButtonSpan.nextSibling);
+        }
+        if (trialStatus && trialStatus.plan === 'free') {
+          if (trialStatus.isInTrial) {
+            trialInfoElem.textContent = `${t['trial_active'] || 'Trial'}: ${trialStatus.daysLeft ?? '-'} ${t['trial_days_left'] ? t['trial_days_left'].replace('%s', trialStatus.daysLeft ?? '-') : 'dias restantes'}`;
+            trialInfoElem.style.color = '#4ecdc4';
+            trialInfoElem.style.background = '#eafaf7';
+            trialInfoElem.classList.remove('trial-expired');
+          } else {
+            trialInfoElem.textContent = t['trial_expired'] || 'Trial expirado';
+            trialInfoElem.style.color = '#ff6b6b';
+            trialInfoElem.style.background = '#fff0f0';
+            trialInfoElem.classList.add('trial-expired');
+          }
+          trialInfoElem.style.display = '';
+        } else if (trialInfoElem) {
+          trialInfoElem.textContent = '';
+          trialInfoElem.style.display = 'none';
+          trialInfoElem.classList.remove('trial-expired');
+        }
+        if (trialInfoElem) {
+          // Adicionar tooltip traduzido
+          if (trialStatus && trialStatus.plan === 'free') {
+            trialInfoElem.title = trialStatus.isInTrial
+              ? (t['upgrade_tooltip'] || 'Fazer upgrade')
+              : (t['upgrade_tooltip'] || 'Fazer upgrade');
+          } else {
+            trialInfoElem.title = '';
+          }
+          // Separar clique: só o badge abre o link
+          trialInfoElem.onclick = null;
+          if (trialStatus && trialStatus.plan === 'free') {
+            trialInfoElem.style.cursor = 'pointer';
+            trialInfoElem.onclick = (e) => {
+              e.stopPropagation(); // Não propaga para o botão de perfil
+              window.electronAPI.openExternal('https://spaceapp-digital.com/pricing');
+            };
+          } else {
+            trialInfoElem.style.cursor = 'default';
+            trialInfoElem.onclick = null;
+          }
+        }
       }
     } catch (error) {
       // Silenciar erros
@@ -1469,10 +1530,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Adicionar traduções para trial
   const trialTranslations = {
     'pt-BR': {
-      'trial_expired_notification': 'Seu período de trial expirou. Apenas 3 aplicações podem estar ativas no plano gratuito.'
+      'trial_expired_notification': 'Seu período de trial expirou. Apenas 3 aplicações podem estar ativas no plano gratuito.',
+      'trial_active': 'Trial',
+      'trial_days_left': ' dias restantes',
+      'upgrade_tooltip': 'Fazer upgrade'
     },
     'en-US': {
-      'trial_expired_notification': 'Your trial period has expired. Only 3 applications can be active in the free plan.'
+      'trial_expired_notification': 'Your trial period has expired. Only 3 applications can be active in the free plan.',
+      'trial_active': 'Trial',
+      'trial_days_left': ' days remaining',
+      'upgrade_tooltip': 'Upgrade now'
     }
   };
 
