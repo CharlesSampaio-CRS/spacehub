@@ -394,7 +394,7 @@ const loadUserInfo = async () => {
     if (upgradeBtn) {
       upgradeBtn.addEventListener('click', () => {
         // Abrir site de pagamentos
-        window.electronAPI.openExternal('https://spaceapp-digital.com/pricing');
+        window.electronAPI.openExternal('https://pay.infinitepay.io/charles-roberto-142/VC1DLUMtSQ-AAGvqtNpt-140,00');
       });
     }
 

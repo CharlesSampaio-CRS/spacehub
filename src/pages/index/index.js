@@ -838,7 +838,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         trialButton.addEventListener('click', () => {
           // Abrir site de pagamentos
-          window.electronAPI.openExternal('https://spaceapp-digital.com/pricing');
+          window.electronAPI.openExternal('https://pay.infinitepay.io/charles-roberto-142/VC1DLUMtSQ-AAGvqtNpt-140,00');
         });
         
         navSection?.appendChild(trialButton);
@@ -1428,7 +1428,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             trialInfoElem.style.cursor = 'pointer';
             trialInfoElem.onclick = (e) => {
               e.stopPropagation(); // Não propaga para o botão de perfil
-              window.electronAPI.openExternal('https://spaceapp-digital.com/pricing');
+              window.electronAPI.openExternal('https://pay.infinitepay.io/charles-roberto-142/VC1DLUMtSQ-AAGvqtNpt-140,00');
             };
           } else {
             trialInfoElem.style.cursor = 'default';
