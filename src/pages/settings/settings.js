@@ -8,20 +8,48 @@ const getAuthData = async () => {
   }
 };
 
+// Função utilitária para saber se está no trial
+function isInTrial(user) {
+  if (!user.createdAt) return false;
+  const created = new Date(user.createdAt);
+  const now = new Date();
+  const diffDays = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+  // Só considera trial se a data de criação for no passado e até 14 dias atrás
+  return created <= now && diffDays <= 14 && diffDays >= 0;
+}
+
+// Função para obter apps permitidas
+function getAllowedApps(user) {
+  if (user.plan === 'premium') return null;
+  if (user.plan === 'free') {
+    if (isInTrial(user)) return null;
+    return ['whatsapp', 'discord', 'linkedin'];
+  }
+  return [];
+}
+
 const loadApplications = async () => {
   const auth = await getAuthData();
   if (!auth) return;
 
   try {
-    // Tentar usar dados pré-carregados primeiro
-    let trialStatus = await window.electronAPI.getTrialStatus();
-    let applications = await window.electronAPI.getUserApplications();
-    
-    // Se não houver dados pré-carregados, buscar da API
-    if (!trialStatus) {
-      trialStatus = await window.electronAPI.checkTrialStatus(auth.userUuid);
+    // Buscar dados do usuário para validação de plano/trial
+    let user = await window.electronAPI.getUserInfo();
+    if (!user) {
+      // Fallback: buscar da API
+      const response = await fetch(`https://spaceapp-digital-api.onrender.com/users/${auth.userUuid}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`
+        }
+      });
+      const userData = await response.json();
+      user = userData?.data || userData;
     }
-    
+    const allowedApps = getAllowedApps(user);
+
+    let applications = await window.electronAPI.getUserApplications();
     if (!applications || applications.length === 0) {
       const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${auth.userUuid}`, {
         method: 'GET',
@@ -33,12 +61,11 @@ const loadApplications = async () => {
       const data = await response.json();
       applications = data.data?.applications || [];
     }
-    
     if (!Array.isArray(applications)) return;
 
     const listContainer = document.getElementById("applicationsList");
     listContainer.innerHTML = "";
-    
+
     // Ordenar aplicações: ativas primeiro, depois inativas
     const sortedApplications = applications.sort((a, b) => {
       if (a.active === b.active) {
@@ -47,16 +74,12 @@ const loadApplications = async () => {
       return b.active - a.active;
     });
 
-    // Se for usuário free fora do trial, limitar a 3 aplicações (WhatsApp, Discord, LinkedIn)
-    if (trialStatus.plan === 'free' && !trialStatus.isInTrial) {
-      const allowedApps = ['whatsapp', 'discord', 'linkedin'];
-      
-      // Desativar todas as aplicações exceto as permitidas
+    // Se houver restrição, desativar apps não permitidas
+    if (Array.isArray(allowedApps)) {
       sortedApplications.forEach(app => {
         const isAllowed = allowedApps.includes(app.application.toLowerCase());
         app.active = isAllowed;
       });
-      
       // Atualizar no servidor
       try {
         await fetch('https://spaceapp-digital-api.onrender.com/spaces', {
@@ -78,13 +101,10 @@ const loadApplications = async () => {
     sortedApplications.forEach(app => {
       const appItem = document.createElement("div");
       appItem.className = "application-card";
-      // Garantir que o card seja relativo para posicionar a coroa
       appItem.style.position = 'relative';
-      
-      // Verificar se deve desabilitar o toggle (apenas para usuários free fora do trial)
-      const isDisabled = trialStatus.plan === 'free' && !trialStatus.isInTrial && !app.active;
-      const isPremiumOnly = trialStatus.plan === 'free' && !trialStatus.isInTrial && !['whatsapp','discord','linkedin'].includes(app.application.toLowerCase());
-      
+      // Verificar se deve desabilitar o toggle
+      const isDisabled = Array.isArray(allowedApps) && !allowedApps.includes(app.application.toLowerCase());
+      const isPremiumOnly = Array.isArray(allowedApps) && !allowedApps.includes(app.application.toLowerCase());
       appItem.innerHTML = `
         <div class="application-info">
           <div class="app-icon-wrapper">
@@ -107,7 +127,6 @@ const loadApplications = async () => {
     // Adicionar eventos aos toggles
     const toggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
     toggles.forEach(toggle => {
-      // Se for premium only, mostrar notificação ao tentar interagir
       if (toggle.dataset.premium === "1") {
         toggle.addEventListener('click', (e) => {
           e.preventDefault();
@@ -168,16 +187,28 @@ const updateApplications = async () => {
   try {
     const auth = await getAuthData();
     if (!auth) return;
-    const trialStatus = await window.electronAPI.checkTrialStatus(auth.userUuid);
+    // Buscar dados do usuário para validação de plano/trial
+    let user = await window.electronAPI.getUserInfo();
+    if (!user) {
+      // Fallback: buscar da API
+      const response = await fetch(`https://spaceapp-digital-api.onrender.com/users/${auth.userUuid}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`
+        }
+      });
+      const userData = await response.json();
+      user = userData?.data || userData;
+    }
+    const allowedApps = getAllowedApps(user);
     const currentLanguage = await window.electronAPI.invoke('get-language');
     const toggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
     let applications = Array.from(toggles).map(toggle => ({
       uuid: toggle.id.replace('toggle-', ''),
       active: toggle.checked
     }));
-    if (trialStatus.plan === 'free' && !trialStatus.isInTrial) {
-      const allowedApps = ['whatsapp', 'discord', 'linkedin'];
-      // Só permitir ativar/desativar as permitidas
+    if (Array.isArray(allowedApps)) {
       applications = applications.map(app => {
         const appData = toggles.find(toggle => toggle.id === `toggle-${app.uuid}`);
         const appName = appData.closest('.application-card').querySelector('p strong').textContent;
@@ -254,10 +285,8 @@ const updateApplications = async () => {
         applications: updatedApplications
       })
     });
-    
     // Atualizar dados pré-carregados
     await window.electronAPI.updateUserApplications(updatedApplications);
-    
     // Atualizar imediatamente após salvar
     loadApplications();
     showSaveNotification(true, currentLanguage);
@@ -274,25 +303,10 @@ const loadUserInfo = async () => {
   if (!auth) return;
 
   try {
-    // Tentar usar dados pré-carregados primeiro
-    let trialStatus = await window.electronAPI.getTrialStatus();
-    let userData = await window.electronAPI.getUserInfo();
-    
-    // Se não houver dados pré-carregados, buscar da API
-    if (!trialStatus) {
-      try {
-        trialStatus = await window.electronAPI.checkTrialStatus(auth.userUuid);
-      } catch (error) {
-        // Fallback: assumir usuário free em trial
-        trialStatus = {
-          plan: 'free',
-          isInTrial: true,
-          daysLeft: 14
-        };
-      }
-    }
-    
-    if (!userData) {
+    // Buscar dados do usuário para validação de plano/trial
+    let user = await window.electronAPI.getUserInfo();
+    if (!user) {
+      // Fallback: buscar da API
       const response = await fetch(`https://spaceapp-digital-api.onrender.com/users/${auth.userUuid}`, {
         method: 'GET',
         headers: {
@@ -300,13 +314,11 @@ const loadUserInfo = async () => {
           'Authorization': `Bearer ${auth.token}`
         }
       });
-      
-      userData = await response.json();
+      const userData = await response.json();
+      user = userData?.data || userData;
     }
-    
-    const user = userData?.data || userData;
     const currentLanguage = await window.electronAPI.invoke('get-language');
-    
+
     const nameElem = document.getElementById("userName");
     const emailElem = document.getElementById("userEmail");
     if (!nameElem || !emailElem) {
@@ -324,42 +336,46 @@ const loadUserInfo = async () => {
     const trialCard = document.createElement("div");
     trialCard.className = "application-card";
     let inner = '';
-    if (trialStatus.plan === 'free' && !trialStatus.isInTrial) {
-      inner = `
-        <div class="trial-warning">
-          <div class="warning-content">
-            <i class="fas fa-exclamation-triangle"></i>
-            <div>
-              <h4>${translations[currentLanguage]?.['trial_expired'] || 'Período de Trial Expirado'}</h4>
-              <p>${translations[currentLanguage]?.['trial_expired_message'] || 'Seu período gratuito de 14 dias expirou. Faça upgrade para continuar usando todas as aplicações.'}</p>
-              <button id="upgrade-plan-btn" class="upgrade-btn">
-                <i class="fas fa-crown"></i>
-                ${translations[currentLanguage]?.['upgrade_plan'] || 'Fazer Upgrade'}
-              </button>
+    if (user.plan === 'free') {
+      if (isInTrial(user)) {
+        // Banner de trial ativo
+        inner = `
+          <div class="trial-info">
+            <div class="info-content">
+              <i class="fas fa-clock"></i>
+              <div>
+                <h4>${translations[currentLanguage]?.['trial_active'] || 'Período de Trial Ativo'}</h4>
+                <p>${(translations[currentLanguage]?.['trial_days_left'] || 'Você tem %s dias restantes no período gratuito.').replace('%s', 14 - Math.floor((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)))}</p>
+                <button id="upgrade-plan-btn" class="upgrade-btn">
+                  <i class="fas fa-crown"></i>
+                  ${translations[currentLanguage]?.['upgrade_plan'] || 'Fazer Upgrade'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      `;
-      trialCard.className = "application-card";
-    } else if (trialStatus.plan === 'free' && trialStatus.isInTrial) {
-      inner = `
-        <div class="trial-info">
-          <div class="info-content">
-            <i class="fas fa-clock"></i>
-            <div>
-              <h4>${translations[currentLanguage]?.['trial_active'] || 'Período de Trial Ativo'}</h4>
-              <p>${(translations[currentLanguage]?.['trial_days_left'] || 'Você tem %s dias restantes no período gratuito.').replace('%s', trialStatus.daysLeft)}</p>
-              <button id="upgrade-plan-btn" class="upgrade-btn">
-                <i class="fas fa-crown"></i>
-                ${translations[currentLanguage]?.['upgrade_plan'] || 'Fazer Upgrade'}
-              </button>
+        `;
+        trialCard.className = "application-card";
+      } else {
+        // Banner de trial expirado
+        inner = `
+          <div class="trial-warning">
+            <div class="warning-content">
+              <i class="fas fa-exclamation-triangle"></i>
+              <div>
+                <h4>${translations[currentLanguage]?.['trial_expired'] || 'Período de Trial Expirado'}</h4>
+                <p>${translations[currentLanguage]?.['trial_expired_message'] || 'Seu período gratuito de 14 dias expirou. Faça upgrade para continuar usando todas as aplicações.'}</p>
+                <button id="upgrade-plan-btn" class="upgrade-btn">
+                  <i class="fas fa-crown"></i>
+                  ${translations[currentLanguage]?.['upgrade_plan'] || 'Fazer Upgrade'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      `;
-      trialCard.className = "application-card";
+        `;
+        trialCard.className = "application-card";
+      }
     } else {
-      // Usuário pago - mostrar informações do plano atual
+      // Usuário premium - mostrar informações do plano atual, sem banner de trial
       inner = `
         <div class="premium-status">
           <div class="status-content">

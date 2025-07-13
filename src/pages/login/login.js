@@ -57,6 +57,7 @@ async function login() {
         }
       });
       const userData = await response.json();
+      console.log(userData)
       localStorage.setItem('user', JSON.stringify(userData.data || userData));
     } catch (e) {
       // Se falhar, apenas continue

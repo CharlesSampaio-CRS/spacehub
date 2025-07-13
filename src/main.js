@@ -890,7 +890,8 @@ ipcMain.handle('login', async (event, { email, password }) => {
 
       // Salvar dados no store para uso posterior
       if (userResponse.data) {
-        store.set('user', userResponse.data.data || userResponse.data);
+        const userData = userResponse.data.data || userResponse.data;
+        store.set('user', userData);
       }
       
       if (spacesResponse.data && spacesResponse.data.data && spacesResponse.data.data.applications) {
