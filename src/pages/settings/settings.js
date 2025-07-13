@@ -8,25 +8,8 @@ const getAuthData = async () => {
   }
 };
 
-// Função utilitária para saber se está no trial
-function isInTrial(user) {
-  if (!user.createdAt) return false;
-  const created = new Date(user.createdAt);
-  const now = new Date();
-  const diffDays = Math.floor((now - created) / (1000 * 60 * 60 * 24));
-  // Só considera trial se a data de criação for no passado e até 14 dias atrás
-  return created <= now && diffDays <= 14 && diffDays >= 0;
-}
-
-// Função para obter apps permitidas
-function getAllowedApps(user) {
-  if (user.plan === 'premium') return null;
-  if (user.plan === 'free') {
-    if (isInTrial(user)) return null;
-    return ['whatsapp', 'discord', 'linkedin'];
-  }
-  return [];
-}
+// Remover funções isInTrial, getAllowedApps, banners de trial, limitação de toggles, e toda lógica de limitação de apps baseada em plano/trial
+// O frontend só exibe o que vier do backend
 
 const loadApplications = async () => {
   const auth = await getAuthData();
@@ -47,7 +30,7 @@ const loadApplications = async () => {
       const userData = await response.json();
       user = userData?.data || userData;
     }
-    const allowedApps = getAllowedApps(user);
+    // const allowedApps = getAllowedApps(user); // Removido
 
     let applications = await window.electronAPI.getUserApplications();
     if (!applications || applications.length === 0) {
@@ -74,49 +57,49 @@ const loadApplications = async () => {
       return b.active - a.active;
     });
 
-    // Se houver restrição, desativar apps não permitidas
-    if (Array.isArray(allowedApps)) {
-      sortedApplications.forEach(app => {
-        const isAllowed = allowedApps.includes(app.application.toLowerCase());
-        app.active = isAllowed;
-      });
-      // Atualizar no servidor
-      try {
-        await fetch('https://spaceapp-digital-api.onrender.com/spaces', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${auth.token}`
-          },
-          body: JSON.stringify({
-            userUuid: auth.userUuid,
-            applications: sortedApplications
-          })
-        });
-      } catch (error) {
-        // Silenciar erros de rede
-      }
-    }
+    // Remover lógica de desativação de apps não permitidos
+    // if (Array.isArray(allowedApps)) { // Removido
+    //   sortedApplications.forEach(app => {
+    //     const isAllowed = allowedApps.includes(app.application.toLowerCase());
+    //     app.active = isAllowed;
+    //   });
+    //   // Atualizar no servidor
+    //   try {
+    //     await fetch('https://spaceapp-digital-api.onrender.com/spaces', {
+    //       method: 'PUT',
+    //       headers: {
+    //         'Content-Type': 'application/json',
+    //         'Authorization': `Bearer ${auth.token}`
+    //       },
+    //       body: JSON.stringify({
+    //         userUuid: auth.userUuid,
+    //         applications: sortedApplications
+    //       })
+    //     });
+    //   } catch (error) {
+    //     // Silenciar erros de rede
+    //   }
+    // }
 
     sortedApplications.forEach(app => {
       const appItem = document.createElement("div");
       appItem.className = "application-card";
       appItem.style.position = 'relative';
-      // Verificar se deve desabilitar o toggle
-      const isDisabled = Array.isArray(allowedApps) && !allowedApps.includes(app.application.toLowerCase());
-      const isPremiumOnly = Array.isArray(allowedApps) && !allowedApps.includes(app.application.toLowerCase());
+      // Remover lógica de desabilitação do toggle
+      // const isDisabled = Array.isArray(allowedApps) && !allowedApps.includes(app.application.toLowerCase()); // Removido
+      // const isPremiumOnly = Array.isArray(allowedApps) && !allowedApps.includes(app.application.toLowerCase()); // Removido
       appItem.innerHTML = `
         <div class="application-info">
           <div class="app-icon-wrapper">
-            <img src="${app.icon}" alt="${app.application}" class="app-icon${isPremiumOnly ? ' disabled-app' : ''}" onerror="this.src='../../assets/${app.application.toLowerCase()}.png'" ${isPremiumOnly ? 'title="Disponível apenas para usuários premium"' : ''}>
+            <img src="${app.icon}" alt="${app.application}" class="app-icon" onerror="this.src='../../assets/${app.application.toLowerCase()}.png'">
           </div>
           <div>
             <p><strong>${app.application}</strong></p>
           </div>
         </div>
-        <div class="application-toggle ${isDisabled ? 'disabled' : ''}">
+        <div class="application-toggle">
           <label class="toggle-switch">
-            <input type="checkbox" id="toggle-${app.uuid}" ${app.active ? 'checked' : ''} ${isDisabled ? 'disabled' : ''} ${isPremiumOnly ? 'data-premium="1"' : ''}>
+            <input type="checkbox" id="toggle-${app.uuid}" ${app.active ? 'checked' : ''}>
             <span class="slider"></span>
           </label>
         </div>
@@ -127,16 +110,17 @@ const loadApplications = async () => {
     // Adicionar eventos aos toggles
     const toggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
     toggles.forEach(toggle => {
-      if (toggle.dataset.premium === "1") {
-        toggle.addEventListener('click', (e) => {
-          e.preventDefault();
-          const currentLanguage = (window.electronAPI && window.electronAPI.getLanguage && window.electronAPI.getLanguage()) || 'pt-BR';
-          const premiumMessage = translations[currentLanguage]?.['premium_only'] || 'Disponível apenas para usuários premium';
-          showSaveNotification(false, currentLanguage, premiumMessage);
-        });
-      } else {
+      // Remover lógica de desabilitação do toggle
+      // if (toggle.dataset.premium === "1") { // Removido
+      //   toggle.addEventListener('click', (e) => {
+      //     e.preventDefault();
+      //     const currentLanguage = (window.electronAPI && window.electronAPI.getLanguage && window.electronAPI.getLanguage()) || 'pt-BR';
+      //     const premiumMessage = translations[currentLanguage]?.['premium_only'] || 'Disponível apenas para usuários premium';
+      //     showSaveNotification(false, currentLanguage, premiumMessage);
+      //   });
+      // } else { // Removido
         toggle.addEventListener('change', updateApplications);
-      }
+      // } // Removido
     });
 
   } catch (error) {
@@ -201,62 +185,63 @@ const updateApplications = async () => {
       const userData = await response.json();
       user = userData?.data || userData;
     }
-    const allowedApps = getAllowedApps(user);
+    // const allowedApps = getAllowedApps(user); // Removido
     const currentLanguage = await window.electronAPI.invoke('get-language');
     const toggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
     let applications = Array.from(toggles).map(toggle => ({
       uuid: toggle.id.replace('toggle-', ''),
       active: toggle.checked
     }));
-    if (Array.isArray(allowedApps)) {
-      applications = applications.map(app => {
-        const appData = toggles.find(toggle => toggle.id === `toggle-${app.uuid}`);
-        const appName = appData.closest('.application-card').querySelector('p strong').textContent;
-        const isAllowed = allowedApps.includes(appName.toLowerCase());
-        if (!isAllowed) {
-          app.active = false;
-          if (appData) {
-            appData.checked = false;
-            appData.disabled = true;
-            const toggleSwitch = appData.closest('.toggle-switch');
-            if (toggleSwitch) {
-              toggleSwitch.classList.add('disabled');
-            }
-          }
-        } else {
-          if (appData) {
-            appData.disabled = false;
-            const toggleSwitch = appData.closest('.toggle-switch');
-            if (toggleSwitch) {
-              toggleSwitch.classList.remove('disabled');
-            }
-          }
-        }
-        return app;
-      });
-      const warningMessage = translations[currentLanguage]['only_3_apps_allowed'] || 
-                            'Apenas 3 aplicações podem estar ativas no plano gratuito. Aplicações extras foram desativadas.';
-      const notification = document.createElement('div');
-      notification.className = 'trial-notification';
-      notification.innerHTML = `
-        <div class="notification-content">
-          <i class="fas fa-exclamation-triangle"></i>
-          <span>${warningMessage}</span>
-          <button class="close-notification">&times;</button>
-        </div>
-      `;
-      document.body.appendChild(notification);
-      setTimeout(() => {
-        if (notification.parentNode) {
-          notification.parentNode.removeChild(notification);
-        }
-      }, 5000);
-      notification.querySelector('.close-notification').addEventListener('click', () => {
-        if (notification.parentNode) {
-          notification.parentNode.removeChild(notification);
-        }
-      });
-    }
+    // Remover lógica de desativação de apps não permitidos
+    // if (Array.isArray(allowedApps)) { // Removido
+    //   applications = applications.map(app => {
+    //     const appData = toggles.find(toggle => toggle.id === `toggle-${app.uuid}`);
+    //     const appName = appData.closest('.application-card').querySelector('p strong').textContent;
+    //     const isAllowed = allowedApps.includes(appName.toLowerCase());
+    //     if (!isAllowed) {
+    //       app.active = false;
+    //       if (appData) {
+    //         appData.checked = false;
+    //         appData.disabled = true;
+    //         const toggleSwitch = appData.closest('.toggle-switch');
+    //         if (toggleSwitch) {
+    //           toggleSwitch.classList.add('disabled');
+    //         }
+    //       }
+    //     } else {
+    //       if (appData) {
+    //         appData.disabled = false;
+    //         const toggleSwitch = appData.closest('.toggle-switch');
+    //         if (toggleSwitch) {
+    //           toggleSwitch.classList.remove('disabled');
+    //         }
+    //       }
+    //     }
+    //     return app;
+    //   });
+    //   const warningMessage = translations[currentLanguage]['only_3_apps_allowed'] || 
+    //                         'Apenas 3 aplicações podem estar ativas no plano gratuito. Aplicações extras foram desativadas.'; // Removido
+    //   const notification = document.createElement('div'); // Removido
+    //   notification.className = 'trial-notification'; // Removido
+    //   notification.innerHTML = ` // Removido
+    //     <div class="notification-content"> // Removido
+    //       <i class="fas fa-exclamation-triangle"></i> // Removido
+    //       <span>${warningMessage}</span> // Removido
+    //       <button class="close-notification">&times;</button> // Removido
+    //     </div> // Removido
+    //   `; // Removido
+    //   document.body.appendChild(notification); // Removido
+    //   setTimeout(() => { // Removido
+    //     if (notification.parentNode) { // Removido
+    //       notification.parentNode.removeChild(notification); // Removido
+    //     } // Removido
+    //   }, 5000); // Removido
+    //   notification.querySelector('.close-notification').addEventListener('click', () => { // Removido
+    //     if (notification.parentNode) { // Removido
+    //       notification.parentNode.removeChild(notification); // Removido
+    //     } // Removido
+    //   }); // Removido
+    // } // Removido
     // Buscar estado atual das aplicações no backend
     const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${auth.userUuid}`, {
       method: 'GET',
@@ -303,7 +288,7 @@ const loadUserInfo = async () => {
   if (!auth) return;
 
   try {
-    // Buscar dados do usuário para validação de plano/trial
+    // Buscar dados do usuário
     let user = await window.electronAPI.getUserInfo();
     if (!user) {
       // Fallback: buscar da API
@@ -327,7 +312,8 @@ const loadUserInfo = async () => {
     nameElem.textContent = user.name || "-";
     emailElem.textContent = user.email || "-";
 
-    // Adicionar card de trial no placeholder correto
+    // Buscar status do trial/plano do backend
+    const trialStatus = await window.electronAPI.getTrialStatus();
     const trialCardPlaceholder = document.getElementById("trialCardPlaceholder");
     if (!trialCardPlaceholder) {
       return;
@@ -336,8 +322,8 @@ const loadUserInfo = async () => {
     const trialCard = document.createElement("div");
     trialCard.className = "application-card";
     let inner = '';
-    if (user.plan === 'free') {
-      if (isInTrial(user)) {
+    if (trialStatus && trialStatus.plan === 'free') {
+      if (trialStatus.isInTrial) {
         // Banner de trial ativo
         inner = `
           <div class="trial-info">
@@ -345,7 +331,7 @@ const loadUserInfo = async () => {
               <i class="fas fa-clock"></i>
               <div>
                 <h4>${translations[currentLanguage]?.['trial_active'] || 'Período de Trial Ativo'}</h4>
-                <p>${(translations[currentLanguage]?.['trial_days_left'] || 'Você tem %s dias restantes no período gratuito.').replace('%s', 14 - Math.floor((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)))}</p>
+                <p>${(translations[currentLanguage]?.['trial_days_left'] || 'Você tem %s dias restantes no período gratuito.').replace('%s', trialStatus.daysLeft ?? '-')}</p>
                 <button id="upgrade-plan-btn" class="upgrade-btn">
                   <i class="fas fa-crown"></i>
                   ${translations[currentLanguage]?.['upgrade_plan'] || 'Fazer Upgrade'}
@@ -374,7 +360,7 @@ const loadUserInfo = async () => {
         `;
         trialCard.className = "application-card";
       }
-    } else {
+    } else if (trialStatus && trialStatus.plan && trialStatus.plan !== 'free') {
       // Usuário premium - mostrar informações do plano atual, sem banner de trial
       inner = `
         <div class="premium-status">

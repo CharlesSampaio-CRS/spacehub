@@ -842,6 +842,14 @@ ipcMain.handle('get-user-session', (event, email) => {
 // Modificar o handler de login
 ipcMain.handle('login', async (event, { email, password }) => {
   try {
+    // 1. Limpar dados antigos antes de tentar login
+    store.delete('token');
+    store.delete('userUuid');
+    store.delete('user');
+    store.delete('userApplications');
+    store.delete('trialStatus');
+
+    // 2. Tentar login normalmente
     const { data } = await axios.post('https://spaceapp-digital-api.onrender.com/login', {
       email,
       password
@@ -870,7 +878,9 @@ ipcMain.handle('login', async (event, { email, password }) => {
       throw new Error('UUID do usuário não encontrado');
     }
 
-    // Pré-carregar dados do usuário e aplicações
+    // 3. Buscar dados do usuário e aplicações
+    let userData = null;
+    let applications = [];
     try {
       // Buscar dados do usuário
       const userResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/users/${userUuid}`, {
@@ -879,6 +889,11 @@ ipcMain.handle('login', async (event, { email, password }) => {
           'Authorization': `Bearer ${token}`
         }
       });
+      userData = userResponse.data.data || userResponse.data;
+      store.set('user', userData);
+      
+      // Logar os dados do usuário no console da aplicação
+      console.log('Usuário autenticado:', userData);
 
       // Buscar aplicações do usuário
       const spacesResponse = await axios.get(`https://spaceapp-digital-api.onrender.com/spaces/${userUuid}`, {
@@ -887,30 +902,53 @@ ipcMain.handle('login', async (event, { email, password }) => {
           'Authorization': `Bearer ${token}`
         }
       });
+      applications = spacesResponse.data?.data?.applications || [];
 
-      // Salvar dados no store para uso posterior
-      if (userResponse.data) {
-        const userData = userResponse.data.data || userResponse.data;
-        store.set('user', userData);
+      // 4. Validar plano e trial
+      let trialStatus = {
+        plan: userData.plan || 'free',
+        isInTrial: false,
+        canHaveMoreApps: false,
+        daysLeft: 0,
+        createdAt: userData.createdAt
+      };
+      if (userData.plan === 'free') {
+        // Verificar trial
+        const isInTrial = trialManager.isUserInTrial(userData);
+        trialStatus.isInTrial = isInTrial;
+        trialStatus.canHaveMoreApps = isInTrial;
+        if (isInTrial) {
+          // Calcular dias restantes
+          const createdAt = new Date(userData.createdAt);
+          const now = new Date();
+          const createdDate = new Date(createdAt.getFullYear(), createdAt.getMonth(), createdAt.getDate());
+          const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const timeDiff = currentDate.getTime() - createdDate.getTime();
+          const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+          trialStatus.daysLeft = Math.max(0, 14 - daysDiff);
+        } else {
+          // Fora do trial: limitar aplicações
+          applications = trialManager.limitApplicationsForFreeUser(applications);
+          // Atualizar no servidor se necessário
+          await axios.put('https://spaceapp-digital-api.onrender.com/spaces', {
+            userUuid: userUuid,
+            applications: applications
+          }, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+        }
+      } else {
+        // Premium: tudo liberado
+        trialStatus.plan = userData.plan;
+        trialStatus.isInTrial = false;
+        trialStatus.canHaveMoreApps = true;
+        trialStatus.daysLeft = null;
       }
-      
-      if (spacesResponse.data && spacesResponse.data.data && spacesResponse.data.data.applications) {
-        store.set('userApplications', spacesResponse.data.data.applications);
-      }
-
-      // Verificar trial status e salvar
-      try {
-        const trialStatus = await checkTrialStatus(userUuid);
-        store.set('trialStatus', trialStatus);
-      } catch (trialError) {
-        // Fallback: assumir usuário free em trial
-        store.set('trialStatus', {
-          plan: 'free',
-          isInTrial: true,
-          daysLeft: 14
-        });
-      }
-
+      store.set('userApplications', applications);
+      store.set('trialStatus', trialStatus);
     } catch (preloadError) {
       console.error('Erro ao pré-carregar dados:', preloadError);
       // Continuar mesmo se falhar o pré-carregamento
@@ -918,7 +956,13 @@ ipcMain.handle('login', async (event, { email, password }) => {
 
     createUserSession(email);
 
-    return data;
+    // Retornar dados já validados para o frontend
+    return {
+      token,
+      user: store.get('user'),
+      userApplications: store.get('userApplications'),
+      trialStatus: store.get('trialStatus')
+    };
   } catch (error) {
     console.error('Login error in main process:', error);
     throw error;
