@@ -2716,3 +2716,18 @@ async function validateAndSaveTrialStatus(userUuid, token, email) {
     return null;
   }
 }
+
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Se já existe uma janela principal, focar nela
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+  // O resto do código do app continua normalmente
+}
