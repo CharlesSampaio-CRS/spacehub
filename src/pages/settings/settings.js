@@ -22,30 +22,14 @@ const loadApplications = async () => {
     // Buscar dados do usuário para validação de plano/trial
     let user = await window.electronAPI.getUserInfo();
     if (!user) {
-      // Fallback: buscar da API
-      const response = await fetch(`https://spaceapp-digital-api.onrender.com/users/${auth.userUuid}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${auth.token}`
-        }
-      });
-      const userData = await response.json();
-      user = userData?.data || userData;
+      // Fallback: buscar da API via main process
+      user = await window.electronAPI.invoke('get-user-info');
     }
-    // const allowedApps = getAllowedApps(user); // Removido
 
     let applications = await window.electronAPI.getUserApplications();
     if (!applications || applications.length === 0) {
-      const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${auth.userUuid}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${auth.token}`
-        }
-      });
-      const data = await response.json();
-      applications = data.data?.applications || [];
+      // Fallback: buscar da API via main process
+      applications = await window.electronAPI.invoke('get-user-applications');
     }
     if (!Array.isArray(applications)) return;
 
@@ -60,40 +44,13 @@ const loadApplications = async () => {
       return b.active - a.active;
     });
 
-    // Remover lógica de desativação de apps não permitidos
-    // if (Array.isArray(allowedApps)) { // Removido
-    //   sortedApplications.forEach(app => {
-    //     const isAllowed = allowedApps.includes(app.application.toLowerCase());
-    //     app.active = isAllowed;
-    //   });
-    //   // Atualizar no servidor
-    //   try {
-    //     await fetch('https://spaceapp-digital-api.onrender.com/spaces', {
-    //       method: 'PUT',
-    //       headers: {
-    //         'Content-Type': 'application/json',
-    //         'Authorization': `Bearer ${auth.token}`
-    //       },
-    //       body: JSON.stringify({
-    //         userUuid: auth.userUuid,
-    //         applications: sortedApplications
-    //       })
-    //     });
-    //   } catch (error) {
-    //     // Silenciar erros de rede
-    //   }
-    // }
-
     sortedApplications.forEach(app => {
       const appItem = document.createElement("div");
       appItem.className = "application-card";
       appItem.style.position = 'relative';
-      
-      // Verificar se o app deve estar desabilitado
       const isDisabled = trialStatus && trialStatus.plan === 'free' && !trialStatus.isInTrial;
       const defaultApps = ['whatsapp', 'discord', 'linkedin'];
       const shouldDisableIcon = isDisabled && !defaultApps.includes(app.application.toLowerCase());
-      
       appItem.innerHTML = `
         <div class="application-info">
           <div class="app-icon-wrapper">
@@ -181,111 +138,35 @@ const updateApplications = async () => {
   try {
     const auth = await getAuthData();
     if (!auth) return;
-    // Buscar dados do usuário para validação de plano/trial
     let user = await window.electronAPI.getUserInfo();
     if (!user) {
-      // Fallback: buscar da API
-      const response = await fetch(`https://spaceapp-digital-api.onrender.com/users/${auth.userUuid}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${auth.token}`
-        }
-      });
-      const userData = await response.json();
-      user = userData?.data || userData;
+      user = await window.electronAPI.invoke('get-user-info');
     }
-    // const allowedApps = getAllowedApps(user); // Removido
     const currentLanguage = await window.electronAPI.invoke('get-language');
     const toggles = document.querySelectorAll('.application-toggle input[type="checkbox"]');
     let applications = Array.from(toggles).map(toggle => ({
       uuid: toggle.id.replace('toggle-', ''),
       active: toggle.checked
     }));
-    // Remover lógica de desativação de apps não permitidos
-    // if (Array.isArray(allowedApps)) { // Removido
-    //   applications = applications.map(app => {
-    //     const appData = toggles.find(toggle => toggle.id === `toggle-${app.uuid}`);
-    //     const appName = appData.closest('.application-card').querySelector('p strong').textContent;
-    //     const isAllowed = allowedApps.includes(appName.toLowerCase());
-    //     if (!isAllowed) {
-    //       app.active = false;
-    //       if (appData) {
-    //         appData.checked = false;
-    //         appData.disabled = true;
-    //         const toggleSwitch = appData.closest('.toggle-switch');
-    //         if (toggleSwitch) {
-    //           toggleSwitch.classList.add('disabled');
-    //         }
-    //       }
-    //     } else {
-    //       if (appData) {
-    //         appData.disabled = false;
-    //         const toggleSwitch = appData.closest('.toggle-switch');
-    //         if (toggleSwitch) {
-    //           toggleSwitch.classList.remove('disabled');
-    //         }
-    //       }
-    //     }
-    //     return app;
-    //   });
-    //   const warningMessage = translations[currentLanguage]['only_3_apps_allowed'] || 
-    //                         'Apenas 3 aplicações podem estar ativas no plano gratuito. Aplicações extras foram desativadas.'; // Removido
-    //   const notification = document.createElement('div'); // Removido
-    //   notification.className = 'trial-notification'; // Removido
-    //   notification.innerHTML = ` // Removido
-    //     <div class="notification-content"> // Removido
-    //       <i class="fas fa-exclamation-triangle"></i> // Removido
-    //       <span>${warningMessage}</span> // Removido
-    //       <button class="close-notification">&times;</button> // Removido
-    //     </div> // Removido
-    //   `; // Removido
-    //   document.body.appendChild(notification); // Removido
-    //   setTimeout(() => { // Removido
-    //     if (notification.parentNode) { // Removido
-    //       notification.parentNode.removeChild(notification); // Removido
-    //     } // Removido
-    //   }, 5000); // Removido
-    //   notification.querySelector('.close-notification').addEventListener('click', () => { // Removido
-    //     if (notification.parentNode) { // Removido
-    //       notification.parentNode.removeChild(notification); // Removido
-    //     } // Removido
-    //   }); // Removido
-    // } // Removido
     // Buscar estado atual das aplicações no backend
-    const response = await fetch(`https://spaceapp-digital-api.onrender.com/spaces/${auth.userUuid}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${auth.token}`
-      }
-    });
-    const data = await response.json();
-    if (!Array.isArray(data.data.applications)) return;
-    const updatedApplications = data.data.applications.map(app => {
+    let currentApps = await window.electronAPI.getUserApplications();
+    if (!currentApps || currentApps.length === 0) {
+      currentApps = await window.electronAPI.invoke('get-user-applications');
+    }
+    if (!Array.isArray(currentApps)) return;
+    const updatedApplications = currentApps.map(app => {
       const toggleState = applications.find(t => t.uuid === app.uuid);
       return {
         ...app,
         active: toggleState ? toggleState.active : app.active
       };
     });
-    await fetch('https://spaceapp-digital-api.onrender.com/spaces', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${auth.token}`
-      },
-      body: JSON.stringify({
-        userUuid: auth.userUuid,
-        applications: updatedApplications
-      })
-    });
+    // Atualizar no backend via main process
+    await window.electronAPI.invoke('update-user-applications', updatedApplications);
     // Atualizar dados pré-carregados
     await window.electronAPI.updateUserApplications(updatedApplications);
-    // Atualizar imediatamente após salvar
     loadApplications();
     showSaveNotification(true, currentLanguage);
-    // Recarregar a sidebar na página principal
     window.electronAPI.send('reload-applications');
   } catch (error) {
     const currentLanguage = await window.electronAPI.invoke('get-language');
@@ -298,22 +179,11 @@ const loadUserInfo = async () => {
   if (!auth) return;
 
   try {
-    // Buscar dados do usuário
     let user = await window.electronAPI.getUserInfo();
     if (!user) {
-      // Fallback: buscar da API
-      const response = await fetch(`https://spaceapp-digital-api.onrender.com/users/${auth.userUuid}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${auth.token}`
-        }
-      });
-      const userData = await response.json();
-      user = userData?.data || userData;
+      user = await window.electronAPI.invoke('get-user-info');
     }
     const currentLanguage = await window.electronAPI.invoke('get-language');
-
     const nameElem = document.getElementById("userName");
     const emailElem = document.getElementById("userEmail");
     if (!nameElem || !emailElem) {
@@ -321,7 +191,6 @@ const loadUserInfo = async () => {
     }
     nameElem.textContent = user.name || "-";
     emailElem.textContent = user.email || "-";
-
     // Buscar status do trial/plano do backend
     const trialStatus = await window.electronAPI.getTrialStatus();
     const trialCardPlaceholder = document.getElementById("trialCardPlaceholder");
@@ -397,7 +266,6 @@ const loadUserInfo = async () => {
         window.electronAPI.openExternal('https://pay.infinitepay.io/charles-roberto-142/VC1DLUMtSQ-AAGvqtNpt-140,00');
       });
     }
-
   } catch (error) {
     // Silenciar erros de rede
   }
