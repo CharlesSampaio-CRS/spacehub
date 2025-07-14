@@ -2723,11 +2723,42 @@ if (!gotTheLock) {
   app.quit();
 } else {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
-    // Se já existe uma janela principal, focar nela
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
     }
   });
-  // O resto do código do app continua normalmente
+
+  // Interceptar todas as requests para forçar headers de no-cache
+  app.whenReady().then(async () => {
+    // Limpar cache da sessão principal
+    await session.defaultSession.clearCache();
+    // Limpar cache de todas as sessões de usuário, se existirem
+    if (typeof userSessions !== 'undefined') {
+      for (const [email, userSession] of userSessions.entries()) {
+        try {
+          await userSession.clearCache();
+        } catch (error) {
+          console.error(`Erro ao limpar cache da sessão ${email}:`, error);
+        }
+      }
+    }
+    // Interceptar requests para forçar headers de no-cache
+    session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+      details.requestHeaders['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+      details.requestHeaders['Pragma'] = 'no-cache';
+      details.requestHeaders['Expires'] = '0';
+      callback({ requestHeaders: details.requestHeaders });
+    });
+  });
 }
+
+// Garantir que todas as requisições Axios usem headers de no-cache por padrão
+const axiosNoCache = axios.create({
+  headers: {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  }
+});
+// Substituir axios por axiosNoCache nas requisições dinâmicas, se possível
