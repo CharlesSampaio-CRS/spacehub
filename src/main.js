@@ -607,18 +607,229 @@ function showUpdateAvailableWindow() {
     return;
   }
 
+  // Obter configuração de tema do store
+  const isDarkMode = store.get('darkMode') === true;
+  const language = store.get('language') || 'pt-BR';
+  
+  const translations = {
+    'pt-BR': {
+      title: 'Nova Atualização Disponível',
+      message: 'Uma nova versão do SpaceHub está disponível para download.',
+      downloadButton: 'Baixar Agora',
+      laterButton: 'Mais Tarde'
+    },
+    'en-US': {
+      title: 'New Update Available',
+      message: 'A new version of SpaceHub is available for download.',
+      downloadButton: 'Download Now',
+      laterButton: 'Later'
+    }
+  };
+
+  const t = translations[language] || translations['pt-BR'];
+
   updateAvailableWindow = new BrowserWindow({
-    width: 400,
-    height: 250,
+    width: 480,
+    height: 320,
     frame: false,
     alwaysOnTop: true,
     resizable: false,
     webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: true
+      nodeIntegration: true,
+      contextIsolation: false
     }
   });
+
+  updateAvailableWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>${t.title}</title>
+      <style>
+        :root {
+          --primary-color: #4a6cf7;
+          --primary-hover: #3a5ce5;
+          --text-color: #333;
+          --text-light: #666;
+          --border-color: #ddd;
+          --card-bg: #fff;
+          --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          --transition: all 0.3s ease;
+        }
+
+        body.dark-mode {
+          --text-color: #f0f0f0;
+          --text-light: #a0a0a0;
+          --border-color: #4a4a4a;
+          --card-bg: #404040;
+        }
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+          background: var(--card-bg);
+          color: var(--text-color);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          padding: 0;
+          overflow: hidden;
+          ${isDarkMode ? 'background: #363636;' : ''}
+        }
+
+        .update-modal {
+          background: var(--card-bg);
+          border-radius: 16px;
+          box-shadow: var(--card-shadow);
+          padding: 32px;
+          text-align: center;
+          max-width: 400px;
+          width: 100%;
+          border: 1px solid var(--border-color);
+          box-sizing: border-box;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .update-icon {
+          width: 64px;
+          height: 64px;
+          background: var(--primary-color);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 24px;
+          color: white;
+          font-size: 28px;
+        }
+
+        .update-title {
+          font-size: 24px;
+          font-weight: 600;
+          color: var(--text-color);
+          margin-bottom: 16px;
+        }
+
+        .update-message {
+          font-size: 16px;
+          color: var(--text-light);
+          line-height: 1.5;
+          margin-bottom: 32px;
+        }
+
+        .button-container {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+        }
+
+        .btn {
+          padding: 12px 24px;
+          border-radius: 8px;
+          border: none;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          transition: var(--transition);
+          min-width: 120px;
+        }
+
+        .btn-primary {
+          background: var(--primary-color);
+          color: white;
+        }
+
+        .btn-primary:hover {
+          background: var(--primary-hover);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(74, 108, 247, 0.3);
+        }
+
+        .btn-secondary {
+          background: transparent;
+          color: var(--text-light);
+          border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+          background: ${isDarkMode ? '#4a4a4a' : '#f0f0f0'};
+          color: var(--text-color);
+        }
+
+        .btn:active {
+          transform: translateY(0);
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        .update-modal {
+          animation: fadeIn 0.3s ease-out;
+        }
+      </style>
+    </head>
+    <body class="${isDarkMode ? 'dark-mode' : ''}">
+      <div class="update-modal">
+        <div class="update-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="16,12 12,8 8,12"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+          </svg>
+        </div>
+        
+        <h1 class="update-title">${t.title}</h1>
+        
+        <p class="update-message">${t.message}</p>
+        
+        <div class="button-container">
+          <button class="btn btn-secondary" id="laterBtn">${t.laterButton}</button>
+          <button class="btn btn-primary" id="downloadBtn">${t.downloadButton}</button>
+        </div>
+      </div>
+
+      <script>
+        const { ipcRenderer } = require('electron');
+        
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+          ipcRenderer.send('download-update');
+          window.close();
+        });
+        
+        document.getElementById('laterBtn').addEventListener('click', () => {
+          window.close();
+        });
+        
+        // Adicionar efeito de hover nos botões
+        document.querySelectorAll('.btn').forEach(btn => {
+          btn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-1px)';
+          });
+          
+          btn.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+          });
+        });
+      </script>
+    </body>
+    </html>
+  `)}`);
 
   updateAvailableWindow.on('closed', () => {
     updateAvailableWindow = null;
@@ -637,8 +848,8 @@ autoUpdater.on('update-downloaded', (info) => {
   }
 
   updateReadyWindow = new BrowserWindow({
-    width: 450,
-    height: 450,
+    width: 540,
+    height: 460,
     title: 'Update Ready',
     frame: false,
     resizable: false,
@@ -649,43 +860,244 @@ autoUpdater.on('update-downloaded', (info) => {
     }
   });
 
+  // Obter configuração de tema do store
+  const isDarkMode = store.get('darkMode') === true;
+  const language = store.get('language') || 'pt-BR';
+  
+  const translations = {
+    'pt-BR': {
+      title: 'Atualização Pronta',
+      message: 'A versão {version} foi baixada e está pronta para ser instalada.',
+      restartButton: 'Reiniciar Agora',
+      cancelButton: 'Cancelar'
+    },
+    'en-US': {
+      title: 'Update Ready',
+      message: 'Version {version} has been downloaded and is ready to install.',
+      restartButton: 'Restart Now',
+      cancelButton: 'Cancel'
+    }
+  };
+
+  const t = translations[language] || translations['pt-BR'];
+
   updateReadyWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(`
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>Atualização Pronta</title>
+      <title>${t.title}</title>
       <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 30px; background-color: #f5f5f5; color: #333; }
-        h1 { color: #2c3e50; margin-bottom: 20px; }
-        p { margin-bottom: 30px; line-height: 1.5; }
-        .button-container { display: flex; justify-content: center; gap: 15px; }
-        button { padding: 10px 25px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; transition: background-color 0.3s; }
-        #restartBtn { background-color: #27ae60; color: white; }
-        #restartBtn:hover { background-color: #2ecc71; }
+        :root {
+          --primary-color: #4a6cf7;
+          --primary-hover: #3a5ce5;
+          --text-color: #333;
+          --text-light: #666;
+          --border-color: #ddd;
+          --card-bg: #fff;
+          --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          --transition: all 0.3s ease;
+        }
+
+        body.dark-mode {
+          --text-color: #f0f0f0;
+          --text-light: #a0a0a0;
+          --border-color: #4a4a4a;
+          --card-bg: #404040;
+        }
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+          background: var(--card-bg);
+          color: var(--text-color);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          padding: 16px;
+          overflow: hidden;
+          ${isDarkMode ? 'background: #363636;' : ''}
+        }
+
+        .update-modal {
+          background: var(--card-bg);
+          border-radius: 16px;
+          box-shadow: var(--card-shadow);
+          padding: 24px;
+          text-align: center;
+          max-width: 380px;
+          width: 100%;
+          border: 1px solid var(--border-color);
+          box-sizing: border-box;
+        }
+
+        .update-icon {
+          width: 64px;
+          height: 64px;
+          background: var(--primary-color);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 24px;
+          color: white;
+          font-size: 28px;
+        }
+
+        .update-title {
+          font-size: 24px;
+          font-weight: 600;
+          color: var(--text-color);
+          margin-bottom: 16px;
+        }
+
+        .update-message {
+          font-size: 16px;
+          color: var(--text-light);
+          line-height: 1.5;
+          margin-bottom: 32px;
+        }
+
+        .version-info {
+          background: ${isDarkMode ? '#2a2a2a' : '#f8f9fa'};
+          border-radius: 8px;
+          padding: 12px;
+          margin-bottom: 24px;
+          border: 1px solid var(--border-color);
+        }
+
+        .version-label {
+          font-size: 14px;
+          color: var(--text-light);
+          margin-bottom: 4px;
+        }
+
+        .version-value {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--text-color);
+        }
+
+        .button-container {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+        }
+
+        .btn {
+          padding: 12px 24px;
+          border-radius: 8px;
+          border: none;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          transition: var(--transition);
+          min-width: 120px;
+        }
+
+        .btn-primary {
+          background: var(--primary-color);
+          color: white;
+        }
+
+        .btn-primary:hover {
+          background: var(--primary-hover);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(74, 108, 247, 0.3);
+        }
+
+        .btn-secondary {
+          background: transparent;
+          color: var(--text-light);
+          border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+          background: ${isDarkMode ? '#4a4a4a' : '#f0f0f0'};
+          color: var(--text-color);
+        }
+
+        .btn:active {
+          transform: translateY(0);
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        .update-modal {
+          animation: fadeIn 0.3s ease-out;
+        }
       </style>
     </head>
-    <body>
-      <h1>Atualização Pronta para Instalar</h1>
-      <p>A versão ${info.version} foi baixada e está pronta para ser instalada.</p>
-      <div class="button-container">
-        <button id="restartBtn">Reiniciar Agora</button>
+    <body class="${isDarkMode ? 'dark-mode' : ''}">
+      <div class="update-modal">
+        <div class="update-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7,10 12,15 17,10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </div>
+        
+        <h1 class="update-title">${t.title}</h1>
+        
+        <p class="update-message">${t.message.replace('{version}', info.version)}</p>
+        
+        <div class="version-info">
+          <div class="version-label">Nova Versão</div>
+          <div class="version-value">v${info.version}</div>
+        </div>
+        
+        <div class="button-container">
+          <button class="btn btn-secondary" id="cancelBtn">${t.cancelButton}</button>
+          <button class="btn btn-primary" id="restartBtn">${t.restartButton}</button>
+        </div>
       </div>
+
       <script>
         const { ipcRenderer } = require('electron');
+        
         document.getElementById('restartBtn').addEventListener('click', () => {
           ipcRenderer.send('restart-for-update');
+        });
+        
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+          window.close();
+        });
+        
+        // Adicionar efeito de hover nos botões
+        document.querySelectorAll('.btn').forEach(btn => {
+          btn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-1px)';
+          });
+          
+          btn.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+          });
         });
       </script>
     </body>
     </html>
   `)}`);
 
-
   updateReadyWindow.on('closed', () => {
     updateReadyWindow = null;
   });
-});
+}); // <-- fechamento correto do autoUpdater.on('update-downloaded', ...)
 
 ipcMain.on('restart-for-update', () => {
   if (isUpdating) return;
@@ -723,8 +1135,10 @@ app.whenReady().then(() => {
     }
   });
 
+  // Configurar autoUpdater
   autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.autoRunAppAfterInstall = true;
+  autoUpdater.forceDevUpdateConfig = true;
   
   autoUpdater.logger = {
     info: (message) => console.log('AutoUpdater:', message),

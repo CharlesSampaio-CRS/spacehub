@@ -619,306 +619,18 @@ input:focus {
 
 /* Estilos do diálogo de confirmação */
 .confirmation-dialog {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.confirmation-content {
-  background: var(--card-bg);
-  padding: 24px;
-  border-radius: 12px;
-  max-width: 400px;
-  width: 90%;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.dark-mode .confirmation-content {
-  background: var(--card-bg-dark);
-}
-
-.confirmation-content h3 {
-  margin: 0 0 16px;
-  color: var(--text-color);
-  font-size: 18px;
-}
-
-.dark-mode .confirmation-content h3 {
-  color: #f0f0f0;
-}
-
-.confirmation-content p {
-  margin: 0 0 24px;
-  color: var(--text-light);
-  font-size: 14px;
-}
-
-.dark-mode .confirmation-content p {
-  color: #a0a0a0;
-}
-
-.confirmation-buttons {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
-
-.confirmation-buttons button {
-  padding: 8px 24px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: var(--transition);
-}
-
-.confirm-btn {
-  background: var(--primary-color);
-  color: white;
-}
-
-.confirm-btn:hover {
-  background: var(--primary-hover);
-}
-
-.cancel-btn {
-  background: transparent;
-  color: var(--text-light);
-  border: 1px solid var(--border-color) !important;
-}
-
-.dark-mode .cancel-btn {
-  color: #a0a0a0;
-  border-color: #4a4a4a !important;
-}
-
-.cancel-btn:hover {
-  background: var(--hover-bg);
-}
-
-.dark-mode .cancel-btn:hover {
-  background: var(--hover-bg-dark);
-}
-
-/* Botão de limpar cache */
-.clear-cache-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: var(--transition);
-  min-width: 100px;
-  justify-content: center;
-}
-
-.clear-cache-button:hover {
-  background: #dc2626;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
-}
-
-.clear-cache-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
-}
-
-.clear-cache-button:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.clear-cache-button i {
-  font-size: 14px;
-}
-
-.dark-mode .clear-cache-button {
-  background: #dc2626;
-}
-
-.dark-mode .clear-cache-button:hover {
-  background: #b91c1c;
-}
-
-.dark-mode .clear-cache-button:disabled {
-  background: #6b7280;
-}
-
-/* Mensagens de cache */
-.cache-success-message,
-.cache-error-message {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  z-index: 1000;
-  animation: slideInRight 0.3s ease-out;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  max-width: 300px;
-}
-
-.cache-success-message {
-  background: #10b981;
-  color: white;
-  border: 1px solid #059669;
-}
-
-.cache-error-message {
-  background: #ef4444;
-  color: white;
-  border: 1px solid #dc2626;
-}
-
-.cache-success-message i,
-.cache-error-message i {
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.dark-mode .cache-success-message {
-  background: #059669;
-  border-color: #047857;
-}
-
-.dark-mode .cache-error-message {
-  background: #dc2626;
-  border-color: #b91c1c;
-}
-
-/* Ajuste do toggle switch para modo escuro */
-.dark-mode .slider {
-  background-color: #4a4a4a;
-}
-
-.dark-mode input:checked + .slider {
-  background-color: var(--primary-color);
-}
-
-.dark-mode .slider:before {
-  background-color: #e0e0e0;
-}
-
-.version-button {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-}
-
-.version-button:hover {
-  opacity: 1;
-  background: var(--bg-secondary);
-}
-
-.update-info {
-  text-align: left;
-  margin: 1rem 0;
-}
-
-.version-comparison {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: var(--bg-secondary);
-  border-radius: 8px;
-}
-
-.version-item {
-  display: flex;
-  justify-content: space-between;
-  margin: 0.5rem 0;
-  padding: 0.5rem;
-  background: var(--bg-primary);
-  border-radius: 4px;
-}
-
-.version-label {
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.version-value {
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.update-dialog .swal2-title {
-  color: var(--text-primary);
-}
-
-.update-dialog .swal2-html-container {
-  color: var(--text-secondary);
-}
-
-.version-info {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
-.version-info span {
-  display: block;
-  padding: 0.5rem;
-  background: var(--bg-secondary);
-  border-radius: 4px;
-}
-
-.confirmation-dialog {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   padding: 1rem;
+  width: 100%;
 }
 
 .confirmation-icon {
   font-size: 3rem;
   margin-bottom: 1rem;
-  color: var(--text-primary);
+  color: var(--primary-color);
 }
 
 .confirmation-content {
@@ -927,24 +639,98 @@ input:focus {
 
 .confirmation-content p {
   margin-bottom: 1rem;
-  color: var(--text-primary);
+  color: var(--text-color);
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 .confirmation-dialog-container .swal2-title {
-  color: var(--text-primary);
+  color: var(--text-color);
   font-size: 1.5rem;
   margin-bottom: 1rem;
+  font-weight: 600;
 }
 
 .confirmation-dialog-container .swal2-html-container {
   margin: 0;
+  padding: 0;
 }
 
 .confirmation-dialog-container .swal2-confirm,
 .confirmation-dialog-container .swal2-cancel {
   padding: 0.75rem 2rem;
   font-size: 1rem;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.confirmation-dialog-container .swal2-confirm {
+  background: var(--primary-color);
+  border: none;
+}
+
+.confirmation-dialog-container .swal2-confirm:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(74, 108, 247, 0.3);
+}
+
+.confirmation-dialog-container .swal2-cancel {
+  background: transparent;
+  color: var(--text-light);
+  border: 1px solid var(--border-color);
+}
+
+.confirmation-dialog-container .swal2-cancel:hover {
+  background: var(--hover-bg);
+  color: var(--text-color);
+}
+
+/* Dark mode adjustments for SweetAlert2 */
+.dark-mode .confirmation-dialog-container .swal2-title {
+  color: #f0f0f0;
+}
+
+.dark-mode .confirmation-dialog-container .swal2-html-container {
+  color: #a0a0a0;
+}
+
+.dark-mode .confirmation-dialog-container .swal2-cancel {
+  color: #a0a0a0;
+  border-color: #4a4a4a;
+}
+
+.dark-mode .confirmation-dialog-container .swal2-cancel:hover {
+  background: #4a4a4a;
+  color: #f0f0f0;
+}
+
+.dark-mode .confirmation-icon {
+  color: #7c8cff;
+}
+
+/* Version info styling */
+.version-info {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.version-info span {
+  display: block;
+  padding: 0.5rem;
+  background: var(--hover-bg);
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.dark-mode .version-info span {
+  background: #2a2a2a;
+  color: #a0a0a0;
 }
 
 /* Trial Warning and Info Styles */
@@ -1364,4 +1150,148 @@ body.dark-mode .trial-card .premium-status {
 .dark-mode .icon-disabled {
   opacity: 0.3 !important;
   filter: grayscale(1) brightness(0.7) !important;
+}
+
+/* Botão de limpar cache */
+.clear-cache-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: var(--transition);
+  min-width: 100px;
+  justify-content: center;
+}
+
+.clear-cache-button:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+.clear-cache-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.clear-cache-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.clear-cache-button i {
+  font-size: 14px;
+}
+
+.dark-mode .clear-cache-button {
+  background: #dc2626;
+}
+
+.dark-mode .clear-cache-button:hover {
+  background: #b91c1c;
+}
+
+.dark-mode .clear-cache-button:disabled {
+  background: #6b7280;
+}
+
+/* Mensagens de cache */
+.cache-success-message,
+.cache-error-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: slideInRight 0.3s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 300px;
+}
+
+.cache-success-message {
+  background: #10b981;
+  color: white;
+  border: 1px solid #059669;
+}
+
+.cache-error-message {
+  background: #ef4444;
+  color: white;
+  border: 1px solid #dc2626;
+}
+
+.cache-success-message i,
+.cache-error-message i {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.dark-mode .cache-success-message {
+  background: #059669;
+  border-color: #047857;
+}
+
+.dark-mode .cache-error-message {
+  background: #dc2626;
+  border-color: #b91c1c;
+}
+
+/* Ajuste do toggle switch para modo escuro */
+.dark-mode .slider {
+  background-color: #4a4a4a;
+}
+
+.dark-mode input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+.dark-mode .slider:before {
+  background-color: #e0e0e0;
+}
+
+/* Version button */
+.version-button {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-light);
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.version-button:hover {
+  opacity: 1;
+  background: var(--hover-bg);
 }

@@ -377,6 +377,72 @@ async function loadAppVersion() {
   }
 }
 
+// Adiciona CSS customizado para o modal de versão mais recente
+(function addCustomUpdateModalStyle() {
+  if (document.getElementById('custom-update-modal-style')) return;
+  const style = document.createElement('style');
+  style.id = 'custom-update-modal-style';
+  style.innerHTML = `
+    .swal2-container .modal {
+      background: var(--bg-light, #fff);
+      color: var(--text-dark, #222);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      padding: 36px 32px 28px 32px;
+      min-width: 340px;
+      max-width: 90vw;
+      text-align: center;
+      border: 1px solid var(--border, #e0e0e0);
+      margin: 0 auto;
+      transition: background 0.3s, color 0.3s;
+    }
+    .swal2-container.dark-mode .modal {
+      background: var(--bg-dark, #23272f);
+      color: var(--text-light, #f0f0f0);
+      border: 1px solid var(--border-dark, #333);
+    }
+    .swal2-container .modal .icon {
+      background: #4caf50;
+      color: #fff;
+      border-radius: 50%;
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px auto;
+      font-size: 32px;
+    }
+    .swal2-container .modal .title {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .swal2-container .modal .desc {
+      font-size: 16px;
+      margin-bottom: 18px;
+      color: #888;
+    }
+    .swal2-container.dark-mode .modal .desc {
+      color: #bbb;
+    }
+    .swal2-container .modal .version-bar {
+      background: #222;
+      color: #fff;
+      border-radius: 6px;
+      padding: 7px 0;
+      margin-bottom: 22px;
+      font-size: 15px;
+      letter-spacing: 1px;
+    }
+    .swal2-container.dark-mode .modal .version-bar {
+      background: #444;
+      color: #fff;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
 // Função para verificar atualizações
 async function checkForUpdates() {
   try {
@@ -445,24 +511,34 @@ async function checkForUpdates() {
       Swal.fire({
         title: translations[currentLanguage]['Confirmação'],
         html: `
-          <div class="confirmation-dialog">
-            <div class="confirmation-icon">
-              <i class="fas fa-check-circle"></i>
+          <div class="modal">
+            <div class="icon">
+              <i class="fa fa-check"></i>
             </div>
-            <div class="confirmation-content">
-              <p>${translations[currentLanguage]['latest_version']}</p>
-              <div class="version-info">
-                <span>${translations[currentLanguage]['current_version']}: v${currentVersion}</span>
-              </div>
-            </div>
+            <div class="title">${translations[currentLanguage]['Confirmação']}</div>
+            <div class="desc">${translations[currentLanguage]['latest_version']}</div>
+            <div class="version-bar">${translations[currentLanguage]['current_version']}: v${currentVersion}</div>
           </div>
         `,
+        showCancelButton: false,
         confirmButtonText: translations[currentLanguage]['OK'],
         confirmButtonColor: '#3085d6',
         customClass: {
           container: 'confirmation-dialog-container'
         }
       });
+      // Ajustar tema do modal conforme o tema do app
+      setTimeout(() => {
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        const swalContainer = document.querySelector('.swal2-container');
+        if (swalContainer) {
+          if (isDarkMode) {
+            swalContainer.classList.add('dark-mode');
+          } else {
+            swalContainer.classList.remove('dark-mode');
+          }
+        }
+      }, 10);
     }
   } catch (error) {
     Swal.fire({
