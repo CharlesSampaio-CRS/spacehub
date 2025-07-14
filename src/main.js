@@ -1022,8 +1022,12 @@ ipcMain.on('language-changed', (event, language) => {
 // Handler para download de atualizações
 ipcMain.on('download-update', () => {
   console.log('Iniciando download de atualização...');
-  // Aqui você pode implementar a lógica de download de atualização
-  // Por enquanto, apenas logamos a ação
+  try {
+    // Iniciar o download da atualização
+    autoUpdater.downloadUpdate();
+  } catch (error) {
+    console.error('Erro ao iniciar download de atualização:', error);
+  }
 });
 
 // Handler para criar janela de login
