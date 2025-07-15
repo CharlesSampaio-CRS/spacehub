@@ -1309,6 +1309,15 @@ body.dark-mode .trial-card .premium-status {
   background-color: #e0e0e0;
 }
 
+/* Correção: Remover outline do input invisível da toggle-switch e adicionar foco visual na .slider */
+.toggle-switch input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.toggle-switch input:focus + .slider {
+  box-shadow: 0 0 0 2px var(--primary-color);
+}
+
 /* Version button */
 .version-button {
   position: fixed;
