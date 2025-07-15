@@ -615,83 +615,115 @@ function translatePage(language) {
 const setupLanguageToggle = () => {
   const toggle = document.getElementById("language-toggle");
   const toggleIcon = document.getElementById("language-icon");
+  
+  console.log('Configurando toggle de idioma...');
+  console.log('Toggle encontrado:', !!toggle);
+  console.log('Toggle icon encontrado:', !!toggleIcon);
+  
   if (!toggle || !toggleIcon) {
+    console.error('Elementos da toggle de idioma não encontrados');
     return;
   }
 
-
   // Verificar o idioma atual
   window.electronAPI.invoke('get-language').then(currentLanguage => {
+    console.log('Idioma atual:', currentLanguage);
     const isEnglish = currentLanguage === 'en-US';
     toggle.checked = isEnglish;
     toggleIcon.innerHTML = isEnglish ? '🇺🇸' : '🇧🇷';
+    console.log('Toggle configurada para:', isEnglish ? 'Inglês' : 'Português');
   }).catch(error => {
     console.error('Erro ao obter idioma atual:', error);
   });
 
-  toggle.addEventListener("change", async () => {
+  // Teste simples - adicionar evento de clique direto
+  toggle.addEventListener("click", (e) => {
+    console.log('Toggle clicada!');
+    console.log('Estado atual:', toggle.checked);
+  });
+
+  // Adicionar evento de mudança
+  toggle.addEventListener("change", async (e) => {
+    console.log('Toggle de idioma alterada');
     const newLanguage = toggle.checked ? 'en-US' : 'pt-BR';
     const languageName = toggle.checked ? 'Inglês' : 'Português';
     
-    // Obter idioma atual para a mensagem de confirmação
-    const currentLanguage = await window.electronAPI.invoke('get-language');
+    console.log('Novo idioma selecionado:', newLanguage, languageName);
     
-    // Salvar estado original do toggle
-    const originalChecked = toggle.checked;
-    const originalIcon = toggleIcon.innerHTML;
-    
-    // Mostrar diálogo de confirmação personalizado
-    const showConfirmationDialog = async (message, onConfirm) => {
-      const dialog = document.createElement('div');
-      dialog.className = 'confirmation-dialog';
-      dialog.innerHTML = `
-        <div class="confirmation-content">
-          <h3>${translations[currentLanguage]?.['Confirmação'] || 'Confirmação'}</h3>
-          <p>${message}</p>
-          <div class="confirmation-buttons">
-            <button class="confirm-btn">${translations[currentLanguage]?.['Confirmar'] || 'Confirmar'}</button>
-            <button class="cancel-btn">${translations[currentLanguage]?.['Cancelar'] || 'Cancelar'}</button>
+    try {
+      // Obter idioma atual para a mensagem de confirmação
+      const currentLanguage = await window.electronAPI.invoke('get-language');
+      
+      // Salvar estado original do toggle para reversão em caso de cancelamento
+      const originalChecked = toggle.checked;
+      const originalIcon = toggleIcon.innerHTML;
+      
+      console.log('Estado original salvo:', originalChecked);
+      
+      // Usar o mesmo design do diálogo de logout
+      const showConfirmationDialog = async (message, onConfirm) => {
+        const dialog = document.createElement('div');
+        dialog.className = 'confirmation-dialog';
+        dialog.innerHTML = `
+          <div class="confirmation-content">
+            <h3>${translations[currentLanguage]?.['Confirmação'] || 'Confirmação'}</h3>
+            <p>${message}</p>
+            <div class="confirmation-buttons">
+              <button class="confirm-btn">${translations[currentLanguage]?.['Confirmar'] || 'Confirmar'}</button>
+              <button class="cancel-btn">${translations[currentLanguage]?.['Cancelar'] || 'Cancelar'}</button>
+            </div>
           </div>
-        </div>
-      `;
+        `;
 
-      document.body.appendChild(dialog);
+        document.body.appendChild(dialog);
 
-      const confirmBtn = dialog.querySelector('.confirm-btn');
-      const cancelBtn = dialog.querySelector('.cancel-btn');
+        const confirmBtn = dialog.querySelector('.confirm-btn');
+        const cancelBtn = dialog.querySelector('.cancel-btn');
 
-      confirmBtn.addEventListener('click', () => {
-        document.body.removeChild(dialog);
-        onConfirm();
+        confirmBtn.addEventListener('click', () => {
+          console.log('Confirmação aceita');
+          document.body.removeChild(dialog);
+          onConfirm();
+        });
+
+        cancelBtn.addEventListener('click', () => {
+          console.log('Confirmação cancelada');
+          document.body.removeChild(dialog);
+          // Reverter o toggle se cancelar
+          toggle.checked = !originalChecked;
+          toggleIcon.innerHTML = originalChecked ? '🇺🇸' : '🇧🇷';
+          console.log('Toggle revertida para estado original');
+        });
+      };
+      
+      const confirmMessage = translations[currentLanguage]?.language_change_confirmation?.replace('%s', languageName) || 
+                            `Deseja realmente mudar o idioma para ${languageName}? A aplicação será reiniciada.`;
+      
+      showConfirmationDialog(confirmMessage, () => {
+        console.log('Aplicando mudança de idioma...');
+        toggleIcon.innerHTML = toggle.checked ? '🇺🇸' : '🇧🇷';
+        
+        // Enviar mudança para o main process
+        window.electronAPI.setLanguage(newLanguage);
+        
+        // Salvar no localStorage
+        localStorage.setItem('language', newLanguage);
+        
+        console.log('Reiniciando aplicação...');
+        // Reiniciar a aplicação
+        setTimeout(() => {
+          window.electronAPI.restartApp();
+        }, 500);
       });
-
-      cancelBtn.addEventListener('click', () => {
-        document.body.removeChild(dialog);
-        // Reverter o toggle se cancelar
-        toggle.checked = !originalChecked;
-        toggleIcon.innerHTML = originalChecked ? '🇺🇸' : '🇧🇷';
-        console.log('Mudança de idioma cancelada pelo usuário');
-      });
-    };
-    
-    const confirmMessage = translations[currentLanguage]?.language_change_confirmation?.replace('%s', languageName) || 
-                          `Deseja realmente mudar o idioma para ${languageName}? A aplicação será reiniciada.`;
-    
-    showConfirmationDialog(confirmMessage, () => {
+    } catch (error) {
+      console.error('Erro ao processar mudança de idioma:', error);
+      // Reverter toggle em caso de erro
+      toggle.checked = !toggle.checked;
       toggleIcon.innerHTML = toggle.checked ? '🇺🇸' : '🇧🇷';
-      
-      // Enviar mudança para o main process
-      window.electronAPI.setLanguage(newLanguage);
-      
-      // Salvar no localStorage
-      localStorage.setItem('language', newLanguage);
-      
-      // Reiniciar a aplicação
-      setTimeout(() => {
-        window.electronAPI.restartApp();
-      }, 500);
-    });
+    }
   });
+  
+  console.log('Toggle de idioma configurada com sucesso');
 };
 
 const setupClearCacheButton = () => {
@@ -827,6 +859,15 @@ async function loadSystemInfo() {
 }
 
 const initializeSettingsPage = async () => {
+    console.log('Inicializando página de configurações...');
+    
+    // Verificar se os elementos existem
+    const toggle = document.getElementById("language-toggle");
+    const toggleIcon = document.getElementById("language-icon");
+    console.log('Elementos encontrados na inicialização:');
+    console.log('- Toggle:', !!toggle);
+    console.log('- Toggle Icon:', !!toggleIcon);
+    
     // Carregar outras informações
     loadApplications();
   // Carregar informações do sistema primeiro
@@ -834,6 +875,7 @@ const initializeSettingsPage = async () => {
 
   loadUserInfo();
   // Restaurar configurações de tema e toggles
+  console.log('Configurando toggles...');
   setupDarkModeToggle();
   setupNotificationToggle();
   setupCompactLayoutToggle();
@@ -850,14 +892,30 @@ const initializeSettingsPage = async () => {
   if (saveButton) {
     saveButton.addEventListener("click", updateApplications);
   }
+  
+  console.log('Página de configurações inicializada com sucesso');
 };
 
 // Garantir que o evento DOMContentLoaded está sendo chamado
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('DOMContentLoaded disparado');
   // Aguardar um pouco para garantir que tudo esteja carregado
   setTimeout(async () => {
+    console.log('Iniciando configuração da página...');
     await initializeSettingsPage();
   }, 100);
+});
+
+// Também tentar inicializar quando a janela carregar
+window.addEventListener('load', async () => {
+  console.log('Window load disparado');
+  if (!document.getElementById('language-toggle')) {
+    console.log('Elementos ainda não encontrados, aguardando...');
+    setTimeout(async () => {
+      console.log('Tentando inicializar novamente...');
+      await initializeSettingsPage();
+    }, 500);
+  }
 });
 
 // Função para verificar atualizações

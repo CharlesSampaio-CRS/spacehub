@@ -208,12 +208,112 @@ body.dark-mode {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
+  padding: 16px 0;
   border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
 }
 
 .setting-item:last-child {
   border-bottom: none;
+}
+
+/* Estilos específicos para a toggle de idioma */
+#language-toggle {
+  position: relative;
+  z-index: 10;
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+}
+
+#language-toggle:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 54px;
+  height: 28px;
+  cursor: pointer;
+  z-index: 1;
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+  cursor: pointer;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+  z-index: 1;
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+  z-index: 1;
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+}
+
+input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--primary-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.setting-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.mode-icon {
+  font-size: 1.2em;
+  min-width: 24px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.setting-item:hover .mode-icon {
+  transform: scale(1.1);
 }
 
 .application-grid {
@@ -379,81 +479,13 @@ body.dark-mode {
 
 .application-grid::-webkit-scrollbar-thumb,
 .preferences-wrapper::-webkit-scrollbar-thumb {
-  background: var(--text-secondary);
+  background: #ccc;
   border-radius: 4px;
 }
 
 .application-grid::-webkit-scrollbar-thumb:hover,
 .preferences-wrapper::-webkit-scrollbar-thumb:hover {
   background: var(--primary-color);
-}
-
-/* Toggle Switch */
-.toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 54px;
-  height: 28px;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 34px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 20px;
-  width: 20px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-
-input:checked + .slider {
-  background-color: var(--primary-color);
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px var(--primary-color);
-}
-
-input:checked + .slider:before {
-  transform: translateX(26px);
-}
-
-.setting-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 500;
-}
-
-.mode-icon {
-  font-size: 1.2em;
-  min-width: 24px;
-  text-align: center;
-  transition: transform 0.3s ease;
-}
-
-.setting-item:hover .mode-icon {
-  transform: scale(1.1);
 }
 
 .language-selector {
@@ -619,95 +651,97 @@ input:focus {
 
 /* Estilos do diálogo de confirmação */
 .confirmation-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
-  padding: 1rem;
-  width: 100%;
-}
-
-.confirmation-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  color: var(--primary-color);
+  justify-content: center;
+  z-index: 1000;
 }
 
 .confirmation-content {
-  width: 100%;
+  background: var(--card-bg);
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.confirmation-content h3 {
+  margin: 0 0 16px;
+  color: var(--text-color);
+  font-size: 18px;
 }
 
 .confirmation-content p {
-  margin-bottom: 1rem;
-  color: var(--text-color);
-  font-size: 16px;
-  line-height: 1.5;
+  margin: 0 0 24px;
+  color: var(--text-light);
+  font-size: 14px;
 }
 
-.confirmation-dialog-container .swal2-title {
-  color: var(--text-color);
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  font-weight: 600;
+.confirmation-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
 }
 
-.confirmation-dialog-container .swal2-html-container {
-  margin: 0;
-  padding: 0;
-}
-
-.confirmation-dialog-container .swal2-confirm,
-.confirmation-dialog-container .swal2-cancel {
-  padding: 0.75rem 2rem;
-  font-size: 1rem;
+.confirmation-buttons button {
+  padding: 8px 24px;
   border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.confirmation-dialog-container .swal2-confirm {
-  background: var(--primary-color);
   border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: var(--transition);
 }
 
-.confirmation-dialog-container .swal2-confirm:hover {
+.confirm-btn {
+  background: var(--primary-color);
+  color: white;
+}
+
+.confirm-btn:hover {
   background: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(74, 108, 247, 0.3);
 }
 
-.confirmation-dialog-container .swal2-cancel {
+.cancel-btn {
   background: transparent;
   color: var(--text-light);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color) !important;
 }
 
-.confirmation-dialog-container .swal2-cancel:hover {
+.cancel-btn:hover {
   background: var(--hover-bg);
-  color: var(--text-color);
 }
 
-/* Dark mode adjustments for SweetAlert2 */
-.dark-mode .confirmation-dialog-container .swal2-title {
+/* Dark mode adjustments */
+.dark-mode .confirmation-content {
+  background: var(--card-bg-dark);
+  border: 1px solid #4a4a4a;
+}
+
+.dark-mode .confirmation-content h3 {
   color: #f0f0f0;
 }
 
-.dark-mode .confirmation-dialog-container .swal2-html-container {
+.dark-mode .confirmation-content p {
   color: #a0a0a0;
 }
 
-.dark-mode .confirmation-dialog-container .swal2-cancel {
+.dark-mode .cancel-btn {
   color: #a0a0a0;
   border-color: #4a4a4a;
 }
 
-.dark-mode .confirmation-dialog-container .swal2-cancel:hover {
+.dark-mode .cancel-btn:hover {
   background: #4a4a4a;
   color: #f0f0f0;
-}
-
-.dark-mode .confirmation-icon {
-  color: #7c8cff;
 }
 
 /* Version info styling */
