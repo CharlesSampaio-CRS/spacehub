@@ -136,7 +136,7 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'pages/index/index.html'));
   mainWindow.maximize();
-  //mainWindow.setMenu(null);
+  mainWindow.setMenu(null);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url) && !url.includes('linkedin.com')) {
@@ -358,7 +358,13 @@ ipcMain.on('start-google-login', () => {
   authWindow.setMenu(null);
   authWindow.loadURL(authUrl);
 
-  authWindow.on('closed', () => { authWindow = null; });
+  authWindow.on('closed', () => {
+    // Se o login não foi concluído, notificar o frontend para reabilitar os botões
+    if (loginWindow && !loginWindow.isDestroyed()) {
+      loginWindow.webContents.send('google-login-cancelled');
+    }
+    authWindow = null;
+  });
 
   authWindow.webContents.on('will-redirect', async (event, url) => {
     if (!url.startsWith('http://localhost')) return;

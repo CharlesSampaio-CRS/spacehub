@@ -340,6 +340,13 @@ window.addEventListener('DOMContentLoaded', () => {
     setLoginButtonLoading(false);
   });
 
+  // Evento para reabilitar botões se o login Google for cancelado ou falhar
+  window.electronAPI.on('google-login-cancelled', () => {
+    setLoginButtonLoading(false);
+    document.getElementById('googleLogin').disabled = false;
+    document.getElementById('loginButton').disabled = false;
+  });
+
   // Evento para abrir tela de registro
   document.getElementById('registerLink')?.addEventListener('click', (e) => {
     e.preventDefault();

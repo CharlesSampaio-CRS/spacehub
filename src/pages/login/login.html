@@ -38,7 +38,7 @@
     }
 
     .mode-icon {
-      font-size: 1.4em;
+      font-size: 1.1em;
       transition: transform 0.3s ease;
     }
 
@@ -242,6 +242,16 @@
       const currentLanguage = localStorage.getItem('language') || 'pt-BR';
       document.documentElement.lang = currentLanguage;
       translatePage(currentLanguage);
+
+      // Bloquear Google login ao clicar em Entrar
+      const loginButton = document.getElementById('loginButton');
+      const googleLogin = document.getElementById('googleLogin');
+      if (loginButton && googleLogin) {
+        loginButton.addEventListener('click', () => {
+          googleLogin.disabled = true;
+          googleLogin.classList.add('disabled');
+        });
+      }
     });
   </script>
 </body>
